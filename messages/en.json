@@ -55,7 +55,20 @@
     "magicLinkTab": "Magic link",
     "invalidCredentials": "Invalid email or password",
     "passwordMismatch": "Passwords do not match",
-    "passwordTooShort": "Password must be at least 8 characters"
+    "passwordTooShort": "Password must be at least 8 characters",
+    "forgotPassword": "Forgot password?",
+    "resetPasswordTitle": "Reset your password",
+    "resetPasswordDescription": "Enter your email and we will send you a reset link.",
+    "sendResetLink": "Send reset link",
+    "resetEmailSent": "Check your email",
+    "resetEmailSentDescription": "We sent a password reset link to {email}.",
+    "backToSignIn": "Back to sign in",
+    "updatePasswordTitle": "Set a new password",
+    "updatePasswordDescription": "Choose a new password for your account.",
+    "updatePassword": "Update password",
+    "resetLinkInvalidTitle": "Reset link invalid",
+    "resetLinkInvalidDescription": "This reset link is invalid or has expired.",
+    "requestNewResetLink": "Request a new reset link"
   },
   "dashboard": {
     "welcome": "Welcome, {name}",

@@ -1,4 +1,5 @@
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
+import { DashboardClient } from '@/components/dashboard/DashboardClient'
 import { FileUpload } from '@/components/upload/FileUpload'
 import { PersonalLetterUpload } from '@/components/upload/PersonalLetterUpload'
 import { createClient } from '@/lib/supabase/server'
@@ -6,7 +7,7 @@ import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { FileText, Briefcase, Mail } from 'lucide-react'
+import { Briefcase } from 'lucide-react'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 
@@ -41,6 +42,27 @@ export default async function DashboardPage() {
     prisma.generatedLetter.count({ where: { userId: user.id } }),
   ])
 
+  // Serialize documents for client component
+  const serializedCv = cvDocument
+    ? {
+        id: cvDocument.id,
+        createdAt: cvDocument.createdAt.toISOString().slice(0, 10),
+        parsedContent: cvDocument.parsedContent,
+        fileUrl: cvDocument.fileUrl,
+        skills: cvDocument.skills as string[] | null,
+      }
+    : null
+
+  const serializedLetter = personalLetter
+    ? {
+        id: personalLetter.id,
+        createdAt: personalLetter.createdAt.toISOString().slice(0, 10),
+        parsedContent: personalLetter.parsedContent,
+        fileUrl: personalLetter.fileUrl,
+        skills: personalLetter.skills as string[] | null,
+      }
+    : null
+
   return (
     <div className="min-h-screen">
       <DashboardHeader />
@@ -50,73 +72,13 @@ export default async function DashboardPage() {
         </h1>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {/* CV Section */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                {t('yourCV')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {cvDocument ? (
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    {t('uploaded')}: {new Date(cvDocument.createdAt).toLocaleDateString()}
-                  </p>
-                  {cvDocument.skills && (
-                    <div>
-                      <p className="text-xs font-medium mb-1">{t('extractedSkills')}:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {(cvDocument.skills as string[]).slice(0, 3).map((skill, i) => (
-                          <span key={i} className="text-xs bg-muted px-2 py-0.5 rounded">
-                            {skill}
-                          </span>
-                        ))}
-                        {(cvDocument.skills as string[]).length > 3 && (
-                          <span className="text-xs text-muted-foreground">
-                            {t('moreSkills', { count: (cvDocument.skills as string[]).length - 3 })}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">{t('noCV')}</p>
-                  <FileUpload />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Personal Letter Section */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Mail className="h-5 w-5" />
-                {t('yourPersonalLetter')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {personalLetter ? (
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    {t('uploaded')}: {new Date(personalLetter.createdAt).toLocaleDateString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground line-clamp-3">
-                    {personalLetter.parsedContent?.substring(0, 150)}...
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">{t('noPersonalLetter')}</p>
-                  <PersonalLetterUpload />
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* CV and Personal Letter sections */}
+          <DashboardClient
+            cvDocument={serializedCv}
+            personalLetter={serializedLetter}
+            cvUploadComponent={<FileUpload />}
+            personalLetterUploadComponent={<PersonalLetterUpload />}
+          />
 
           {/* Saved Jobs */}
           <Card>

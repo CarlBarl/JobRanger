@@ -27,7 +27,9 @@
       "Bash(del \"C:\\\\Users\\\\Calle\\\\Dev\\\\JobJägaren\\\\verify-seed.js\")",
       "Bash(npx prisma generate)",
       "Bash(tasklist:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(ls:*)",
+      "Bash(npx prisma studio)"
     ]
   }
 }

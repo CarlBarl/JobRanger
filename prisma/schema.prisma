@@ -30,7 +30,7 @@ model Document {
   userId        String
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   type          DocumentType
-  fileUrl       String
+  fileUrl       String?
   parsedContent String?      @db.Text
   skills        Json?
   createdAt     DateTime     @default(now())

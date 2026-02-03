@@ -4,14 +4,13 @@ import { render, screen } from '@/lib/test-utils'
 import { SignInForm } from './SignInForm'
 
 const signInWithOtp = vi.fn()
-const signInWithPassword = vi.fn()
 const push = vi.fn()
+const refresh = vi.fn()
 
 vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
     auth: {
       signInWithOtp,
-      signInWithPassword,
     },
   }),
 }))
@@ -19,6 +18,7 @@ vi.mock('@/lib/supabase/client', () => ({
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push,
+    refresh,
   }),
 }))
 
@@ -83,10 +83,15 @@ describe('SignInForm', () => {
       expect(
         screen.getByRole('button', { name: /^sign in$/i })
       ).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /forgot password/i })).toHaveAttribute(
+        'href',
+        '/auth/forgot'
+      )
     })
 
     it('shows an error for invalid email', async () => {
       const user = userEvent.setup()
+      const fetchSpy = vi.spyOn(globalThis, 'fetch')
       render(<SignInForm />)
 
       await user.click(screen.getByRole('tab', { name: /password/i }))
@@ -96,13 +101,19 @@ describe('SignInForm', () => {
       await user.click(screen.getByRole('button', { name: /^sign in$/i }))
 
       expect(await screen.findByText(/valid email/i)).toBeInTheDocument()
-      expect(signInWithPassword).not.toHaveBeenCalled()
+      expect(fetchSpy).not.toHaveBeenCalled()
     })
 
     it('shows error on invalid credentials', async () => {
-      signInWithPassword.mockResolvedValue({
-        error: { message: 'Invalid login credentials' },
-      })
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            success: false,
+            error: { message: 'Invalid login credentials' },
+          }),
+          { status: 401, headers: { 'content-type': 'application/json' } }
+        )
+      )
 
       const user = userEvent.setup()
       render(<SignInForm />)
@@ -113,16 +124,22 @@ describe('SignInForm', () => {
       await user.type(passwordInput, 'wrongpassword')
       await user.click(screen.getByRole('button', { name: /^sign in$/i }))
 
-      expect(signInWithPassword).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'wrongpassword',
+      expect(globalThis.fetch).toHaveBeenCalledWith('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: 'test@example.com', password: 'wrongpassword' }),
       })
 
       expect(await screen.findByText(/invalid email or password/i)).toBeInTheDocument()
     })
 
     it('redirects on successful password sign in', async () => {
-      signInWithPassword.mockResolvedValue({ error: null })
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      )
 
       const user = userEvent.setup()
       render(<SignInForm />)
@@ -133,12 +150,14 @@ describe('SignInForm', () => {
       await user.type(passwordInput, 'password123')
       await user.click(screen.getByRole('button', { name: /^sign in$/i }))
 
-      expect(signInWithPassword).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123',
+      expect(globalThis.fetch).toHaveBeenCalledWith('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: 'test@example.com', password: 'password123' }),
       })
 
       expect(push).toHaveBeenCalledWith('/dashboard')
+      expect(refresh).toHaveBeenCalled()
     })
   })
 
