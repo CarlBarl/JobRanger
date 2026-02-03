@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  // Use Supabase Auth user id as the primary key.
+  id        String   @id
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+
+  documents        Document[]
+  savedJobs        SavedJob[]
+  generatedLetters GeneratedLetter[]
+}
+
+enum DocumentType {
+  cv
+  cover_letter_template
+}
+
+model Document {
+  id            String       @id @default(cuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          DocumentType
+  fileUrl       String
+  parsedContent String?      @db.Text
+  skills        Json?
+  createdAt     DateTime     @default(now())
+
+  @@index([userId])
+  @@index([userId, type])
+}
+
+model SavedJob {
+  id      String   @id @default(cuid())
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  afJobId String
+  notes   String?
+  savedAt DateTime @default(now())
+
+  letters GeneratedLetter[]
+
+  @@unique([userId, afJobId])
+  @@index([userId])
+}
+
+model GeneratedLetter {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  savedJobId String?
+  savedJob   SavedJob? @relation(fields: [savedJobId], references: [id], onDelete: SetNull)
+  afJobId    String
+  content    String    @db.Text
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@index([afJobId])
+}
+

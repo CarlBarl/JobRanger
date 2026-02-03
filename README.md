@@ -44,7 +44,7 @@ An AI-powered job matching platform that helps Swedish job seekers find relevant
 
 3. **Set up environment variables**
    ```bash
-   cp .env.example .env.local
+   cp env.example .env.local
    ```
    
    Fill in the values in `.env.local`:

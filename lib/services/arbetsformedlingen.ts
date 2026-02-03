@@ -1,0 +1,85 @@
+const AF_BASE_URL = 'https://jobsearch.api.jobtechdev.se'
+
+export type AFJobHit = {
+  id: string
+  headline?: string
+  employer?: { name?: string | null } | null
+  workplace_address?: {
+    municipality?: string | null
+    region?: string | null
+    country?: string | null
+  } | null
+  description?: { text?: string | null; text_formatted?: string | null } | null
+  publication_date?: string | null
+  application_deadline?: string | null
+  logo_url?: string | null
+}
+
+export type AFSearchResponse = {
+  total: { value: number }
+  hits: AFJobHit[]
+}
+
+export type AFJobAd = {
+  id: string
+  headline?: string
+  employer?: { name?: string | null } | null
+  description?: { text?: string | null; text_formatted?: string | null } | null
+  workplace_address?: {
+    municipality?: string | null
+    region?: string | null
+    country?: string | null
+  } | null
+  publication_date?: string | null
+  application_deadline?: string | null
+  logo_url?: string | null
+} & Record<string, unknown>
+
+export type SearchJobsOptions = {
+  query: string
+  limit?: number
+  offset?: number
+}
+
+function getApiKeyHeader() {
+  const apiKey = process.env.AF_API_KEY
+  if (!apiKey) {
+    throw new Error('AF_API_KEY is not set')
+  }
+  return apiKey
+}
+
+export async function searchJobs(options: SearchJobsOptions): Promise<AFSearchResponse> {
+  const params = new URLSearchParams()
+  params.set('q', options.query)
+  params.set('limit', String(options.limit ?? 20))
+  params.set('offset', String(options.offset ?? 0))
+
+  const response = await fetch(`${AF_BASE_URL}/search?${params.toString()}`, {
+    headers: {
+      accept: 'application/json',
+      'api-key': getApiKeyHeader(),
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`AF API error: ${response.status}`)
+  }
+
+  return (await response.json()) as AFSearchResponse
+}
+
+export async function getJobById(id: string): Promise<AFJobAd> {
+  const response = await fetch(`${AF_BASE_URL}/ad/${id}`, {
+    headers: {
+      accept: 'application/json',
+      'api-key': getApiKeyHeader(),
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`AF API error: ${response.status}`)
+  }
+
+  return (await response.json()) as AFJobAd
+}
