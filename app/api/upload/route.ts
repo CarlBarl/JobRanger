@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (typeValue !== 'cv' && typeValue !== 'cover_letter_template') {
+    if (typeValue !== 'cv' && typeValue !== 'personal_letter') {
       return NextResponse.json(
         { success: false, error: { code: 'BAD_REQUEST', message: 'Invalid document type' } },
         { status: 400 }
