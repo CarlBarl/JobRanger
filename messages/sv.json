@@ -73,7 +73,20 @@
     "searchJobs": "Sök Jobb",
     "viewLetters": "Visa Brev",
     "jobsSaved": "jobb sparade",
-    "lettersGenerated": "brev genererade"
+    "lettersGenerated": "brev genererade",
+    "viewDocument": "Visa dokument",
+    "openInNewTab": "Öppna i ny flik",
+    "close": "Stäng",
+    "noContent": "Inget innehåll tillgängligt",
+    "edit": "Redigera",
+    "preview": "Förhandsgranska",
+    "saveChanges": "Spara",
+    "saving": "Sparar...",
+    "uploadNewFile": "Ladda upp ny",
+    "unsavedChanges": "Du har osparade ändringar",
+    "backToDashboard": "Tillbaka till Dashboard",
+    "lastUpdated": "Senast uppdaterad",
+    "changesSaved": "Ändringar sparade"
   },
   "jobs": {
     "title": "Sök Jobb",

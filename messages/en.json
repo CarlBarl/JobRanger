@@ -73,7 +73,20 @@
     "searchJobs": "Search Jobs",
     "viewLetters": "View Letters",
     "jobsSaved": "jobs saved",
-    "lettersGenerated": "letters generated"
+    "lettersGenerated": "letters generated",
+    "viewDocument": "View document",
+    "openInNewTab": "Open in new tab",
+    "close": "Close",
+    "noContent": "No content available",
+    "edit": "Edit",
+    "preview": "Preview",
+    "saveChanges": "Save",
+    "saving": "Saving...",
+    "uploadNewFile": "Upload New",
+    "unsavedChanges": "You have unsaved changes",
+    "backToDashboard": "Back to Dashboard",
+    "lastUpdated": "Last updated",
+    "changesSaved": "Changes saved"
   },
   "jobs": {
     "title": "Search Jobs",
