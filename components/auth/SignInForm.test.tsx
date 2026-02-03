@@ -23,7 +23,7 @@ describe('SignInForm', () => {
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: /sign in/i })
+      screen.getByRole('button', { name: /send magic link/i })
     ).toBeInTheDocument()
   })
 
@@ -32,7 +32,7 @@ describe('SignInForm', () => {
     render(<SignInForm />)
 
     await user.type(screen.getByLabelText(/email/i), 'invalid-email')
-    await user.click(screen.getByRole('button', { name: /sign in/i }))
+    await user.click(screen.getByRole('button', { name: /send magic link/i }))
 
     expect(await screen.findByText(/valid email/i)).toBeInTheDocument()
     expect(signInWithOtp).not.toHaveBeenCalled()
@@ -45,7 +45,7 @@ describe('SignInForm', () => {
     render(<SignInForm />)
 
     await user.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await user.click(screen.getByRole('button', { name: /sign in/i }))
+    await user.click(screen.getByRole('button', { name: /send magic link/i }))
 
     expect(signInWithOtp).toHaveBeenCalledWith({
       email: 'test@example.com',

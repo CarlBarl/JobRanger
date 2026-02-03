@@ -90,7 +90,10 @@ describe('POST /api/generate', () => {
       employer: { name: 'ACME' },
       description: { text: 'desc' },
     })
-    mocks.findFirst.mockResolvedValue({ id: 'doc-1', parsedContent: 'cv text' })
+    // First call returns CV, second call returns personal letter
+    mocks.findFirst
+      .mockResolvedValueOnce({ id: 'doc-1', parsedContent: 'cv text' })
+      .mockResolvedValueOnce({ id: 'pl-1', parsedContent: 'personal letter text' })
     mocks.generateCoverLetter.mockResolvedValue('letter')
     mocks.findUnique.mockResolvedValue({ id: 'saved-1' })
     mocks.create.mockResolvedValue({ id: 'letter-1', content: 'letter', createdAt: 'now' })
@@ -112,6 +115,7 @@ describe('POST /api/generate', () => {
       jobTitle: 'Dev',
       jobDescription: 'desc',
       companyName: 'ACME',
+      personalLetterContent: 'personal letter text',
     })
     expect(mocks.create).toHaveBeenCalled()
   })
