@@ -1,62 +1,87 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '@/lib/test-utils'
+import { render, screen, waitFor } from '@/lib/test-utils'
 import { JobSearch } from './JobSearch'
 
-describe('JobSearch', () => {
-  afterEach(() => {
+function mockFetchWithSkills(skills: string[]) {
+  return vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+    const url = typeof input === 'string' ? input : input.toString()
+
+    if (url.startsWith('/api/documents')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: [
+              {
+                id: 'doc-1',
+                type: 'cv',
+                skills,
+              },
+            ],
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
+    if (url.startsWith('/api/jobs')) {
+      return Promise.resolve(
+        new Response(JSON.stringify({ success: true, data: { hits: [] } }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      )
+    }
+
+    return Promise.reject(new Error(`Unexpected fetch: ${url}`))
+  })
+}
+
+describe('JobSearch skill search', () => {
+  beforeEach(() => {
     vi.restoreAllMocks()
   })
 
-  it('fetches and renders job results', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          success: true,
-          data: {
-            total: { value: 1 },
-            hits: [
-              {
-                id: '1',
-                headline: 'Developer',
-                employer: { name: 'ACME' },
-                workplace_address: { municipality: 'Stockholm' },
-              },
-            ],
-          },
-        }),
-        { status: 200, headers: { 'content-type': 'application/json' } }
-      )
-    )
-
+  it('searches using selected skills', async () => {
     const user = userEvent.setup()
+    const fetchMock = mockFetchWithSkills(['React', 'TypeScript', 'Node'])
+
     render(<JobSearch />)
 
-    await user.type(screen.getByLabelText(/search/i), 'developer')
-    await user.click(screen.getByRole('button', { name: /search/i }))
+    const nodeCheckbox = await screen.findByLabelText('Node')
+    await user.click(nodeCheckbox)
 
-    expect(await screen.findByText('Developer')).toBeInTheDocument()
-    expect(screen.getByText('ACME')).toBeInTheDocument()
+    await user.click(
+      screen.getByRole('button', { name: /search with selected skills/i })
+    )
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        2,
+        '/api/jobs?q=React%20TypeScript'
+      )
+    })
   })
 
-  it('shows an error message when API returns an error', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
-        }),
-        { status: 401, headers: { 'content-type': 'application/json' } }
-      )
-    )
-
+  it('searches using all skills even when some are deselected', async () => {
     const user = userEvent.setup()
+    const fetchMock = mockFetchWithSkills(['React', 'TypeScript', 'Node'])
+
     render(<JobSearch />)
 
-    await user.type(screen.getByLabelText(/search/i), 'developer')
-    await user.click(screen.getByRole('button', { name: /search/i }))
+    const nodeCheckbox = await screen.findByLabelText('Node')
+    await user.click(nodeCheckbox)
 
-    expect(await screen.findByText(/not authenticated/i)).toBeInTheDocument()
+    await user.click(
+      screen.getByRole('button', { name: /search with all skills/i })
+    )
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        2,
+        '/api/jobs?q=React%20TypeScript%20Node'
+      )
+    })
   })
 })
-
