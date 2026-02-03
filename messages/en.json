@@ -1,0 +1,96 @@
+{
+  "common": {
+    "appName": "JobMatch",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "upload": "Upload",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Done!"
+  },
+  "landing": {
+    "hero": "Find Your Dream Job in Sweden",
+    "subtitle": "Upload your CV and personal letter, discover matching jobs from Arbetsförmedlingen, and generate personalized cover letters with AI.",
+    "getStarted": "Get Started",
+    "features": {
+      "upload": {
+        "title": "Upload Documents",
+        "description": "We extract your skills automatically using AI"
+      },
+      "search": {
+        "title": "Search Jobs",
+        "description": "Find relevant jobs from Arbetsförmedlingen"
+      },
+      "generate": {
+        "title": "Generate Letters",
+        "description": "AI creates personalized cover letters for each job"
+      }
+    }
+  },
+  "auth": {
+    "signInTitle": "Sign in to JobMatch",
+    "signInDescription": "Enter your email to receive a magic link",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "sendMagicLink": "Send magic link",
+    "sending": "Sending...",
+    "checkEmail": "Check your email",
+    "checkEmailDescription": "We sent a magic link to {email}. Click the link to sign in.",
+    "invalidEmail": "Please enter a valid email address"
+  },
+  "dashboard": {
+    "welcome": "Welcome, {name}",
+    "yourCV": "Your CV",
+    "yourPersonalLetter": "Your Personal Letter",
+    "savedJobs": "Saved Jobs",
+    "generatedLetters": "Generated Letters",
+    "uploadCV": "Upload CV",
+    "uploadPersonalLetter": "Upload Personal Letter",
+    "noCV": "No CV uploaded yet",
+    "noPersonalLetter": "No personal letter uploaded yet",
+    "uploaded": "Uploaded",
+    "extractedSkills": "Extracted skills",
+    "moreSkills": "+{count} more",
+    "searchJobs": "Search Jobs",
+    "viewLetters": "View Letters",
+    "jobsSaved": "jobs saved",
+    "lettersGenerated": "letters generated"
+  },
+  "jobs": {
+    "title": "Search Jobs",
+    "searchPlaceholder": "Search jobs (e.g., developer, nurse, teacher)",
+    "search": "Search",
+    "found": "Found {count} jobs",
+    "noResults": "No jobs found. Try a different search term.",
+    "enterSearch": "Enter a search term to find jobs from Arbetsförmedlingen",
+    "backToSearch": "Back to search",
+    "saveJob": "Save Job",
+    "unsaveJob": "Remove from saved",
+    "generateLetter": "Generate Personal Letter",
+    "generating": "Generating...",
+    "publishedAt": "Published"
+  },
+  "letters": {
+    "title": "Generated Letters",
+    "empty": "No letters generated yet. Search for jobs and generate personal letters.",
+    "aiAdapted": "Personal Letter AI-adapted for this job",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "useOriginal": "Use my original letter",
+    "useAI": "Use AI-adapted letter",
+    "createdAt": "Created"
+  },
+  "upload": {
+    "dropCV": "Click to upload CV (PDF, DOCX, or TXT)",
+    "dropPersonalLetter": "Click to upload Personal Letter (PDF, DOCX, or TXT)",
+    "uploading": "Uploading...",
+    "uploadCV": "Upload CV",
+    "uploadPersonalLetter": "Upload Personal Letter",
+    "maxSize": "Max 5MB",
+    "invalidType": "File must be PDF, DOCX, or TXT",
+    "tooLarge": "File must be less than 5MB"
+  }
+}
