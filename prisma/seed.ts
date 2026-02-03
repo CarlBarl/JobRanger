@@ -58,6 +58,8 @@ async function ensureBucketExists(supabase: any): Promise<void> {
 
 const DEBUG_USER_EMAIL = 'carlelelid@gmail.com'
 const DEBUG_USER_ID = 'debug-user-001'
+const MUNICIPAL_USER_EMAIL = 'carlelelid@outlook.com'
+const MUNICIPAL_USER_ID = 'debug-user-002'
 
 const MOCK_CV_CONTENT = `
 CARL ELELID
@@ -149,35 +151,111 @@ const MOCK_SKILLS = [
   'CI/CD',
 ]
 
-async function main() {
-  console.log('🌱 Starting seed...')
+const MUNICIPAL_CV_CONTENT = `
+CARL ELELID
+AdministratÃ¶r | Kommunal service | Ã–rebro, Sverige
+carlelelid@outlook.com | +46 70 555 1122
 
-  // Initialize Supabase client
-  const supabase = getSupabaseClient()
+PROFIL
+Serviceinriktad administratÃ¶r med erfarenhet frÃ¥n kommunal verksamhet och
+medborgarkontakt. Trygg i att hantera Ã¤renden, dokumentation och samordning
+mellan olika aktÃ¶rer. VÃ¤rdesÃ¤tter bemÃ¶tande, tydlighet och samarbete.
 
-  // Ensure the documents bucket exists
-  await ensureBucketExists(supabase)
+ARBETSLIVSERFARENHET
 
-  // Create or update debug user
+AdministratÃ¶r | Ã–rebro kommun | 2021 - Nu
+- HandlÃ¤gger inkommande Ã¤renden och registrerar beslut och diarier
+- Ger service och stÃ¶d till medborgare via telefon och reception
+- Samordnar mÃ¶ten, bokningar och intern kommunikation
+- Ansvarar fÃ¶r kvalitetssÃ¤kring av dokument och rutiner
+
+ServicehandlÃ¤ggare | Medborgarkontoret | 2018 - 2021
+- VÃ¤gleder invÃ¥nare i kommunala tjÃ¤nster och processer
+- Samverkar med socialtjÃ¤nst, skola och andra fÃ¶rvaltningar
+- Hanterar konflikter och klagomÃ¥l pÃ¥ ett lÃ¶sningsorienterat sÃ¤tt
+
+UTBILDNING
+
+YH AdministratÃ¶r inom offentlig fÃ¶rvaltning | 2016 - 2018
+- Inriktning mot Ã¤rendehantering och offentlig service
+
+KOMPETENSER
+
+Service och bemÃ¶tande, Ã„rendehantering, Dokumentation, Samordning,
+Konflikthantering, Office 365, Teams, Outlook, DiariefÃ¶ring
+
+SPRÃ…K
+Svenska: ModersmÃ¥l
+Engelska: Goda kunskaper
+`
+
+const MUNICIPAL_PERSONAL_LETTER_CONTENT = `
+Hej,
+
+Jag sÃ¶ker tjÃ¤nsten inom kommunal service eftersom jag trivs i rollen dÃ¤r jag fÃ¥r
+hjÃ¤lpa mÃ¤nniskor och skapa struktur i vardagen. I min nuvarande roll arbetar jag
+dagligen med Ã¤rendehantering, dokumentation och kontakt med medborgare och
+kollegor. Jag tycker om att gÃ¶ra processen enkel att fÃ¶rstÃ¥ och att bemÃ¶ta varje
+person med respekt och tydlighet.
+
+Jag Ã¤r van att hantera flera Ã¤renden samtidigt och att prioritera utifrÃ¥n bÃ¥de
+service och kvalitet. Jag uppskattar samarbete Ã¶ver fÃ¶rvaltningsgrÃ¤nser och bidrar
+gÃ¤rna med en lÃ¶sningsorienterad instÃ¤llning nÃ¤r utmaningar uppstÃ¥r.
+
+FÃ¶r mig Ã¤r kommunens uppdrag meningsfullt, och jag vill bidra till att invÃ¥nare
+kÃ¤nner sig trygga och vÃ¤linformerade. Jag tror att min erfarenhet av administrativa
+processer och mitt intresse fÃ¶r service skulle passa bra hos er.
+
+Med vÃ¤nliga hÃ¤lsningar,
+Carl Elelid
+`
+
+const MUNICIPAL_SKILLS = [
+  'Service',
+  'BemÃ¶tande',
+  'Kommunikation',
+  'Empati',
+  'Ã„rendehantering',
+  'Dokumentation',
+  'Samordning',
+  'Planering',
+  'Konflikthantering',
+  'Office 365',
+  'Teams',
+  'Outlook',
+  'DiariefÃ¶ring',
+]
+
+type SeedUserInput = {
+  id: string
+  email: string
+  name: string
+  cvContent: string
+  personalLetterContent: string
+  skills?: string[]
+}
+
+async function seedUserDocuments(
+  supabase: ReturnType<typeof getSupabaseClient>,
+  input: SeedUserInput
+) {
   const user = await prisma.user.upsert({
-    where: { email: DEBUG_USER_EMAIL },
+    where: { email: input.email },
     update: {},
     create: {
-      id: DEBUG_USER_ID,
-      email: DEBUG_USER_EMAIL,
-      name: 'Carl Elelid',
+      id: input.id,
+      email: input.email,
+      name: input.name,
     },
   })
-  console.log(`✅ User created/updated: ${user.email}`)
+  console.log(`âœ… User created/updated: ${user.email}`)
 
-  // Delete existing documents for clean seed
   await prisma.document.deleteMany({
     where: { userId: user.id },
   })
 
-  // Upload CV to Supabase Storage
   const cvFileName = `${user.id}/${Date.now()}-cv.txt`
-  const cvContent = MOCK_CV_CONTENT.trim()
+  const cvContent = input.cvContent.trim()
   const { error: cvUploadError } = await supabase.storage
     .from('documents')
     .upload(cvFileName, Buffer.from(cvContent), {
@@ -192,23 +270,21 @@ async function main() {
   const {
     data: { publicUrl: cvUrl },
   } = supabase.storage.from('documents').getPublicUrl(cvFileName)
-  console.log(`✅ CV uploaded to: ${cvUrl}`)
+  console.log(`âœ… CV uploaded to: ${cvUrl}`)
 
-  // Create CV document with fileUrl
   const cv = await prisma.document.create({
     data: {
       userId: user.id,
       type: DocumentType.cv,
       fileUrl: cvUrl,
       parsedContent: cvContent,
-      skills: MOCK_SKILLS,
+      skills: input.skills,
     },
   })
-  console.log(`✅ CV created: ${cv.id}`)
+  console.log(`âœ… CV created: ${cv.id}`)
 
-  // Upload Personal Letter to Supabase Storage
   const letterFileName = `${user.id}/${Date.now()}-personal_letter.txt`
-  const letterContent = MOCK_PERSONAL_LETTER_CONTENT.trim()
+  const letterContent = input.personalLetterContent.trim()
   const { error: letterUploadError } = await supabase.storage
     .from('documents')
     .upload(letterFileName, Buffer.from(letterContent), {
@@ -223,9 +299,8 @@ async function main() {
   const {
     data: { publicUrl: letterUrl },
   } = supabase.storage.from('documents').getPublicUrl(letterFileName)
-  console.log(`✅ Personal Letter uploaded to: ${letterUrl}`)
+  console.log(`âœ… Personal Letter uploaded to: ${letterUrl}`)
 
-  // Create Personal Letter document with fileUrl
   const personalLetter = await prisma.document.create({
     data: {
       userId: user.id,
@@ -234,9 +309,37 @@ async function main() {
       parsedContent: letterContent,
     },
   })
-  console.log(`✅ Personal Letter created: ${personalLetter.id}`)
+  console.log(`âœ… Personal Letter created: ${personalLetter.id}`)
+}
 
-  console.log('🎉 Seed completed successfully!')
+async function main() {
+  console.log('🌱 Starting seed...')
+
+  // Initialize Supabase client
+  const supabase = getSupabaseClient()
+
+  // Ensure the documents bucket exists
+  await ensureBucketExists(supabase)
+
+  await seedUserDocuments(supabase, {
+    id: DEBUG_USER_ID,
+    email: DEBUG_USER_EMAIL,
+    name: 'Carl Elelid',
+    cvContent: MOCK_CV_CONTENT,
+    personalLetterContent: MOCK_PERSONAL_LETTER_CONTENT,
+    skills: MOCK_SKILLS,
+  })
+
+  await seedUserDocuments(supabase, {
+    id: MUNICIPAL_USER_ID,
+    email: MUNICIPAL_USER_EMAIL,
+    name: 'Carl Elelid',
+    cvContent: MUNICIPAL_CV_CONTENT,
+    personalLetterContent: MUNICIPAL_PERSONAL_LETTER_CONTENT,
+    skills: MUNICIPAL_SKILLS,
+  })
+
+  console.log('Seed completed successfully!')
 }
 
 main()
