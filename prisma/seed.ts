@@ -1,4 +1,9 @@
+import dotenv from 'dotenv'
+// Load .env.local first (higher priority), then .env as fallback
+dotenv.config({ path: '.env.local' })
+dotenv.config({ path: '.env' })
 import { PrismaClient, DocumentType } from '@prisma/client'
+import { createClient } from '@supabase/supabase-js'
 
 // Use DIRECT_URL to bypass connection pooler (PgBouncer) for seed operations
 const prisma = new PrismaClient({
@@ -8,6 +13,48 @@ const prisma = new PrismaClient({
     },
   },
 })
+
+// Supabase client is created inside main() to ensure env vars are loaded
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error(
+      'Missing Supabase environment variables. Ensure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env'
+    )
+  }
+
+  return createClient(supabaseUrl, supabaseKey)
+}
+
+const BUCKET_NAME = 'documents'
+
+// Ensure the documents bucket exists, create if not
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function ensureBucketExists(supabase: any): Promise<void> {
+  const { data: buckets, error: listError } = await supabase.storage.listBuckets()
+
+  if (listError) {
+    throw new Error(`Failed to list buckets: ${listError.message}`)
+  }
+
+  const bucketExists = buckets?.some((b: { name: string }) => b.name === BUCKET_NAME)
+
+  if (!bucketExists) {
+    console.log(`📦 Creating "${BUCKET_NAME}" bucket...`)
+    const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
+      public: true,
+    })
+
+    if (createError) {
+      throw new Error(`Failed to create bucket: ${createError.message}`)
+    }
+    console.log(`✅ Bucket "${BUCKET_NAME}" created`)
+  } else {
+    console.log(`✅ Bucket "${BUCKET_NAME}" already exists`)
+  }
+}
 
 const DEBUG_USER_EMAIL = 'carlelelid@gmail.com'
 const DEBUG_USER_ID = 'debug-user-001'
@@ -105,6 +152,12 @@ const MOCK_SKILLS = [
 async function main() {
   console.log('🌱 Starting seed...')
 
+  // Initialize Supabase client
+  const supabase = getSupabaseClient()
+
+  // Ensure the documents bucket exists
+  await ensureBucketExists(supabase)
+
   // Create or update debug user
   const user = await prisma.user.upsert({
     where: { email: DEBUG_USER_EMAIL },
@@ -122,25 +175,63 @@ async function main() {
     where: { userId: user.id },
   })
 
-  // Create mock CV
+  // Upload CV to Supabase Storage
+  const cvFileName = `${user.id}/${Date.now()}-cv.txt`
+  const cvContent = MOCK_CV_CONTENT.trim()
+  const { error: cvUploadError } = await supabase.storage
+    .from('documents')
+    .upload(cvFileName, Buffer.from(cvContent), {
+      contentType: 'text/plain',
+      upsert: true,
+    })
+
+  if (cvUploadError) {
+    throw new Error(`Failed to upload CV: ${cvUploadError.message}`)
+  }
+
+  const {
+    data: { publicUrl: cvUrl },
+  } = supabase.storage.from('documents').getPublicUrl(cvFileName)
+  console.log(`✅ CV uploaded to: ${cvUrl}`)
+
+  // Create CV document with fileUrl
   const cv = await prisma.document.create({
     data: {
       userId: user.id,
       type: DocumentType.cv,
-      fileUrl: 'https://example.com/mock-cv.pdf',
-      parsedContent: MOCK_CV_CONTENT.trim(),
+      fileUrl: cvUrl,
+      parsedContent: cvContent,
       skills: MOCK_SKILLS,
     },
   })
   console.log(`✅ CV created: ${cv.id}`)
 
-  // Create mock Personal Letter
+  // Upload Personal Letter to Supabase Storage
+  const letterFileName = `${user.id}/${Date.now()}-personal_letter.txt`
+  const letterContent = MOCK_PERSONAL_LETTER_CONTENT.trim()
+  const { error: letterUploadError } = await supabase.storage
+    .from('documents')
+    .upload(letterFileName, Buffer.from(letterContent), {
+      contentType: 'text/plain',
+      upsert: true,
+    })
+
+  if (letterUploadError) {
+    throw new Error(`Failed to upload Personal Letter: ${letterUploadError.message}`)
+  }
+
+  const {
+    data: { publicUrl: letterUrl },
+  } = supabase.storage.from('documents').getPublicUrl(letterFileName)
+  console.log(`✅ Personal Letter uploaded to: ${letterUrl}`)
+
+  // Create Personal Letter document with fileUrl
   const personalLetter = await prisma.document.create({
     data: {
       userId: user.id,
       type: DocumentType.personal_letter,
-      fileUrl: 'https://example.com/mock-personal-letter.pdf',
-      parsedContent: MOCK_PERSONAL_LETTER_CONTENT.trim(),
+      fileUrl: letterUrl,
+      parsedContent: letterContent,
     },
   })
   console.log(`✅ Personal Letter created: ${personalLetter.id}`)

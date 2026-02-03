@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
+import { SignOutButton } from '@/components/auth/SignOutButton'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 
@@ -26,7 +27,10 @@ export async function DashboardHeader() {
           </Link>
           <LanguageSwitcher />
           {user?.email ? (
-            <span className="ml-2 text-sm text-muted-foreground">{user.email}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">{user.email}</span>
+              <SignOutButton />
+            </div>
           ) : null}
         </nav>
       </div>

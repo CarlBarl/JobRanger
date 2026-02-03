@@ -55,7 +55,20 @@
     "magicLinkTab": "Magisk länk",
     "invalidCredentials": "Ogiltig e-post eller lösenord",
     "passwordMismatch": "Lösenorden matchar inte",
-    "passwordTooShort": "Lösenordet måste vara minst 8 tecken"
+    "passwordTooShort": "Lösenordet måste vara minst 8 tecken",
+    "forgotPassword": "Glömt lösenord?",
+    "resetPasswordTitle": "Återställ lösenord",
+    "resetPasswordDescription": "Ange din e-post så skickar vi en återställningslänk.",
+    "sendResetLink": "Skicka återställningslänk",
+    "resetEmailSent": "Kolla din e-post",
+    "resetEmailSentDescription": "Vi skickade en återställningslänk till {email}.",
+    "backToSignIn": "Tillbaka till inloggning",
+    "updatePasswordTitle": "Sätt nytt lösenord",
+    "updatePasswordDescription": "Välj ett nytt lösenord för ditt konto.",
+    "updatePassword": "Uppdatera lösenord",
+    "resetLinkInvalidTitle": "Ogiltig återställningslänk",
+    "resetLinkInvalidDescription": "Länken är ogiltig eller har gått ut.",
+    "requestNewResetLink": "Begär ny återställningslänk"
   },
   "dashboard": {
     "welcome": "Välkommen, {name}",

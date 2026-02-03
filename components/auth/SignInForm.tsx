@@ -68,21 +68,43 @@ export function SignInForm() {
     }
 
     setLoading(true)
-    const supabase = createClient()
+    let signInErrorMessage: string | null = null
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const result = (await response.json()) as
+        | { success: true }
+        | { success: false; error?: { message?: string } }
+
+      if (!response.ok || !result.success) {
+        const rawMessage = result.error?.message
+        if (
+          rawMessage &&
+          rawMessage.toLowerCase().includes('invalid login credentials')
+        ) {
+          signInErrorMessage = t('invalidCredentials')
+        } else {
+          signInErrorMessage = rawMessage ?? t('invalidCredentials')
+        }
+      }
+    } catch {
+      signInErrorMessage = t('invalidCredentials')
+    }
 
     setLoading(false)
 
-    if (signInError) {
-      setError(t('invalidCredentials'))
+    if (signInErrorMessage) {
+      setError(signInErrorMessage)
       return
     }
 
     router.push('/dashboard')
+    router.refresh()
   }
 
   if (sent) {
@@ -160,6 +182,11 @@ export function SignInForm() {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? t('signingIn') : t('signIn')}
               </Button>
+              <div className="text-right">
+                <Link href="/auth/forgot" className="text-sm text-primary hover:underline">
+                  {t('forgotPassword')}
+                </Link>
+              </div>
             </form>
           </TabsContent>
         </Tabs>
