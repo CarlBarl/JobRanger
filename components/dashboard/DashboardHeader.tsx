@@ -1,18 +1,21 @@
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
+import { LanguageSwitcher } from '@/components/ui/language-switcher'
+import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
 
 export async function DashboardHeader() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
+  const t = await getTranslations('common')
 
   return (
     <header className="border-b">
       <div className="container mx-auto flex items-center justify-between px-4 py-4">
         <Link href="/dashboard" className="text-xl font-semibold">
-          JobMatch
+          {t('appName')}
         </Link>
         <nav className="flex items-center gap-2">
           <Link href="/jobs">
@@ -21,6 +24,7 @@ export async function DashboardHeader() {
           <Link href="/letters">
             <Button variant="ghost">Letters</Button>
           </Link>
+          <LanguageSwitcher />
           {user?.email ? (
             <span className="ml-2 text-sm text-muted-foreground">{user.email}</span>
           ) : null}
@@ -29,4 +33,3 @@ export async function DashboardHeader() {
     </header>
   )
 }
-
