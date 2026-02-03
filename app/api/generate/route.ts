@@ -49,22 +49,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const document = await prisma.document.findFirst({
+    const cvDocument = await prisma.document.findFirst({
       where: { id: documentId, userId: user.id, type: 'cv' },
     })
 
-    if (!document) {
+    if (!cvDocument) {
       return NextResponse.json(
         { success: false, error: { code: 'NOT_FOUND', message: 'CV not found' } },
         { status: 404 }
       )
     }
 
+    // Find user's Personal Letter (optional) - use the most recent one
+    const personalLetter = await prisma.document.findFirst({
+      where: { userId: user.id, type: 'personal_letter' },
+      orderBy: { createdAt: 'desc' },
+    })
+
     const content = await generateCoverLetter({
       jobTitle: job.headline ?? '',
       companyName: job.employer?.name ?? undefined,
       jobDescription: job.description?.text ?? '',
-      cvContent: document.parsedContent ?? '',
+      cvContent: cvDocument.parsedContent ?? '',
+      personalLetterContent: personalLetter?.parsedContent ?? undefined,
     })
 
     const savedJob = await prisma.savedJob.findUnique({
