@@ -4,7 +4,30 @@
       "Bash(dir:*)",
       "Bash(start chrome:*)",
       "Bash(claude:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(npm install:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nchore: install next-intl for i18n support\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: add Swedish and English translation files\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:*)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npm run test:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx prisma db seed:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(npm run dev:*)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)",
+      "Bash(node -e:*)",
+      "Bash(node:*)",
+      "Bash(npx prisma db execute:*)",
+      "Bash(npm run build:*)",
+      "Bash(del \"C:\\\\Users\\\\Calle\\\\Dev\\\\JobJägaren\\\\verify-seed.js\")",
+      "Bash(npx prisma generate)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)"
     ]
   }
 }
