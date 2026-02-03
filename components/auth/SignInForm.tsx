@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,6 +17,7 @@ import {
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function SignInForm() {
+  const t = useTranslations('auth')
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -26,7 +28,7 @@ export function SignInForm() {
     setError(null)
 
     if (!EMAIL_REGEX.test(email)) {
-      setError('Please enter a valid email address')
+      setError(t('invalidEmail'))
       return
     }
 
@@ -54,9 +56,9 @@ export function SignInForm() {
     return (
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Check your email</CardTitle>
+          <CardTitle>{t('checkEmail')}</CardTitle>
           <CardDescription>
-            We sent a magic link to {email}. Click the link to sign in.
+            {t('checkEmailDescription', { email })}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -66,17 +68,17 @@ export function SignInForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Sign in to JobMatch</CardTitle>
-        <CardDescription>Enter your email to receive a magic link</CardDescription>
+        <CardTitle>{t('signInTitle')}</CardTitle>
+        <CardDescription>{t('signInDescription')}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('email')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder={t('emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
@@ -84,7 +86,7 @@ export function SignInForm() {
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Sending...' : 'Sign in'}
+            {loading ? t('sending') : t('sendMagicLink')}
           </Button>
         </form>
       </CardContent>
