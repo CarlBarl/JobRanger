@@ -1,0 +1,96 @@
+{
+  "common": {
+    "appName": "JobMatch",
+    "signIn": "Logga in",
+    "signOut": "Logga ut",
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "delete": "Ta bort",
+    "upload": "Ladda upp",
+    "loading": "Laddar...",
+    "error": "Ett fel uppstod",
+    "success": "Klart!"
+  },
+  "landing": {
+    "hero": "Hitta Ditt Drömjobb i Sverige",
+    "subtitle": "Ladda upp ditt CV och personliga brev, hitta matchande jobb från Arbetsförmedlingen och generera anpassade personliga brev med AI.",
+    "getStarted": "Kom igång",
+    "features": {
+      "upload": {
+        "title": "Ladda upp dokument",
+        "description": "Vi extraherar dina kompetenser automatiskt med AI"
+      },
+      "search": {
+        "title": "Sök jobb",
+        "description": "Hitta relevanta jobb från Arbetsförmedlingen"
+      },
+      "generate": {
+        "title": "Generera brev",
+        "description": "AI skapar anpassade personliga brev för varje jobb"
+      }
+    }
+  },
+  "auth": {
+    "signInTitle": "Logga in på JobMatch",
+    "signInDescription": "Ange din e-post för att få en magisk länk",
+    "email": "E-post",
+    "emailPlaceholder": "du@exempel.se",
+    "sendMagicLink": "Skicka magisk länk",
+    "sending": "Skickar...",
+    "checkEmail": "Kolla din e-post",
+    "checkEmailDescription": "Vi skickade en magisk länk till {email}. Klicka på länken för att logga in.",
+    "invalidEmail": "Ange en giltig e-postadress"
+  },
+  "dashboard": {
+    "welcome": "Välkommen, {name}",
+    "yourCV": "Ditt CV",
+    "yourPersonalLetter": "Ditt Personliga Brev",
+    "savedJobs": "Sparade Jobb",
+    "generatedLetters": "Genererade Brev",
+    "uploadCV": "Ladda upp CV",
+    "uploadPersonalLetter": "Ladda upp Personligt Brev",
+    "noCV": "Inget CV uppladdat än",
+    "noPersonalLetter": "Inget personligt brev uppladdat än",
+    "uploaded": "Uppladdat",
+    "extractedSkills": "Extraherade kompetenser",
+    "moreSkills": "+{count} till",
+    "searchJobs": "Sök Jobb",
+    "viewLetters": "Visa Brev",
+    "jobsSaved": "jobb sparade",
+    "lettersGenerated": "brev genererade"
+  },
+  "jobs": {
+    "title": "Sök Jobb",
+    "searchPlaceholder": "Sök jobb (t.ex. utvecklare, sjuksköterska, lärare)",
+    "search": "Sök",
+    "found": "Hittade {count} jobb",
+    "noResults": "Inga jobb hittades. Prova ett annat sökord.",
+    "enterSearch": "Ange ett sökord för att hitta jobb från Arbetsförmedlingen",
+    "backToSearch": "Tillbaka till sökning",
+    "saveJob": "Spara Jobb",
+    "unsaveJob": "Ta bort från sparade",
+    "generateLetter": "Generera Personligt Brev",
+    "generating": "Genererar...",
+    "publishedAt": "Publicerad"
+  },
+  "letters": {
+    "title": "Genererade Brev",
+    "empty": "Inga brev genererade än. Sök jobb och generera personliga brev.",
+    "aiAdapted": "Personligt Brev AI-anpassat för detta jobb",
+    "copy": "Kopiera",
+    "copied": "Kopierat!",
+    "useOriginal": "Använd mitt originalbrev",
+    "useAI": "Använd AI-anpassat brev",
+    "createdAt": "Skapad"
+  },
+  "upload": {
+    "dropCV": "Klicka för att ladda upp CV (PDF, DOCX eller TXT)",
+    "dropPersonalLetter": "Klicka för att ladda upp Personligt Brev (PDF, DOCX eller TXT)",
+    "uploading": "Laddar upp...",
+    "uploadCV": "Ladda upp CV",
+    "uploadPersonalLetter": "Ladda upp Personligt Brev",
+    "maxSize": "Max 5MB",
+    "invalidType": "Filen måste vara PDF, DOCX eller TXT",
+    "tooLarge": "Filen måste vara mindre än 5MB"
+  }
+}
