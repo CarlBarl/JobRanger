@@ -11,7 +11,7 @@ import {
 import { getTranslations } from 'next-intl/server'
 
 export default async function ResetPasswordPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()

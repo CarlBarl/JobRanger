@@ -1,13 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { FileText, Mail, Pencil, Upload } from 'lucide-react'
+import { FileText, Mail, Upload } from 'lucide-react'
 import { DocumentPreviewDialog } from './DocumentPreviewDialog'
 import { UploadDialog } from './UploadDialog'
+import { BatchSkillsButton } from './BatchSkillsButton'
+import { BatchResultsModal } from './BatchResultsModal'
 import { useTranslations } from 'next-intl'
-import Link from 'next/link'
 
 interface DocumentData {
   id: string
@@ -24,6 +26,28 @@ interface DashboardClientProps {
   personalLetterUploadComponent: React.ReactNode
 }
 
+interface BatchResults {
+  total: number
+  updated: Array<{
+    documentId: string
+    previousSkills: string[]
+    newSkills: string[]
+    added: string[]
+    removed: string[]
+    createdAt: string
+  }>
+  failed: Array<{
+    documentId: string
+    error: string
+    createdAt: string
+  }>
+  skipped: Array<{
+    documentId: string
+    reason: string
+    createdAt: string
+  }>
+}
+
 export function DashboardClient({
   cvDocument,
   personalLetter,
@@ -31,10 +55,14 @@ export function DashboardClient({
   personalLetterUploadComponent,
 }: DashboardClientProps) {
   const t = useTranslations('dashboard')
+  const router = useRouter()
   const [cvDialogOpen, setCvDialogOpen] = useState(false)
   const [letterDialogOpen, setLetterDialogOpen] = useState(false)
   const [cvUploadDialogOpen, setCvUploadDialogOpen] = useState(false)
   const [letterUploadDialogOpen, setLetterUploadDialogOpen] = useState(false)
+  const [batchModalOpen, setBatchModalOpen] = useState(false)
+  const [batchLoading, setBatchLoading] = useState(false)
+  const [batchResults, setBatchResults] = useState<BatchResults | null>(null)
 
   const handleCardKeyDown = (
     event: React.KeyboardEvent,
@@ -49,8 +77,39 @@ export function DashboardClient({
   const cvAriaLabel = `${t('viewDocument')}: ${t('yourCV')}`
   const personalLetterAriaLabel = `${t('viewDocument')}: ${t('yourPersonalLetter')}`
 
+  const handleBatchRegenerate = async () => {
+    setBatchLoading(true)
+    try {
+      const response = await fetch('/api/skills/batch', { method: 'POST' })
+      const data = await response.json()
+
+      if (data.success) {
+        setBatchResults(data.data)
+        setBatchModalOpen(true)
+      } else {
+        // TODO: Show error toast/alert
+        console.error('Batch skills regeneration failed:', data.error)
+      }
+    } catch (error) {
+      // TODO: Show error toast/alert
+      console.error('Batch skills regeneration error:', error)
+    } finally {
+      setBatchLoading(false)
+    }
+  }
+
   return (
     <>
+      {/* Batch Skills Button */}
+      {cvDocument && (
+        <div className="mb-4 flex justify-end">
+          <BatchSkillsButton
+            onTrigger={handleBatchRegenerate}
+            loading={batchLoading}
+          />
+        </div>
+      )}
+
       {/* CV Section */}
       <Card
         className={cvDocument ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}
@@ -94,20 +153,6 @@ export function DashboardClient({
                 </div>
               )}
               <div className="flex gap-2">
-                {cvDocument.fileUrl && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    asChild
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Link href={`/documents/${cvDocument.id}`}>
-                      <Pencil className="h-4 w-4" />
-                      {t('openInNewTab')}
-                    </Link>
-                  </Button>
-                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -161,20 +206,6 @@ export function DashboardClient({
                 {personalLetter.parsedContent?.substring(0, 150)}...
               </p>
               <div className="flex gap-2">
-                {personalLetter.fileUrl && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    asChild
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Link href={`/documents/${personalLetter.id}`}>
-                      <Pencil className="h-4 w-4" />
-                      {t('openInNewTab')}
-                    </Link>
-                  </Button>
-                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -234,6 +265,16 @@ export function DashboardClient({
         open={letterUploadDialogOpen}
         onOpenChange={setLetterUploadDialogOpen}
         documentType="personal_letter"
+      />
+
+      {/* Batch Results Modal */}
+      <BatchResultsModal
+        open={batchModalOpen}
+        onClose={() => {
+          setBatchModalOpen(false)
+          router.refresh()
+        }}
+        results={batchResults}
       />
     </>
   )

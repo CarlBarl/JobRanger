@@ -40,7 +40,7 @@ function formatDate(value?: string | null): string | null {
 }
 
 export default async function JobDetailPage({ params }: { params: { id: string } }) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()

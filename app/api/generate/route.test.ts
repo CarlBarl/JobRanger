@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
-  createClient: () => ({
+  createClient: async () => ({
     auth: {
       getUser: mocks.getUser,
     },

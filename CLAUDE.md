@@ -86,7 +86,7 @@ Write failing test first → Implement minimal code → Refactor. Never write im
 - Use Vitest + React Testing Library
 - Mock external services (Supabase, Gemini, AF API)
 - Co-locate tests: `ComponentName.test.tsx` alongside source
-- Browser testing: Use Claude in Chrome extension (see MCP Plugins below)
+- Browser testing: Use Claude in Chrome (preferred) or Playwright (fallback) - see MCP Plugins below
 
 ## External Services
 
@@ -119,15 +119,18 @@ NEXT_PUBLIC_APP_URL
 | Plugin | Purpose | When to Use |
 |--------|---------|-------------|
 | **Claude in Chrome** | Browser automation & UI testing | Visual testing, E2E flows, UI verification, screenshots |
+| **Playwright** | Browser automation (fallback) | When Claude in Chrome is not available |
 | **Supabase** | Database & backend management | Schema changes, queries, migrations, edge functions |
 | **Context7** | Library documentation lookup | Fetching up-to-date docs for any library |
 
-### Claude in Chrome (Browser Testing)
+### Browser Testing
 
-**CRITICAL: Use Claude in Chrome extension for ALL browser-based testing and UI verification. NEVER use Playwright.**
+**Preferred: Claude in Chrome** - Use for interactive UI testing, visual verification, and screenshots.
 
+**Fallback: Playwright** - Use when Claude in Chrome extension is not available.
+
+#### Claude in Chrome Workflow (Preferred)
 ```
-Workflow:
 1. Start dev server: npm run dev
 2. Get tab context: tabs_context_mcp (with createIfEmpty: true if needed)
 3. Navigate: navigate to localhost:3000
@@ -147,12 +150,31 @@ Workflow:
 - `javascript_tool` - Execute JavaScript in page context
 - `get_page_text` - Extract raw text content from page
 
+#### Playwright Workflow (Fallback)
+```
+1. Start dev server: npm run dev
+2. Launch browser: playwright_navigate to http://localhost:3000
+3. Interact: playwright_click, playwright_fill, etc.
+4. Verify: playwright_screenshot for visual verification
+5. Close: playwright_close when done
+```
+
 **Testing pattern:**
 1. Make code change
-2. Use `read_page` to get page structure and verify elements exist
-3. Test user flows with `computer` (click/type) or `form_input` interactions
-4. Use `computer` with screenshot action for visual verification
-5. Use `find` for natural language element queries
+2. Use `read_page` (Chrome) or `playwright_screenshot` (Playwright) to verify UI
+3. Test user flows with interactions (click/type)
+4. Take screenshots for visual verification
+5. Verify elements exist and function correctly
+
+**Cleanup after browser testing:**
+Always clean up artifacts when done with browser testing sessions:
+```bash
+# Delete screenshots and Playwright artifacts
+rm -f *.png *.jpg
+rm -rf .playwright-mcp/
+```
+
+These files should not be committed to the repository - they're temporary testing artifacts.
 
 ### Supabase MCP
 
