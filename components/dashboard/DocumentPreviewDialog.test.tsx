@@ -25,6 +25,7 @@ const messages = {
     replaceDocumentDescription: 'Upload a new file to replace your current document.',
   },
   upload: {
+    dropCV: 'Click to upload CV',
     uploadCV: 'Upload CV',
     uploading: 'Uploading...',
     uploadFailed: 'Upload failed',

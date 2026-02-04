@@ -72,7 +72,7 @@ describe('DashboardClient', () => {
       />
     )
 
-    const links = screen.getAllByRole('link', { name: /open in new tab/i })
+    const links = screen.getAllByRole('link', { name: /edit/i })
     expect(links).toHaveLength(2)
     expect(links[0]).toHaveAttribute('href', '/documents/cv-1')
     expect(links[1]).toHaveAttribute('href', '/documents/pl-1')

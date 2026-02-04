@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { FileText, Mail, ExternalLink } from 'lucide-react'
+import { FileText, Mail, Pencil, Upload } from 'lucide-react'
 import { DocumentPreviewDialog } from './DocumentPreviewDialog'
+import { UploadDialog } from './UploadDialog'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 
@@ -32,6 +33,8 @@ export function DashboardClient({
   const t = useTranslations('dashboard')
   const [cvDialogOpen, setCvDialogOpen] = useState(false)
   const [letterDialogOpen, setLetterDialogOpen] = useState(false)
+  const [cvUploadDialogOpen, setCvUploadDialogOpen] = useState(false)
+  const [letterUploadDialogOpen, setLetterUploadDialogOpen] = useState(false)
 
   const handleCardKeyDown = (
     event: React.KeyboardEvent,
@@ -90,20 +93,34 @@ export function DashboardClient({
                   </div>
                 </div>
               )}
-              {cvDocument.fileUrl && (
+              <div className="flex gap-2">
+                {cvDocument.fileUrl && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    asChild
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Link href={`/documents/${cvDocument.id}`}>
+                      <Pencil className="h-4 w-4" />
+                      {t('openInNewTab')}
+                    </Link>
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
                   className="gap-2"
-                  asChild
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setCvUploadDialogOpen(true)
+                  }}
                 >
-                  <Link href={`/documents/${cvDocument.id}`}>
-                    <ExternalLink className="h-4 w-4" />
-                    {t('openInNewTab')}
-                  </Link>
+                  <Upload className="h-4 w-4" />
+                  {t('uploadNewFile')}
                 </Button>
-              )}
+              </div>
             </div>
           ) : (
             <div className="space-y-2">
@@ -143,20 +160,34 @@ export function DashboardClient({
               <p className="text-xs text-muted-foreground line-clamp-3">
                 {personalLetter.parsedContent?.substring(0, 150)}...
               </p>
-              {personalLetter.fileUrl && (
+              <div className="flex gap-2">
+                {personalLetter.fileUrl && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    asChild
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Link href={`/documents/${personalLetter.id}`}>
+                      <Pencil className="h-4 w-4" />
+                      {t('openInNewTab')}
+                    </Link>
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
                   className="gap-2"
-                  asChild
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setLetterUploadDialogOpen(true)
+                  }}
                 >
-                  <Link href={`/documents/${personalLetter.id}`}>
-                    <ExternalLink className="h-4 w-4" />
-                    {t('openInNewTab')}
-                  </Link>
+                  <Upload className="h-4 w-4" />
+                  {t('uploadNewFile')}
                 </Button>
-              )}
+              </div>
             </div>
           ) : (
             <div className="space-y-2">
@@ -192,6 +223,18 @@ export function DashboardClient({
           type="personal_letter"
         />
       )}
+
+      {/* Upload Dialogs */}
+      <UploadDialog
+        open={cvUploadDialogOpen}
+        onOpenChange={setCvUploadDialogOpen}
+        documentType="cv"
+      />
+      <UploadDialog
+        open={letterUploadDialogOpen}
+        onOpenChange={setLetterUploadDialogOpen}
+        documentType="personal_letter"
+      />
     </>
   )
 }

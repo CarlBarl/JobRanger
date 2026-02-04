@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Upload, FileText, X, Loader2 } from 'lucide-react'
 
 type DocumentType = 'cv' | 'cover_letter_template'
 
@@ -24,7 +25,6 @@ export function FileUpload({
   variant = 'card',
 }: FileUploadProps) {
   const t = useTranslations('upload')
-  const tCommon = useTranslations('common')
   const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -32,11 +32,28 @@ export function FileUpload({
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const selectedFile = e.target.files?.[0] ?? null
-      setFile(selectedFile)
-      setError(null)
+      const selectedFile = e.target.files?.[0]
+      if (selectedFile) {
+        // Validate file type
+        const allowedTypes = [
+          'application/pdf',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'text/plain',
+        ]
+        if (!allowedTypes.includes(selectedFile.type)) {
+          setError(t('invalidType'))
+          return
+        }
+        // Validate file size (5MB)
+        if (selectedFile.size > 5 * 1024 * 1024) {
+          setError(t('tooLarge'))
+          return
+        }
+        setFile(selectedFile)
+        setError(null)
+      }
     },
-    []
+    [t]
   )
 
   const handleUpload = useCallback(async () => {
@@ -73,33 +90,61 @@ export function FileUpload({
   }, [documentType, file, onUploadComplete, router, t])
 
   const content = (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <label className="block text-sm font-medium">{t('uploadCV')}</label>
-        <input
-          aria-label="File upload"
-          type="file"
-          accept=".pdf,.docx,.txt"
-          onChange={handleFileChange}
-          disabled={uploading}
-        />
-      </div>
-
-      <Button
-        type="button"
-        onClick={handleUpload}
-        disabled={!file || uploading}
-        className="w-full"
-      >
-        {uploading ? t('uploading') : tCommon('upload')}
-      </Button>
-
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-    </div>
+    <>
+      {!file ? (
+        <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+          <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+          <span className="text-sm text-muted-foreground text-center px-2">
+            {t('dropCV')}
+          </span>
+          <span className="text-xs text-muted-foreground mt-1">
+            {t('maxSize')}
+          </span>
+          <input
+            type="file"
+            className="hidden"
+            accept=".pdf,.docx,.txt"
+            onChange={handleFileChange}
+          />
+        </label>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              <span className="text-sm font-medium truncate max-w-[200px]">
+                {file.name}
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setFile(null)}
+              disabled={uploading}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button onClick={handleUpload} disabled={uploading} className="w-full">
+            {uploading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                {t('uploading')}
+              </>
+            ) : (
+              t('uploadCV')
+            )}
+          </Button>
+        </div>
+      )}
+      {error && (
+        <p className="text-sm text-destructive mt-2">{error}</p>
+      )}
+    </>
   )
 
   if (variant === 'embedded') {
-    return content
+    return <div>{content}</div>
   }
 
   return (

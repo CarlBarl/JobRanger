@@ -21,6 +21,7 @@ const messages = {
     replaceDocumentDescription: 'Upload a new file to replace your current document.',
   },
   upload: {
+    dropCV: 'Click to upload CV',
     uploadCV: 'Upload CV',
     uploading: 'Uploading...',
     uploadFailed: 'Upload failed',
@@ -46,7 +47,7 @@ describe('UploadDialog', () => {
 
     expect(screen.getByText('Upload New CV')).toBeInTheDocument()
     expect(screen.getByText('Upload a new file to replace your current document.')).toBeInTheDocument()
-    expect(screen.getByText('Upload CV')).toBeInTheDocument()
+    expect(screen.getByText('Click to upload CV')).toBeInTheDocument()
   })
 
   it('renders personal letter upload when documentType is personal_letter', () => {
