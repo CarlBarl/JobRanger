@@ -1,18 +1,27 @@
 const AF_BASE_URL = 'https://jobsearch.api.jobtechdev.se'
 
+type WorkplaceAddress = {
+  municipality?: string | null
+  region?: string | null
+  country?: string | null
+  city?: string | null
+  street_address?: string | null
+  postcode?: string | null
+} | null
+
 export type AFJobHit = {
   id: string
+  webpage_url?: string | null
   headline?: string
   employer?: { name?: string | null } | null
-  workplace_address?: {
-    municipality?: string | null
-    region?: string | null
-    country?: string | null
-  } | null
+  workplace_address?: WorkplaceAddress
   description?: { text?: string | null; text_formatted?: string | null } | null
   publication_date?: string | null
   application_deadline?: string | null
   logo_url?: string | null
+  employment_type?: { label?: string | null } | null
+  working_hours_type?: { label?: string | null } | null
+  occupation?: { label?: string | null } | null
 }
 
 export type AFSearchResponse = {
@@ -22,17 +31,18 @@ export type AFSearchResponse = {
 
 export type AFJobAd = {
   id: string
+  webpage_url?: string | null
   headline?: string
   employer?: { name?: string | null } | null
   description?: { text?: string | null; text_formatted?: string | null } | null
-  workplace_address?: {
-    municipality?: string | null
-    region?: string | null
-    country?: string | null
-  } | null
+  workplace_address?: WorkplaceAddress
   publication_date?: string | null
   application_deadline?: string | null
   logo_url?: string | null
+  employment_type?: { label?: string | null } | null
+  working_hours_type?: { label?: string | null } | null
+  occupation?: { label?: string | null } | null
+  application_details?: { url?: string | null } | null
 } & Record<string, unknown>
 
 export type SearchJobsOptions = {

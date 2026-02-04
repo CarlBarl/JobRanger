@@ -105,11 +105,25 @@ export async function POST(request: NextRequest) {
     // In some test environments (jsdom), File lacks `text()`/`arrayBuffer()`, so we feature-detect.
     let parsedContent: string | null = '[File parsing not implemented]'
     if (file.type === 'text/plain') {
-      if (typeof file.text === 'function') {
-        parsedContent = await file.text()
-      } else if (typeof file.arrayBuffer === 'function') {
+      if (typeof file.arrayBuffer === 'function') {
         const buf = await file.arrayBuffer()
-        parsedContent = new TextDecoder().decode(buf)
+        const bytes = new Uint8Array(buf)
+
+        // Try UTF-8 first, then fall back to Windows-1252 for Swedish text files
+        let text = new TextDecoder('utf-8').decode(bytes)
+
+        // Check for Mojibake patterns (UTF-8 bytes misread as Latin-1)
+        // These patterns indicate the file was likely Windows-1252/Latin-1 encoded
+        const hasMojibake = /Ã¤|Ã¶|Ã¥|Ã„|Ã–|Ã…/.test(text)
+
+        if (hasMojibake) {
+          // Re-decode as Windows-1252 (superset of Latin-1, common on Windows)
+          text = new TextDecoder('windows-1252').decode(bytes)
+        }
+
+        parsedContent = text
+      } else if (typeof file.text === 'function') {
+        parsedContent = await file.text()
       }
     }
 

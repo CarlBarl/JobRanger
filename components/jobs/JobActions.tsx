@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 
 type ApiEnvelope =
@@ -24,6 +25,7 @@ function getDocuments(data: unknown): DocumentRecord[] {
 }
 
 export function JobActions({ afJobId }: { afJobId: string }) {
+  const t = useTranslations('jobs')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -41,20 +43,20 @@ export function JobActions({ afJobId }: { afJobId: string }) {
       })
       const json: unknown = await res.json()
       if (!isEnvelope(json)) {
-        setError('Failed to save')
+        setError(t('actions.failedToSave'))
         return
       }
       if (!json.success) {
-        setError(json.error.message ?? 'Failed to save')
+        setError(json.error.message ?? t('actions.failedToSave'))
         return
       }
       setSaved(true)
     } catch {
-      setError('Failed to save')
+      setError(t('actions.failedToSave'))
     } finally {
       setSaving(false)
     }
-  }, [afJobId])
+  }, [afJobId, t])
 
   const handleGenerate = useCallback(async () => {
     setGenerating(true)
@@ -65,18 +67,18 @@ export function JobActions({ afJobId }: { afJobId: string }) {
       const docsRes = await fetch('/api/documents')
       const docsJson: unknown = await docsRes.json()
       if (!isEnvelope(docsJson)) {
-        setError('Failed to load documents')
+        setError(t('actions.failedToLoadDocuments'))
         return
       }
       if (!docsJson.success) {
-        setError(docsJson.error.message ?? 'Failed to load documents')
+        setError(docsJson.error.message ?? t('actions.failedToLoadDocuments'))
         return
       }
 
       const docs = getDocuments(docsJson.data)
       const cv = docs.find((d) => d.type === 'cv') ?? null
       if (!cv) {
-        setError('Upload a CV first')
+        setError(t('actions.uploadCvFirst'))
         return
       }
 
@@ -87,33 +89,35 @@ export function JobActions({ afJobId }: { afJobId: string }) {
       })
       const genJson: unknown = await genRes.json()
       if (!isEnvelope(genJson)) {
-        setError('Failed to generate letter')
+        setError(t('actions.failedToGenerate'))
         return
       }
       if (!genJson.success) {
-        setError(genJson.error.message ?? 'Failed to generate letter')
+        setError(genJson.error.message ?? t('actions.failedToGenerate'))
         return
       }
 
       const id = (genJson.data as { id?: unknown }).id
-      setLetterId(typeof id === 'string' ? id : 'unknown')
+      setLetterId(typeof id === 'string' ? id : t('actions.unknownId'))
     } catch {
-      setError('Failed to generate letter')
+      setError(t('actions.failedToGenerate'))
     } finally {
       setGenerating(false)
     }
-  }, [afJobId])
+  }, [afJobId, t])
 
   return (
     <div className="flex flex-wrap gap-2 items-center">
       <Button type="button" variant="outline" onClick={handleSave} disabled={saving || saved}>
-        {saved ? 'Saved' : saving ? 'Saving...' : 'Save job'}
+        {saved ? t('actions.saved') : saving ? t('actions.saving') : t('actions.saveJob')}
       </Button>
       <Button type="button" onClick={handleGenerate} disabled={generating}>
-        {generating ? 'Generating...' : 'Generate letter'}
+        {generating ? t('actions.generating') : t('actions.generateLetter')}
       </Button>
       {letterId ? (
-        <span className="text-sm text-muted-foreground">Generated: {letterId}</span>
+        <span className="text-sm text-muted-foreground">
+          {t('actions.generated', { id: letterId })}
+        </span>
       ) : null}
       {error ? <span className="text-sm text-destructive">{error}</span> : null}
     </div>

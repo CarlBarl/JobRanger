@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
+export const GEMINI_MODEL = 'gemini-flash-lite-latest'
+
 function getApiKey() {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
@@ -10,7 +12,7 @@ function getApiKey() {
 
 function getModel() {
   const genAI = new GoogleGenerativeAI(getApiKey())
-  return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+  return genAI.getGenerativeModel({ model: GEMINI_MODEL })
 }
 
 export interface GenerateCoverLetterInput {
@@ -88,4 +90,11 @@ Return only the JSON array:`
     console.error('Failed to parse skills JSON:', text, error)
     return []
   }
+}
+
+export async function chat(message: string): Promise<string> {
+  const model = getModel()
+  const result = await model.generateContent(message)
+  const response = result.response
+  return response.text()
 }

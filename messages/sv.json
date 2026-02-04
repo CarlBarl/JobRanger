@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "JobMatch",
+    "appName": "JobJägaren",
     "signIn": "Logga in",
     "signOut": "Logga ut",
     "save": "Spara",
@@ -9,7 +9,11 @@
     "upload": "Ladda upp",
     "loading": "Laddar...",
     "error": "Ett fel uppstod",
-    "success": "Klart!"
+    "success": "Klart!",
+    "close": "Stäng",
+    "navJobs": "Jobb",
+    "navLetters": "Brev",
+    "metaDescription": "En AI-driven jobbtjänst för svenska jobbsökare. Ladda upp ett CV, sök jobb och generera personliga brev."
   },
   "landing": {
     "hero": "Hitta Ditt Drömjobb i Sverige",
@@ -31,7 +35,7 @@
     }
   },
   "auth": {
-    "signInTitle": "Logga in på JobMatch",
+    "signInTitle": "Logga in på JobJägaren",
     "signInDescription": "Ange din e-post för att få en magisk länk",
     "signInDescriptionPassword": "Ange din e-post och lösenord",
     "email": "E-post",
@@ -68,7 +72,10 @@
     "updatePassword": "Uppdatera lösenord",
     "resetLinkInvalidTitle": "Ogiltig återställningslänk",
     "resetLinkInvalidDescription": "Länken är ogiltig eller har gått ut.",
-    "requestNewResetLink": "Begär ny återställningslänk"
+    "requestNewResetLink": "Begär ny återställningslänk",
+    "preparingDashboard": "Förbereder din dashboard...",
+    "loadingProfile": "Laddar din profil...",
+    "almostThere": "Nästan klar..."
   },
   "dashboard": {
     "welcome": "Välkommen, {name}",
@@ -96,6 +103,9 @@
     "saveChanges": "Spara",
     "saving": "Sparar...",
     "uploadNewFile": "Ladda upp ny",
+    "uploadNewCV": "Ladda upp nytt CV",
+    "uploadNewPersonalLetter": "Ladda upp nytt personligt brev",
+    "replaceDocumentDescription": "Ladda upp en ny fil för att ersätta ditt nuvarande dokument.",
     "unsavedChanges": "Du har osparade ändringar",
     "backToDashboard": "Tillbaka till Dashboard",
     "lastUpdated": "Senast uppdaterad",
@@ -105,6 +115,7 @@
     "title": "Sök Jobb",
     "searchPlaceholder": "Sök jobb (t.ex. utvecklare, sjuksköterska, lärare)",
     "search": "Sök",
+    "searching": "Söker...",
     "found": "Hittade {count} jobb",
     "noResults": "Inga jobb hittades. Prova ett annat sökord.",
     "enterSearch": "Ange ett sökord för att hitta jobb från Arbetsförmedlingen",
@@ -113,10 +124,53 @@
     "unsaveJob": "Ta bort från sparade",
     "generateLetter": "Generera Personligt Brev",
     "generating": "Genererar...",
-    "publishedAt": "Publicerad"
+    "publishedAt": "Publicerad",
+    "searchWithSkillsTitle": "Sök med dina kompetenser",
+    "searchWithSkillsDescription": "Välj kompetenser från ditt CV eller sök med alla.",
+    "loadingSkills": "Laddar kompetenser...",
+    "skillsErrorUnexpected": "Oväntat svar vid hämtning av kompetenser",
+    "skillsErrorFailed": "Kunde inte ladda kompetenser",
+    "noSkillsFound": "Inga kompetenser hittades. Ladda upp ett CV och extrahera kompetenser först.",
+    "searchWithSelectedSkills": "Sök med valda kompetenser",
+    "searchWithAllSkills": "Sök med alla kompetenser",
+    "errorNoSearchTerm": "Ange ett sökord",
+    "errorSelectSkill": "Välj minst en kompetens",
+    "errorNoSkills": "Inga kompetenser att söka med",
+    "errorUnexpectedResponse": "Oväntat svar från servern",
+    "errorSearchFailed": "Sökningen misslyckades",
+    "actions": {
+      "saved": "Sparad",
+      "saving": "Sparar...",
+      "saveJob": "Spara jobb",
+      "generating": "Genererar...",
+      "generateLetter": "Generera brev",
+      "generated": "Genererat: {id}",
+      "unknownId": "okänt",
+      "failedToSave": "Kunde inte spara",
+      "failedToLoadDocuments": "Kunde inte ladda dokument",
+      "uploadCvFirst": "Ladda upp ett CV först",
+      "failedToGenerate": "Kunde inte generera brev"
+    },
+    "card": {
+      "published": "Publicerad",
+      "deadline": "Sista ansökningsdag",
+      "viewListing": "Visa annons",
+      "unknownEmployer": "Okänd arbetsgivare",
+      "untitledRole": "Namnlös roll"
+    },
+    "detail": {
+      "apply": "Ansök",
+      "viewListing": "Visa annons",
+      "noDescription": "Ingen beskrivning tillgänglig.",
+      "loadErrorTitle": "Kunde inte ladda jobb",
+      "loadErrorMessage": "Det gick inte att ladda jobbet",
+      "published": "Publicerad",
+      "deadline": "Sista ansökningsdag"
+    }
   },
   "letters": {
     "title": "Genererade Brev",
+    "jobIdLabel": "Jobb-ID",
     "empty": "Inga brev genererade än. Sök jobb och generera personliga brev.",
     "aiAdapted": "Personligt Brev AI-anpassat för detta jobb",
     "copy": "Kopiera",
@@ -129,6 +183,7 @@
     "dropCV": "Klicka för att ladda upp CV (PDF, DOCX eller TXT)",
     "dropPersonalLetter": "Klicka för att ladda upp Personligt Brev (PDF, DOCX eller TXT)",
     "uploading": "Laddar upp...",
+    "uploadFailed": "Uppladdningen misslyckades",
     "uploadCV": "Ladda upp CV",
     "uploadPersonalLetter": "Ladda upp Personligt Brev",
     "maxSize": "Max 5MB",

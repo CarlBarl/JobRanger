@@ -1,37 +1,37 @@
 import { describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
-import { FileUpload } from './FileUpload'
+import { PersonalLetterUpload } from './PersonalLetterUpload'
 
 const messages = {
   common: {
-    upload: 'Start upload',
+    error: 'An error occurred',
   },
   upload: {
-    uploadCV: 'Upload CV now',
+    dropPersonalLetter: 'Click to upload Personal Letter',
+    maxSize: 'Max 5MB',
     uploading: 'Uploading...',
-    uploadFailed: 'Upload failed',
+    uploadPersonalLetter: 'Upload Personal Letter',
+    invalidType: 'Invalid file type',
+    tooLarge: 'File too large',
   },
 }
 
-describe('FileUpload', () => {
-  it('renders localized labels', () => {
+describe('PersonalLetterUpload', () => {
+  it('renders upload prompt', () => {
     render(
       <NextIntlClientProvider locale="en" messages={messages}>
-        <FileUpload />
+        <PersonalLetterUpload />
       </NextIntlClientProvider>
     )
 
-    expect(screen.getByText('Upload CV now')).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: 'Start upload' })
-    ).toBeInTheDocument()
+    expect(screen.getByText('Click to upload Personal Letter')).toBeInTheDocument()
   })
 
   it('renders with card wrapper by default', () => {
     const { container } = render(
       <NextIntlClientProvider locale="en" messages={messages}>
-        <FileUpload />
+        <PersonalLetterUpload />
       </NextIntlClientProvider>
     )
 
@@ -41,11 +41,11 @@ describe('FileUpload', () => {
   it('renders without card wrapper when variant is embedded', () => {
     const { container } = render(
       <NextIntlClientProvider locale="en" messages={messages}>
-        <FileUpload variant="embedded" />
+        <PersonalLetterUpload variant="embedded" />
       </NextIntlClientProvider>
     )
 
     expect(container.querySelector('[class*="rounded-xl"]')).not.toBeInTheDocument()
-    expect(screen.getByText('Upload CV now')).toBeInTheDocument()
+    expect(screen.getByText('Click to upload Personal Letter')).toBeInTheDocument()
   })
 })
