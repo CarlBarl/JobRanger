@@ -82,7 +82,7 @@ export function SignInForm() {
         | { success: false; error?: { message?: string } }
 
       if (!response.ok || !result.success) {
-        const rawMessage = result.error?.message
+        const rawMessage = !result.success ? result.error?.message : undefined
         if (
           rawMessage &&
           rawMessage.toLowerCase().includes('invalid login credentials')
