@@ -50,9 +50,11 @@ export async function DELETE(
     )
   }
 
-  const storagePath = parseStoragePathFromPublicUrl(document.fileUrl)
-  if (storagePath) {
-    await supabase.storage.from('documents').remove([storagePath])
+  if (document.fileUrl) {
+    const storagePath = parseStoragePathFromPublicUrl(document.fileUrl)
+    if (storagePath) {
+      await supabase.storage.from('documents').remove([storagePath])
+    }
   }
 
   await prisma.document.delete({ where: { id } })
@@ -139,4 +141,3 @@ export async function PATCH(
 
   return NextResponse.json({ success: true, data: updated })
 }
-
