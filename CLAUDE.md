@@ -91,11 +91,11 @@ Write failing test first → Implement minimal code → Refactor. Never write im
 
 | Service | Base URL / Package | Auth |
 |---------|-------------------|------|
-| Arbetsförmedlingen | `https://jobsearch.api.jobtechdev.se` | Header: `api-key: {key}` |
+| Arbetsförmedlingen | `https://jobsearch.api.jobtechdev.se` | Optional header: `api-key: {key}` |
 | Gemini AI | `@google/generative-ai` | `GEMINI_API_KEY` env var |
 | Supabase | Project URL in env | `SUPABASE_SERVICE_ROLE_KEY` |
 
-**Get AF API key:** https://apirequest.jobtechdev.se
+**Get AF API key (optional):** https://apirequest.jobtechdev.se
 **Get Gemini key:** https://makersuite.google.com/app/apikey
 
 ## Environment Variables
@@ -105,6 +105,7 @@ NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY
 DATABASE_URL
+# Optional (job search works without a key)
 AF_API_KEY
 GEMINI_API_KEY
 NEXT_PUBLIC_APP_URL

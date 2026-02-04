@@ -26,7 +26,7 @@ An AI-powered job matching platform that helps Swedish job seekers find relevant
 - Node.js 18+ 
 - npm or yarn
 - A Supabase account (free tier works)
-- Arbetsförmedlingen API key
+- Arbetsförmedlingen API key (optional)
 - Google AI API key (Gemini)
 
 ### Installation
@@ -57,8 +57,9 @@ An AI-powered job matching platform that helps Swedish job seekers find relevant
    # Database
    DATABASE_URL=your_database_url
    
-   # Arbetsförmedlingen API
-   AF_API_KEY=your_af_api_key
+   # Arbetsförmedlingen API (optional)
+   # Leave empty to use the public endpoint without a key
+   AF_API_KEY=
    
    # Gemini AI
    GEMINI_API_KEY=your_gemini_api_key
@@ -130,7 +131,7 @@ See [docs/TESTING.md](./docs/TESTING.md) for detailed testing guidelines.
 
 ### Arbetsförmedlingen JobSearch API
 
-We use the Swedish Employment Agency's open API to fetch job listings.
+We use the Swedish Employment Agency's open API to fetch job listings. An API key is optional.
 
 - **Documentation**: https://jobsearch.api.jobtechdev.se
 - **Get API Key**: https://apirequest.jobtechdev.se

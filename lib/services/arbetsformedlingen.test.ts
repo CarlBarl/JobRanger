@@ -4,6 +4,7 @@ import { getJobById, searchJobs } from './arbetsformedlingen'
 describe('arbetsformedlingen client', () => {
   afterEach(() => {
     vi.restoreAllMocks()
+    delete process.env.AF_API_KEY
   })
 
   it('searchJobs calls AF /search with api-key header', async () => {
@@ -54,6 +55,24 @@ describe('arbetsformedlingen client', () => {
     )
   })
 
+  it('searchJobs works without api-key header when env is missing', async () => {
+    delete process.env.AF_API_KEY
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ total: { value: 0 }, hits: [] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })
+    )
+
+    const res = await searchJobs({ query: 'developer' })
+
+    expect(res).toEqual({ total: { value: 0 }, hits: [] })
+    const headers = fetchSpy.mock.calls[0]?.[1]?.headers as Record<string, string>
+    expect(headers).toMatchObject({ accept: 'application/json' })
+    expect(headers).not.toHaveProperty('api-key')
+  })
+
   it('throws on non-2xx responses', async () => {
     process.env.AF_API_KEY = 'af-key'
 
@@ -64,4 +83,3 @@ describe('arbetsformedlingen client', () => {
     await expect(searchJobs({ query: 'x' })).rejects.toThrow(/AF API error/i)
   })
 })
-

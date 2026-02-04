@@ -41,12 +41,9 @@ export type SearchJobsOptions = {
   offset?: number
 }
 
-function getApiKeyHeader() {
+function getApiKeyHeader(): Record<string, string> {
   const apiKey = process.env.AF_API_KEY
-  if (!apiKey) {
-    throw new Error('AF_API_KEY is not set')
-  }
-  return apiKey
+  return apiKey ? { 'api-key': apiKey } : {}
 }
 
 export async function searchJobs(options: SearchJobsOptions): Promise<AFSearchResponse> {
@@ -58,7 +55,7 @@ export async function searchJobs(options: SearchJobsOptions): Promise<AFSearchRe
   const response = await fetch(`${AF_BASE_URL}/search?${params.toString()}`, {
     headers: {
       accept: 'application/json',
-      'api-key': getApiKeyHeader(),
+      ...getApiKeyHeader(),
     },
   })
 
@@ -73,7 +70,7 @@ export async function getJobById(id: string): Promise<AFJobAd> {
   const response = await fetch(`${AF_BASE_URL}/ad/${id}`, {
     headers: {
       accept: 'application/json',
-      'api-key': getApiKeyHeader(),
+      ...getApiKeyHeader(),
     },
   })
 
