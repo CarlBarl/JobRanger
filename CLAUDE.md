@@ -86,7 +86,7 @@ Write failing test first → Implement minimal code → Refactor. Never write im
 - Use Vitest + React Testing Library
 - Mock external services (Supabase, Gemini, AF API)
 - Co-locate tests: `ComponentName.test.tsx` alongside source
-- Browser testing: Use Playwright MCP (see Plugin Synergy below)
+- Browser testing: Use Claude in Chrome extension (see MCP Plugins below)
 
 ## External Services
 
@@ -118,37 +118,41 @@ NEXT_PUBLIC_APP_URL
 
 | Plugin | Purpose | When to Use |
 |--------|---------|-------------|
-| **Playwright** | Browser automation & testing | Visual testing, E2E flows, screenshots |
+| **Claude in Chrome** | Browser automation & UI testing | Visual testing, E2E flows, UI verification, screenshots |
 | **Supabase** | Database & backend management | Schema changes, queries, migrations, edge functions |
 | **Context7** | Library documentation lookup | Fetching up-to-date docs for any library |
 
-### Playwright (Browser Testing)
+### Claude in Chrome (Browser Testing)
 
-Use Playwright MCP for all browser-based testing and visual verification. **Always prefer this over manual testing.**
+**CRITICAL: Use Claude in Chrome extension for ALL browser-based testing and UI verification. NEVER use Playwright.**
 
 ```
 Workflow:
 1. Start dev server: npm run dev
-2. Navigate: browser_navigate to localhost:3000
-3. Snapshot: browser_snapshot for accessibility tree (preferred over screenshots)
-4. Interact: browser_click, browser_type, browser_fill_form
-5. Verify: browser_snapshot or browser_take_screenshot
+2. Get tab context: tabs_context_mcp (with createIfEmpty: true if needed)
+3. Navigate: navigate to localhost:3000
+4. Read page: read_page for accessibility tree (preferred) or get_page_text
+5. Interact: computer tool with left_click, type actions or form_input
+6. Verify: read_page or computer tool with screenshot action
 ```
 
 **Key tools:**
-- `browser_navigate` - Go to URL
-- `browser_snapshot` - Get accessibility tree (better than screenshots for understanding page)
-- `browser_take_screenshot` - Visual capture
-- `browser_click` - Click elements by ref from snapshot
-- `browser_type` - Type text into inputs
-- `browser_fill_form` - Fill multiple form fields at once
-- `browser_wait_for` - Wait for text/element to appear
+- `tabs_context_mcp` - Get available tabs, create tab group if needed
+- `tabs_create_mcp` - Create new tab in the group
+- `navigate` - Go to URL
+- `read_page` - Get accessibility tree (best for understanding page structure)
+- `find` - Find elements by natural language description
+- `computer` - Take screenshots, click, type, scroll, hover
+- `form_input` - Set form field values by element ref
+- `javascript_tool` - Execute JavaScript in page context
+- `get_page_text` - Extract raw text content from page
 
 **Testing pattern:**
 1. Make code change
-2. Use `browser_snapshot` to verify the change visually
-3. Test user flows with click/type interactions
-4. Capture screenshots for documentation if needed
+2. Use `read_page` to get page structure and verify elements exist
+3. Test user flows with `computer` (click/type) or `form_input` interactions
+4. Use `computer` with screenshot action for visual verification
+5. Use `find` for natural language element queries
 
 ### Supabase MCP
 
@@ -200,7 +204,7 @@ Invoke with `/skill-name`. Key workflows:
 2. Context7 - Fetch relevant library docs
 3. `/test-driven-development` - Write tests first
 4. Implement code
-5. Playwright `browser_snapshot` - Verify visually
+5. Chrome `read_page` - Verify visually with accessibility tree
 6. Supabase `get_advisors` - Check for security issues
 7. `/verification-before-completion` - Final check
 
@@ -209,16 +213,16 @@ Invoke with `/skill-name`. Key workflows:
 2. `/frontend-design` - **Always invoke for UI work** - generates production-grade, distinctive designs
 3. Context7 - Fetch Tailwind/shadcn docs if needed
 4. Implement components
-5. Playwright `browser_snapshot` - Verify layout and accessibility tree
-6. Playwright `browser_take_screenshot` - Visual review of styling
+5. Chrome `read_page` - Verify layout and accessibility tree
+6. Chrome `computer` screenshot - Visual review of styling
 7. Iterate design with `/frontend-design` if refinements needed
 
 **Debugging:**
 1. `/systematic-debugging` - Structure the investigation
 2. Supabase `get_logs` - Check backend logs
-3. Playwright `browser_snapshot` - See current state
+3. Chrome `read_page` - See current page state
 4. Supabase `execute_sql` - Verify data state
-5. Fix and verify with Playwright
+5. Fix and verify with Chrome extension
 
 **Database Changes:**
 1. Update `prisma/schema.prisma`
