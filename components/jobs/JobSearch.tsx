@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -31,6 +32,7 @@ function getHits(data: unknown): AFJobHit[] {
 }
 
 export function JobSearch() {
+  const t = useTranslations('jobs')
   const [query, setQuery] = useState('')
   const [jobs, setJobs] = useState<AFJobHit[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -62,7 +64,7 @@ export function JobSearch() {
           if (active) {
             setSkills([])
             setSelectedSkills([])
-            setSkillsError('Unexpected response while loading skills')
+            setSkillsError(t('skillsErrorUnexpected'))
           }
           return
         }
@@ -71,7 +73,7 @@ export function JobSearch() {
           if (active) {
             setSkills([])
             setSelectedSkills([])
-            setSkillsError(json.error?.message ?? 'Failed to load skills')
+            setSkillsError(json.error?.message ?? t('skillsErrorFailed'))
           }
           return
         }
@@ -100,7 +102,7 @@ export function JobSearch() {
         if (active) {
           setSkills([])
           setSelectedSkills([])
-          setSkillsError('Failed to load skills')
+          setSkillsError(t('skillsErrorFailed'))
         }
       } finally {
         if (active) {
@@ -114,44 +116,44 @@ export function JobSearch() {
     return () => {
       active = false
     }
-  }, [])
+  }, [t])
 
   const runSearch = useCallback(
     async (overrideQuery?: string) => {
       const q = (overrideQuery ?? query).trim()
-    if (!q) {
-      setError('Please enter a search term')
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      const res = await fetch(`/api/jobs?q=${encodeURIComponent(q)}`)
-      const json: unknown = await res.json()
-
-      if (!isApiEnvelope(json)) {
-        setJobs([])
-        setError('Unexpected response from server')
+      if (!q) {
+        setError(t('errorNoSearchTerm'))
         return
       }
 
-      if (!json.success) {
-        setJobs([])
-        setError(json.error?.message ?? 'Search failed')
-        return
-      }
+      setLoading(true)
+      setError(null)
 
-      setJobs(getHits(json.data))
-    } catch {
-      setJobs([])
-      setError('Search failed')
-    } finally {
-      setLoading(false)
-    }
+      try {
+        const res = await fetch(`/api/jobs?q=${encodeURIComponent(q)}`)
+        const json: unknown = await res.json()
+
+        if (!isApiEnvelope(json)) {
+          setJobs([])
+          setError(t('errorUnexpectedResponse'))
+          return
+        }
+
+        if (!json.success) {
+          setJobs([])
+          setError(json.error?.message ?? t('errorSearchFailed'))
+          return
+        }
+
+        setJobs(getHits(json.data))
+      } catch {
+        setJobs([])
+        setError(t('errorSearchFailed'))
+      } finally {
+        setLoading(false)
+      }
     },
-    [query]
+    [query, t]
   )
 
   const handleSearch = useCallback(() => {
@@ -168,34 +170,34 @@ export function JobSearch() {
 
   const handleSkillSearch = useCallback(() => {
     if (!skillQuery) {
-      setError('Please select at least one skill')
+      setError(t('errorSelectSkill'))
       return
     }
     setQuery(skillQuery)
     void runSearch(skillQuery)
-  }, [runSearch, skillQuery])
+  }, [runSearch, skillQuery, t])
 
   const handleAllSkillsSearch = useCallback(() => {
     if (!allSkillsQuery) {
-      setError('No skills available to search')
+      setError(t('errorNoSkills'))
       return
     }
     setQuery(allSkillsQuery)
     void runSearch(allSkillsQuery)
-  }, [allSkillsQuery, runSearch])
+  }, [allSkillsQuery, runSearch, t])
 
   return (
     <div className="space-y-4">
       <div className="rounded-lg border p-4 space-y-3">
         <div className="flex flex-col gap-1">
-          <h2 className="text-sm font-medium">Search with your skills</h2>
+          <h2 className="text-sm font-medium">{t('searchWithSkillsTitle')}</h2>
           <p className="text-xs text-muted-foreground">
-            Choose skills from your CV or search using all of them.
+            {t('searchWithSkillsDescription')}
           </p>
         </div>
 
         {skillsLoading ? (
-          <p className="text-xs text-muted-foreground">Loading skills...</p>
+          <p className="text-xs text-muted-foreground">{t('loadingSkills')}</p>
         ) : null}
 
         {skillsError ? (
@@ -221,7 +223,7 @@ export function JobSearch() {
           </div>
         ) : skillsLoading ? null : (
           <p className="text-xs text-muted-foreground">
-            No skills found. Upload a CV and extract skills first.
+            {t('noSkillsFound')}
           </p>
         )}
 
@@ -231,7 +233,7 @@ export function JobSearch() {
             onClick={handleSkillSearch}
             disabled={loading || skills.length === 0}
           >
-            Search with selected skills
+            {t('searchWithSelectedSkills')}
           </Button>
           <Button
             type="button"
@@ -239,24 +241,24 @@ export function JobSearch() {
             onClick={handleAllSkillsSearch}
             disabled={loading || skills.length === 0}
           >
-            Search with all skills
+            {t('searchWithAllSkills')}
           </Button>
         </div>
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
         <div className="flex-1 space-y-2">
-          <Label htmlFor="jobs-q">Search</Label>
+          <Label htmlFor="jobs-q">{t('search')}</Label>
           <Input
             id="jobs-q"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="e.g. developer"
+            placeholder={t('searchPlaceholder')}
             disabled={loading}
           />
         </div>
         <Button type="button" onClick={handleSearch} disabled={loading}>
-          {loading ? 'Searching...' : 'Search'}
+          {loading ? t('searching') : t('search')}
         </Button>
       </div>
 

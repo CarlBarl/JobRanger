@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "JobMatch",
+    "appName": "JobRanger",
     "signIn": "Sign In",
     "signOut": "Sign Out",
     "save": "Save",
@@ -9,7 +9,11 @@
     "upload": "Upload",
     "loading": "Loading...",
     "error": "An error occurred",
-    "success": "Done!"
+    "success": "Done!",
+    "close": "Close",
+    "navJobs": "Jobs",
+    "navLetters": "Letters",
+    "metaDescription": "An AI-powered job matching platform for Swedish job seekers. Upload a CV, search jobs, and generate cover letters."
   },
   "landing": {
     "hero": "Find Your Dream Job in Sweden",
@@ -31,7 +35,7 @@
     }
   },
   "auth": {
-    "signInTitle": "Sign in to JobMatch",
+    "signInTitle": "Sign in to JobRanger",
     "signInDescription": "Enter your email to receive a magic link",
     "signInDescriptionPassword": "Enter your email and password",
     "email": "Email",
@@ -68,7 +72,10 @@
     "updatePassword": "Update password",
     "resetLinkInvalidTitle": "Reset link invalid",
     "resetLinkInvalidDescription": "This reset link is invalid or has expired.",
-    "requestNewResetLink": "Request a new reset link"
+    "requestNewResetLink": "Request a new reset link",
+    "preparingDashboard": "Preparing your dashboard...",
+    "loadingProfile": "Loading your profile...",
+    "almostThere": "Almost there..."
   },
   "dashboard": {
     "welcome": "Welcome, {name}",
@@ -96,6 +103,9 @@
     "saveChanges": "Save",
     "saving": "Saving...",
     "uploadNewFile": "Upload New",
+    "uploadNewCV": "Upload New CV",
+    "uploadNewPersonalLetter": "Upload New Personal Letter",
+    "replaceDocumentDescription": "Upload a new file to replace your current document.",
     "unsavedChanges": "You have unsaved changes",
     "backToDashboard": "Back to Dashboard",
     "lastUpdated": "Last updated",
@@ -105,6 +115,7 @@
     "title": "Search Jobs",
     "searchPlaceholder": "Search jobs (e.g., developer, nurse, teacher)",
     "search": "Search",
+    "searching": "Searching...",
     "found": "Found {count} jobs",
     "noResults": "No jobs found. Try a different search term.",
     "enterSearch": "Enter a search term to find jobs from Arbetsförmedlingen",
@@ -113,10 +124,53 @@
     "unsaveJob": "Remove from saved",
     "generateLetter": "Generate Personal Letter",
     "generating": "Generating...",
-    "publishedAt": "Published"
+    "publishedAt": "Published",
+    "searchWithSkillsTitle": "Search with your skills",
+    "searchWithSkillsDescription": "Choose skills from your CV or search using all of them.",
+    "loadingSkills": "Loading skills...",
+    "skillsErrorUnexpected": "Unexpected response while loading skills",
+    "skillsErrorFailed": "Failed to load skills",
+    "noSkillsFound": "No skills found. Upload a CV and extract skills first.",
+    "searchWithSelectedSkills": "Search with selected skills",
+    "searchWithAllSkills": "Search with all skills",
+    "errorNoSearchTerm": "Please enter a search term",
+    "errorSelectSkill": "Please select at least one skill",
+    "errorNoSkills": "No skills available to search",
+    "errorUnexpectedResponse": "Unexpected response from server",
+    "errorSearchFailed": "Search failed",
+    "actions": {
+      "saved": "Saved",
+      "saving": "Saving...",
+      "saveJob": "Save job",
+      "generating": "Generating...",
+      "generateLetter": "Generate letter",
+      "generated": "Generated: {id}",
+      "unknownId": "unknown",
+      "failedToSave": "Failed to save",
+      "failedToLoadDocuments": "Failed to load documents",
+      "uploadCvFirst": "Upload a CV first",
+      "failedToGenerate": "Failed to generate letter"
+    },
+    "card": {
+      "published": "Published",
+      "deadline": "Deadline",
+      "viewListing": "View listing",
+      "unknownEmployer": "Unknown employer",
+      "untitledRole": "Untitled role"
+    },
+    "detail": {
+      "apply": "Apply",
+      "viewListing": "View listing",
+      "noDescription": "No description available.",
+      "loadErrorTitle": "Could not load job",
+      "loadErrorMessage": "Failed to load job",
+      "published": "Published",
+      "deadline": "Deadline"
+    }
   },
   "letters": {
     "title": "Generated Letters",
+    "jobIdLabel": "Job ID",
     "empty": "No letters generated yet. Search for jobs and generate personal letters.",
     "aiAdapted": "Personal Letter AI-adapted for this job",
     "copy": "Copy",
@@ -129,6 +183,7 @@
     "dropCV": "Click to upload CV (PDF, DOCX, or TXT)",
     "dropPersonalLetter": "Click to upload Personal Letter (PDF, DOCX, or TXT)",
     "uploading": "Uploading...",
+    "uploadFailed": "Upload failed",
     "uploadCV": "Upload CV",
     "uploadPersonalLetter": "Upload Personal Letter",
     "maxSize": "Max 5MB",

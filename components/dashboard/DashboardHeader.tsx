@@ -20,10 +20,10 @@ export async function DashboardHeader() {
         </Link>
         <nav className="flex items-center gap-2">
           <Link href="/jobs">
-            <Button variant="ghost">Jobs</Button>
+            <Button variant="ghost">{t('navJobs')}</Button>
           </Link>
           <Link href="/letters">
-            <Button variant="ghost">Letters</Button>
+            <Button variant="ghost">{t('navLetters')}</Button>
           </Link>
           <LanguageSwitcher />
           {user?.email ? (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
@@ -15,9 +15,37 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+type AuthMode = 'password' | 'magic-link'
+
+function LoadingSpinner({ className = '' }: { className?: string }) {
+  return (
+    <svg
+      className={`animate-spin ${className}`}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="3"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
+  )
+}
 
 export function SignInForm() {
   const t = useTranslations('auth')
@@ -27,7 +55,16 @@ export function SignInForm() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
-  const [activeTab, setActiveTab] = useState('magic-link')
+  const [mode, setMode] = useState<AuthMode>('password')
+  const [shouldShake, setShouldShake] = useState(false)
+
+  // Handle shake animation removal
+  useEffect(() => {
+    if (shouldShake) {
+      const timeout = setTimeout(() => setShouldShake(false), 500)
+      return () => clearTimeout(timeout)
+    }
+  }, [shouldShake])
 
   async function handleMagicLinkSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -35,6 +72,7 @@ export function SignInForm() {
 
     if (!EMAIL_REGEX.test(email)) {
       setError(t('invalidEmail'))
+      setShouldShake(true)
       return
     }
 
@@ -52,6 +90,7 @@ export function SignInForm() {
 
     if (signInError) {
       setError(signInError.message)
+      setShouldShake(true)
       return
     }
 
@@ -64,10 +103,12 @@ export function SignInForm() {
 
     if (!EMAIL_REGEX.test(email)) {
       setError(t('invalidEmail'))
+      setShouldShake(true)
       return
     }
 
     setLoading(true)
+
     let signInErrorMessage: string | null = null
 
     try {
@@ -96,13 +137,14 @@ export function SignInForm() {
       signInErrorMessage = t('invalidCredentials')
     }
 
-    setLoading(false)
-
     if (signInErrorMessage) {
+      setLoading(false)
       setError(signInErrorMessage)
+      setShouldShake(true)
       return
     }
 
+    // Success - redirect immediately
     router.push('/dashboard')
     router.refresh()
   }
@@ -121,78 +163,129 @@ export function SignInForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card
+      className={`w-full max-w-md transition-transform ${shouldShake ? 'animate-signin-shake' : ''}`}
+    >
       <CardHeader>
         <CardTitle>{t('signInTitle')}</CardTitle>
         <CardDescription>
-          {activeTab === 'magic-link'
-            ? t('signInDescription')
-            : t('signInDescriptionPassword')}
+          {mode === 'password'
+            ? t('signInDescriptionPassword')
+            : t('signInDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="magic-link">{t('magicLinkTab')}</TabsTrigger>
-            <TabsTrigger value="password">{t('passwordTab')}</TabsTrigger>
-          </TabsList>
-          <TabsContent value="magic-link">
-            <form onSubmit={handleMagicLinkSubmit} noValidate className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email-magic">{t('email')}</Label>
-                <Input
-                  id="email-magic"
-                  type="email"
-                  placeholder={t('emailPlaceholder')}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? t('sending') : t('sendMagicLink')}
-              </Button>
-            </form>
-          </TabsContent>
-          <TabsContent value="password">
-            <form onSubmit={handlePasswordSubmit} noValidate className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email-password">{t('email')}</Label>
-                <Input
-                  id="email-password"
-                  type="email"
-                  placeholder={t('emailPlaceholder')}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">{t('password')}</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? t('signingIn') : t('signIn')}
-              </Button>
-              <div className="text-right">
-                <Link href="/auth/forgot" className="text-sm text-primary hover:underline">
-                  {t('forgotPassword')}
-                </Link>
-              </div>
-            </form>
-          </TabsContent>
-        </Tabs>
-        <p className="mt-4 text-center text-sm text-muted-foreground">
+        {mode === 'password' ? (
+          <form
+            onSubmit={handlePasswordSubmit}
+            noValidate
+            className="space-y-4"
+            aria-busy={loading}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="email-password">{t('email')}</Label>
+              <Input
+                id="email-password"
+                type="email"
+                placeholder={t('emailPlaceholder')}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                autoComplete="email"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">{t('password')}</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                autoComplete="current-password"
+              />
+            </div>
+            {error ? (
+              <p className="text-sm text-destructive animate-signin-fade-up">{error}</p>
+            ) : null}
+            <Button
+              type="submit"
+              className="w-full relative"
+              disabled={loading}
+            >
+              <span className={loading ? 'opacity-0' : 'opacity-100'}>
+                {t('signIn')}
+              </span>
+              {loading && (
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <LoadingSpinner />
+                </span>
+              )}
+            </Button>
+            <div className="flex items-center justify-between text-sm">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('magic-link')
+                  setError(null)
+                }}
+                className="text-muted-foreground hover:text-primary transition-colors"
+              >
+                {t('magicLinkTab')}
+              </button>
+              <Link href="/auth/forgot" className="text-primary hover:underline">
+                {t('forgotPassword')}
+              </Link>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleMagicLinkSubmit} noValidate className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email-magic">{t('email')}</Label>
+              <Input
+                id="email-magic"
+                type="email"
+                placeholder={t('emailPlaceholder')}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                autoComplete="email"
+              />
+            </div>
+            {error ? (
+              <p className="text-sm text-destructive animate-signin-fade-up">{error}</p>
+            ) : null}
+            <Button
+              type="submit"
+              className="w-full relative"
+              disabled={loading}
+            >
+              <span className={loading ? 'opacity-0' : 'opacity-100'}>
+                {t('sendMagicLink')}
+              </span>
+              {loading && (
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <LoadingSpinner />
+                </span>
+              )}
+            </Button>
+            <div className="text-sm">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('password')
+                  setError(null)
+                }}
+                className="text-muted-foreground hover:text-primary transition-colors"
+              >
+                {t('passwordTab')}
+              </button>
+            </div>
+          </form>
+        )}
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           {t('noAccount')}{' '}
-          <Link href="/auth/signup" className="text-primary hover:underline">
+          <Link href="/auth/signup" className="text-primary hover:underline font-medium">
             {t('signUp')}
           </Link>
         </p>

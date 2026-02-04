@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import { NextIntlClientProvider } from 'next-intl'
-import { getLocale, getMessages } from 'next-intl/server'
+import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 import './globals.css'
 
 const geistSans = localFont({
@@ -16,10 +16,13 @@ const geistMono = localFont({
   weight: '100 900',
 })
 
-export const metadata: Metadata = {
-  title: 'JobMatch',
-  description:
-    'An AI-powered job matching platform for Swedish job seekers. Upload a CV, search jobs, and generate cover letters.',
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('common')
+
+  return {
+    title: t('appName'),
+    description: t('metaDescription'),
+  }
 }
 
 export default async function RootLayout({

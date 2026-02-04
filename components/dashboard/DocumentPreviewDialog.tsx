@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -7,9 +8,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, Upload } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { UploadDialog } from './UploadDialog'
 
 interface DocumentPreviewDialogProps {
   open: boolean
@@ -28,10 +30,18 @@ export function DocumentPreviewDialog({
   content,
   fileUrl,
   documentId,
+  type,
 }: DocumentPreviewDialogProps) {
   const t = useTranslations('dashboard')
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
 
   return (
+    <>
+      <UploadDialog
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        documentType={type}
+      />
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
         <DialogHeader>
@@ -43,19 +53,31 @@ export function DocumentPreviewDialog({
           </div>
         </div>
         <div className="flex justify-between items-center pt-4 border-t">
-          {fileUrl && (
-            <Button variant="outline" size="sm" asChild className="gap-2">
-              <Link href={`/documents/${documentId}`}>
-                <ExternalLink className="h-4 w-4" />
-                {t('openInNewTab')}
-              </Link>
+          <div className="flex gap-2">
+            {fileUrl && (
+              <Button variant="outline" size="sm" asChild className="gap-2">
+                <Link href={`/documents/${documentId}`}>
+                  <ExternalLink className="h-4 w-4" />
+                  {t('openInNewTab')}
+                </Link>
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => setUploadDialogOpen(true)}
+            >
+              <Upload className="h-4 w-4" />
+              {t('uploadNewFile')}
             </Button>
-          )}
+          </div>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
             {t('close')}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
+    </>
   )
 }

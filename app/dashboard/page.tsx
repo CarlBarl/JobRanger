@@ -10,6 +10,10 @@ import { Button } from '@/components/ui/button'
 import { Briefcase } from 'lucide-react'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
+import { DebugChat } from '@/components/dashboard/DebugChat'
+import { GEMINI_MODEL } from '@/lib/services/gemini'
+
+const DEBUG_EMAIL = 'carlelelid@gmail.com'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -116,6 +120,8 @@ export default async function DashboardPage() {
           </Card>
         </div>
       </main>
+
+      {authUser.email === DEBUG_EMAIL && <DebugChat modelName={GEMINI_MODEL} />}
     </div>
   )
 }
