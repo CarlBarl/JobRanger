@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getTranslations } from 'next-intl/server'
 
 export default async function LettersPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()

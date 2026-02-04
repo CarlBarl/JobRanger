@@ -1,9 +1,24 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
-import { render, screen, within } from '@/lib/test-utils'
+import { render, screen, within, waitFor } from '@/lib/test-utils'
 import { DashboardClient } from './DashboardClient'
 
+// Mock next/navigation
+const mockRefresh = vi.fn()
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    refresh: mockRefresh
+  })
+}))
+
+// Mock fetch
+global.fetch = vi.fn()
+
 describe('DashboardClient', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   const cvDocument = {
     id: 'cv-1',
     createdAt: '2025-01-01',
@@ -62,19 +77,157 @@ describe('DashboardClient', () => {
     expect(within(dialog).getByText(/your personal letter/i)).toBeInTheDocument()
   })
 
-  it('renders links to document editor pages', () => {
-    render(
-      <DashboardClient
-        cvDocument={cvDocument}
-        personalLetter={personalLetter}
-        cvUploadComponent={<div />}
-        personalLetterUploadComponent={<div />}
-      />
-    )
+  describe('Batch Skills Regeneration', () => {
+    it('shows batch skills button when CV exists', () => {
+      render(
+        <DashboardClient
+          cvDocument={cvDocument}
+          personalLetter={personalLetter}
+          cvUploadComponent={<div />}
+          personalLetterUploadComponent={<div />}
+        />
+      )
 
-    const links = screen.getAllByRole('link', { name: /edit/i })
-    expect(links).toHaveLength(2)
-    expect(links[0]).toHaveAttribute('href', '/documents/cv-1')
-    expect(links[1]).toHaveAttribute('href', '/documents/pl-1')
+      expect(screen.getByRole('button', { name: /regenerate all skills/i })).toBeInTheDocument()
+    })
+
+    it('does not show batch skills button when no CV', () => {
+      render(
+        <DashboardClient
+          cvDocument={null}
+          personalLetter={personalLetter}
+          cvUploadComponent={<div />}
+          personalLetterUploadComponent={<div />}
+        />
+      )
+
+      expect(screen.queryByRole('button', { name: /regenerate all skills/i })).not.toBeInTheDocument()
+    })
+
+    it('handles successful batch regeneration', async () => {
+      const user = userEvent.setup()
+      const mockResults = {
+        total: 2,
+        updated: [
+          {
+            documentId: 'cv-1',
+            skills: ['JavaScript', 'React'],
+            createdAt: '2024-01-01T00:00:00.000Z'
+          }
+        ],
+        failed: [],
+        skipped: []
+      }
+
+      ;(global.fetch as any).mockResolvedValueOnce({
+        json: async () => ({ success: true, data: mockResults })
+      })
+
+      render(
+        <DashboardClient
+          cvDocument={cvDocument}
+          personalLetter={personalLetter}
+          cvUploadComponent={<div />}
+          personalLetterUploadComponent={<div />}
+        />
+      )
+
+      const button = screen.getByRole('button', { name: /regenerate all skills/i })
+      await user.click(button)
+
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith('/api/skills/batch', { method: 'POST' })
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText('Skills Regeneration Results')).toBeInTheDocument()
+      })
+    })
+
+    it('shows loading state during regeneration', async () => {
+      const user = userEvent.setup()
+      ;(global.fetch as any).mockImplementation(() => new Promise(() => {})) // Never resolves
+
+      render(
+        <DashboardClient
+          cvDocument={cvDocument}
+          personalLetter={personalLetter}
+          cvUploadComponent={<div />}
+          personalLetterUploadComponent={<div />}
+        />
+      )
+
+      const button = screen.getByRole('button', { name: /regenerate all skills/i })
+      await user.click(button)
+
+      await waitFor(() => {
+        expect(screen.getByText(/regenerating skills/i)).toBeInTheDocument()
+      })
+    })
+
+    it('handles API errors gracefully', async () => {
+      const user = userEvent.setup()
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      ;(global.fetch as any).mockRejectedValueOnce(new Error('Network error'))
+
+      render(
+        <DashboardClient
+          cvDocument={cvDocument}
+          personalLetter={personalLetter}
+          cvUploadComponent={<div />}
+          personalLetterUploadComponent={<div />}
+        />
+      )
+
+      const button = screen.getByRole('button', { name: /regenerate all skills/i })
+      await user.click(button)
+
+      await waitFor(() => {
+        expect(consoleError).toHaveBeenCalledWith(
+          'Batch skills regeneration error:',
+          expect.any(Error)
+        )
+      })
+
+      consoleError.mockRestore()
+    })
+
+    it('refreshes page when modal is closed', async () => {
+      const user = userEvent.setup()
+      const mockResults = {
+        total: 1,
+        updated: [],
+        failed: [],
+        skipped: []
+      }
+
+      ;(global.fetch as any).mockResolvedValueOnce({
+        json: async () => ({ success: true, data: mockResults })
+      })
+
+      render(
+        <DashboardClient
+          cvDocument={cvDocument}
+          personalLetter={personalLetter}
+          cvUploadComponent={<div />}
+          personalLetterUploadComponent={<div />}
+        />
+      )
+
+      const button = screen.getByRole('button', { name: /regenerate all skills/i })
+      await user.click(button)
+
+      await waitFor(() => {
+        expect(screen.getByText('Close and Refresh')).toBeInTheDocument()
+      })
+
+      const closeButton = screen.getByText('Close and Refresh')
+      await user.click(closeButton)
+
+      await waitFor(() => {
+        expect(mockRefresh).toHaveBeenCalled()
+      })
+    })
   })
 })

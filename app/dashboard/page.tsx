@@ -2,6 +2,7 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { DashboardClient } from '@/components/dashboard/DashboardClient'
 import { FileUpload } from '@/components/upload/FileUpload'
 import { PersonalLetterUpload } from '@/components/upload/PersonalLetterUpload'
+import { SkillsEditor } from '@/components/dashboard/SkillsEditor'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
@@ -119,6 +120,16 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Skills Editor - Full width below the grid */}
+        {serializedCv && (
+          <div className="mt-6">
+            <SkillsEditor
+              skills={serializedCv.skills || []}
+              documentId={serializedCv.id}
+            />
+          </div>
+        )}
       </main>
 
       {authUser.email === DEBUG_EMAIL && <DebugChat modelName={GEMINI_MODEL} />}
