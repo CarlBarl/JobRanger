@@ -5,27 +5,29 @@ import { FileUpload } from './FileUpload'
 
 const messages = {
   common: {
-    upload: 'Start upload',
+    error: 'An error occurred',
   },
   upload: {
-    uploadCV: 'Upload CV now',
+    dropCV: 'Click to upload CV (PDF, DOCX, or TXT)',
+    uploadCV: 'Upload CV',
     uploading: 'Uploading...',
     uploadFailed: 'Upload failed',
+    maxSize: 'Max 5MB',
+    invalidType: 'Invalid file type',
+    tooLarge: 'File too large',
   },
 }
 
 describe('FileUpload', () => {
-  it('renders localized labels', () => {
+  it('renders upload prompt', () => {
     render(
       <NextIntlClientProvider locale="en" messages={messages}>
         <FileUpload />
       </NextIntlClientProvider>
     )
 
-    expect(screen.getByText('Upload CV now')).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: 'Start upload' })
-    ).toBeInTheDocument()
+    expect(screen.getByText('Click to upload CV (PDF, DOCX, or TXT)')).toBeInTheDocument()
+    expect(screen.getByText('Max 5MB')).toBeInTheDocument()
   })
 
   it('renders with card wrapper by default', () => {
@@ -46,6 +48,6 @@ describe('FileUpload', () => {
     )
 
     expect(container.querySelector('[class*="rounded-xl"]')).not.toBeInTheDocument()
-    expect(screen.getByText('Upload CV now')).toBeInTheDocument()
+    expect(screen.getByText('Click to upload CV (PDF, DOCX, or TXT)')).toBeInTheDocument()
   })
 })

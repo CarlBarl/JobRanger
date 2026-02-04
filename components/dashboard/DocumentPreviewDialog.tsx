@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { ExternalLink, Upload } from 'lucide-react'
+import { Pencil, Upload } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { UploadDialog } from './UploadDialog'
@@ -57,7 +57,7 @@ export function DocumentPreviewDialog({
             {fileUrl && (
               <Button variant="outline" size="sm" asChild className="gap-2">
                 <Link href={`/documents/${documentId}`}>
-                  <ExternalLink className="h-4 w-4" />
+                  <Pencil className="h-4 w-4" />
                   {t('openInNewTab')}
                 </Link>
               </Button>
