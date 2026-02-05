@@ -39,5 +39,24 @@ env.local
 *.tsbuildinfo
 next-env.d.ts
 
+# browser testing artifacts
+*.png
+*.jpg
+.playwright-mcp/
+
+# npm artifacts
+.npm-logs/
+.npm-cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# logs
+*.log
+
 # claude code
 .claude/settings.local.json

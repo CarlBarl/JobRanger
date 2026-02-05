@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Upload, FileText, X, Loader2 } from 'lucide-react'
+import { MAX_UPLOAD_BYTES, ALLOWED_UPLOAD_MIME_TYPES } from '@/lib/constants'
 
 type DocumentType = 'cv' | 'cover_letter_template'
 
@@ -34,18 +35,11 @@ export function FileUpload({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const selectedFile = e.target.files?.[0]
       if (selectedFile) {
-        // Validate file type
-        const allowedTypes = [
-          'application/pdf',
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          'text/plain',
-        ]
-        if (!allowedTypes.includes(selectedFile.type)) {
+        if (!(ALLOWED_UPLOAD_MIME_TYPES as readonly string[]).includes(selectedFile.type)) {
           setError(t('invalidType'))
           return
         }
-        // Validate file size (5MB)
-        if (selectedFile.size > 5 * 1024 * 1024) {
+        if (selectedFile.size > MAX_UPLOAD_BYTES) {
           setError(t('tooLarge'))
           return
         }

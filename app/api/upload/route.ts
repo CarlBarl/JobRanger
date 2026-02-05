@@ -2,13 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
-
-const MAX_BYTES = 5 * 1024 * 1024
-const ALLOWED_MIME_TYPES = new Set([
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'text/plain',
-])
+import { MAX_UPLOAD_BYTES, ALLOWED_UPLOAD_MIME_SET } from '@/lib/constants'
 
 function sanitizeFilename(filename: string) {
   return filename.replace(/[^\w.\-]+/g, '_')
@@ -53,7 +47,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!ALLOWED_MIME_TYPES.has(file.type)) {
+    if (!ALLOWED_UPLOAD_MIME_SET.has(file.type)) {
       return NextResponse.json(
         {
           success: false,
@@ -63,7 +57,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (file.size > MAX_BYTES) {
+    if (file.size > MAX_UPLOAD_BYTES) {
       return NextResponse.json(
         { success: false, error: { code: 'BAD_REQUEST', message: 'File must be less than 5MB' } },
         { status: 400 }

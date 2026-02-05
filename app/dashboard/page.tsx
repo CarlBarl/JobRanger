@@ -14,7 +14,7 @@ import { getTranslations } from 'next-intl/server'
 import { DebugChat } from '@/components/dashboard/DebugChat'
 import { GEMINI_MODEL } from '@/lib/services/gemini'
 
-const DEBUG_EMAIL = 'carlelelid@gmail.com'
+const DEBUG_EMAIL = process.env.DEBUG_EMAIL
 
 export default async function DashboardPage() {
   const supabase = await createClient()

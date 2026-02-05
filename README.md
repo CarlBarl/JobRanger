@@ -89,7 +89,6 @@ npm run dev          # Start development server
 npm run build        # Build for production
 npm run start        # Start production server
 npm run lint         # Run ESLint
-npm run format       # Format code with Prettier
 npm run test         # Run tests
 npm run test:watch   # Run tests in watch mode
 npm run test:coverage # Run tests with coverage
@@ -108,9 +107,9 @@ jobmatch/
 ├── components/            # React components
 ├── lib/                   # Utilities and clients
 ├── prisma/               # Database schema
-├── __tests__/            # Test files
-├── docs/                 # Documentation
+├── messages/             # i18n translations (en, sv)
 └── public/               # Static assets
+# Tests are co-located: ComponentName.test.tsx alongside source
 ```
 
 ### Testing Philosophy
@@ -125,7 +124,7 @@ This project uses **Test-Driven Development (TDD)**:
 
 **UI/E2E Tests** use Claude Code's Chrome integration for browser automation.
 
-See [docs/TESTING.md](./docs/TESTING.md) for detailed testing guidelines.
+See [CLAUDE.md](./CLAUDE.md) for detailed testing and development guidelines.
 
 ## API Documentation
 
@@ -136,7 +135,7 @@ We use the Swedish Employment Agency's open API to fetch job listings. An API ke
 - **Documentation**: https://jobsearch.api.jobtechdev.se
 - **Get API Key**: https://apirequest.jobtechdev.se
 
-See [docs/API_REFERENCE.md](./docs/API_REFERENCE.md) for integration details.
+See [CLAUDE.md](./CLAUDE.md) for integration details.
 
 ## Contributing
 
