@@ -58,6 +58,8 @@ export function SignInForm() {
   const [mode, setMode] = useState<AuthMode>('password')
   const [shouldShake, setShouldShake] = useState(false)
 
+  const isDev = process.env.NODE_ENV === 'development'
+
   // Handle shake animation removal
   useEffect(() => {
     if (shouldShake) {
@@ -135,6 +137,49 @@ export function SignInForm() {
       }
     } catch {
       signInErrorMessage = t('invalidCredentials')
+    }
+
+    if (signInErrorMessage) {
+      setLoading(false)
+      setError(signInErrorMessage)
+      setShouldShake(true)
+      return
+    }
+
+    // Success - redirect immediately
+    router.push('/dashboard')
+    router.refresh()
+  }
+
+  async function handleQuickSignIn() {
+    const devEmail = process.env.NEXT_PUBLIC_DEV_EMAIL || 'test@example.com'
+    const devPassword = process.env.NEXT_PUBLIC_DEV_PASSWORD || 'password123'
+
+    setEmail(devEmail)
+    setPassword(devPassword)
+    setMode('password')
+    setError(null)
+    setLoading(true)
+
+    let signInErrorMessage: string | null = null
+
+    try {
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: devEmail, password: devPassword }),
+      })
+
+      const result = (await response.json()) as
+        | { success: true }
+        | { success: false; error?: { message?: string } }
+
+      if (!response.ok || !result.success) {
+        const rawMessage = !result.success ? result.error?.message : undefined
+        signInErrorMessage = rawMessage ?? 'Quick sign-in failed'
+      }
+    } catch {
+      signInErrorMessage = 'Quick sign-in failed'
     }
 
     if (signInErrorMessage) {
@@ -289,6 +334,19 @@ export function SignInForm() {
             {t('signUp')}
           </Link>
         </p>
+        {isDev && (
+          <div className="mt-4 pt-4 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleQuickSignIn}
+              disabled={loading}
+            >
+              🚀 Quick Sign In (Dev)
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
