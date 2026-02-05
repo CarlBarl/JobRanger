@@ -39,7 +39,8 @@ function formatDate(value?: string | null): string | null {
   return value.slice(0, 10)
 }
 
-export default async function JobDetailPage({ params }: { params: { id: string } }) {
+export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
   const {
     data: { user },
@@ -49,7 +50,7 @@ export default async function JobDetailPage({ params }: { params: { id: string }
   if (!user) return null
 
   try {
-    const job = await getJobById(params.id)
+    const job = await getJobById(id)
     const title = job.headline ?? t('card.untitledRole')
     const employerName = job.employer?.name ?? t('card.unknownEmployer')
     const description = job.description?.text ?? ''
@@ -132,7 +133,7 @@ export default async function JobDetailPage({ params }: { params: { id: string }
             </p>
           )}
 
-          <JobActions afJobId={params.id} />
+          <JobActions afJobId={id} />
         </main>
       </div>
     )

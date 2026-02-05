@@ -85,8 +85,8 @@ export function DocumentPreviewDialog({
         documentType={type}
       />
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col overflow-hidden p-0 gap-0">
-          <DialogHeader className="border-b bg-background/80 px-6 py-5 pr-14">
+        <DialogContent className="max-w-3xl h-[85vh] !flex !flex-col overflow-hidden p-0 gap-0">
+          <DialogHeader className="border-b bg-background/80 px-6 py-4 pr-14 shrink-0">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <DialogTitle className="text-xl font-semibold leading-tight">
@@ -108,14 +108,14 @@ export function DocumentPreviewDialog({
           </DialogHeader>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-hidden">
             {isEditing ? (
               <div className="h-full p-6">
                 <textarea
                   aria-label={t('edit')}
                   value={editedContent}
                   onChange={(e) => setEditedContent(e.target.value)}
-                  className="h-full w-full resize-none rounded-lg border bg-background p-4 text-sm leading-relaxed shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  className="w-full h-full resize-none rounded-lg border bg-background p-4 text-sm leading-relaxed shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 font-mono overflow-y-auto"
                   placeholder={t('noContent')}
                   autoFocus
                 />
