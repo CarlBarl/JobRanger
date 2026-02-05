@@ -15,8 +15,6 @@ JobMatch is an AI-powered job matching platform for Swedish job seekers. Users u
 npm run dev                    # Start dev server (localhost:3000)
 npm run build                  # Build for production
 npm run lint                   # ESLint
-npm run format                 # Prettier
-
 # Testing
 npm run test                   # Run all tests
 npm run test:watch             # Watch mode
@@ -37,6 +35,16 @@ npx prisma studio              # Database GUI
 2. **Job Search:** Fetch user skills → Query Arbetsförmedlingen API → Return matched jobs
 3. **Cover Letter:** Selected job + user CV → Gemini generates personalized letter
 
+### Naming Conventions
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Components | PascalCase | `JobCard.tsx` |
+| Utilities | camelCase | `parseResume.ts` |
+| API Routes | lowercase | `route.ts` |
+| Tests | *.test.ts(x) | `JobCard.test.tsx` |
+| Constants | SCREAMING_SNAKE | `MAX_FILE_SIZE` |
+
 ### Key Directories
 
 ```
@@ -48,9 +56,10 @@ components/
   ui/                   # shadcn/ui base components
   [feature]/            # Feature-specific components (upload/, jobs/, letters/)
 lib/
-  gemini.ts             # Gemini AI client
-  arbetsformedlingen.ts # AF JobSearch API client
-  supabase/             # Supabase client (storage)
+  constants.ts          # Shared constants (upload limits, MIME types)
+  services/gemini.ts    # Gemini AI client
+  services/arbetsformedlingen.ts # AF JobSearch API client
+  supabase/             # Supabase client (auth + storage)
   prisma.ts             # Database client
 prisma/schema.prisma    # Database schema
 ```
@@ -88,6 +97,15 @@ Write failing test first → Implement minimal code → Refactor. Never write im
 - Co-locate tests: `ComponentName.test.tsx` alongside source
 - Browser testing: Use Claude in Chrome (preferred) or Playwright (fallback) - see MCP Plugins below
 
+### Avoid
+
+- `any` types - use proper typing or Zod
+- Inline styles - use Tailwind
+- Business logic in components - extract to lib/
+- Prop drilling - use context or composition
+- Hardcoded values - use constants or env vars
+- Writing code before tests
+
 ## External Services
 
 | Service | Base URL / Package | Auth |
@@ -110,6 +128,8 @@ DATABASE_URL
 AF_API_KEY
 GEMINI_API_KEY
 NEXT_PUBLIC_APP_URL
+# Optional - email address for debug chat access
+DEBUG_EMAIL
 ```
 
 ## MCP Plugins & Synergy

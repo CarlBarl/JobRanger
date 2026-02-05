@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { chat, GEMINI_MODEL } from '@/lib/services/gemini'
 
-const DEBUG_EMAIL = 'carlelelid@gmail.com'
+const DEBUG_EMAIL = process.env.DEBUG_EMAIL
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
