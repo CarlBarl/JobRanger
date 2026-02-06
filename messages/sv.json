@@ -169,6 +169,8 @@
     "errorSearchFailed": "Sökningen misslyckades",
     "relevanceToggle": "Kompetensmatchning (experimentell)",
     "relevanceBadge": "{matched}/{total} kompetenser matchar",
+    "regionFilter": "Filtrera efter region",
+    "allRegions": "Alla regioner",
     "actions": {
       "saved": "Sparad",
       "saving": "Sparar...",

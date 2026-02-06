@@ -169,6 +169,8 @@
     "errorSearchFailed": "Search failed",
     "relevanceToggle": "Skill matching (experimental)",
     "relevanceBadge": "{matched}/{total} skills match",
+    "regionFilter": "Filter by region",
+    "allRegions": "All regions",
     "actions": {
       "saved": "Saved",
       "saving": "Saving...",
