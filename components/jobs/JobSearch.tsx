@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { JobCard } from '@/components/jobs/JobCard'
+import { scoreJobRelevance } from '@/lib/scoring'
 import type { AFJobHit } from '@/lib/services/arbetsformedlingen'
 
 type ApiError = { code?: string; message?: string }
@@ -42,6 +43,7 @@ export function JobSearch() {
   const [skillsLoading, setSkillsLoading] = useState(false)
   const [skillsError, setSkillsError] = useState<string | null>(null)
   const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set())
+  const [relevanceEnabled, setRelevanceEnabled] = useState(false)
 
   const skillQuery = useMemo(
     () => selectedSkills.filter(Boolean).join(' ').trim(),
@@ -243,6 +245,24 @@ export function JobSearch() {
     void runSearch(allSkillsQuery)
   }, [allSkillsQuery, runSearch, t])
 
+  const scoredJobs = useMemo(() => {
+    if (!relevanceEnabled || skills.length === 0) return jobs
+
+    return [...jobs]
+      .map((job) => ({
+        ...job,
+        relevance: scoreJobRelevance(
+          {
+            headline: job.headline,
+            description: job.description?.text,
+            occupation: job.occupation?.label,
+          },
+          skills
+        ),
+      }))
+      .sort((a, b) => b.relevance.score - a.relevance.score)
+  }, [jobs, skills, relevanceEnabled])
+
   return (
     <div className="space-y-4">
       <div className="rounded-lg border p-4 space-y-3">
@@ -319,17 +339,40 @@ export function JobSearch() {
         </Button>
       </div>
 
+      {skills.length > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border border-dashed p-3">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={relevanceEnabled}
+              onChange={(e) => setRelevanceEnabled(e.target.checked)}
+              className="rounded"
+            />
+            <span>{t('relevanceToggle')}</span>
+          </label>
+        </div>
+      )}
+
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-      {jobs.length > 0 ? (
+      {scoredJobs.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
-          {jobs.map((job) => (
-            <JobCard
-              key={job.id}
-              job={job}
-              isSaved={savedJobIds.has(job.id)}
-              onToggleSave={handleToggleSave}
-            />
+          {scoredJobs.map((job) => (
+            <div key={job.id} className="relative">
+              {'relevance' in job && job.relevance.matched > 0 && (
+                <span className="absolute top-2 right-2 z-10 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                  {t('relevanceBadge', {
+                    matched: job.relevance.matched,
+                    total: job.relevance.total,
+                  })}
+                </span>
+              )}
+              <JobCard
+                job={job}
+                isSaved={savedJobIds.has(job.id)}
+                onToggleSave={handleToggleSave}
+              />
+            </div>
           ))}
         </div>
       ) : null}
