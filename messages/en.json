@@ -185,7 +185,10 @@
       "deadline": "Deadline",
       "viewListing": "View listing",
       "unknownEmployer": "Unknown employer",
-      "untitledRole": "Untitled role"
+      "untitledRole": "Untitled role",
+      "save": "Save",
+      "saved": "Saved",
+      "unsave": "Remove"
     },
     "detail": {
       "apply": "Apply",

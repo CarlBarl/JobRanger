@@ -20,6 +20,8 @@ type JobCardProps = {
     | 'working_hours_type'
     | 'occupation'
   >
+  isSaved?: boolean
+  onToggleSave?: (afJobId: string) => void
 }
 
 function formatLocation(job: JobCardProps['job']): string | null {
@@ -42,7 +44,7 @@ function formatDate(value?: string | null): string | null {
   return value.slice(0, 10)
 }
 
-export function JobCard({ job }: JobCardProps) {
+export function JobCard({ job, isSaved = false, onToggleSave }: JobCardProps) {
   const t = useTranslations('jobs')
   const employerName = job.employer?.name ?? t('card.unknownEmployer')
   const location = formatLocation(job)
@@ -64,12 +66,39 @@ export function JobCard({ job }: JobCardProps) {
               loading="lazy"
             />
           ) : null}
-          <div className="space-y-1">
+          <div className="space-y-1 flex-1">
             <Link href={`/jobs/${job.id}`} className="hover:underline">
               {job.headline ?? t('card.untitledRole')}
             </Link>
             <p className="text-sm text-muted-foreground">{employerName}</p>
           </div>
+          {onToggleSave ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onToggleSave(job.id)
+              }}
+              className="shrink-0 p-1 rounded hover:bg-muted transition-colors"
+              aria-label={isSaved ? t('card.unsave') : t('card.save')}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill={isSaved ? 'currentColor' : 'none'}
+                stroke="currentColor"
+                strokeWidth={2}
+                className="h-5 w-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0z"
+                />
+              </svg>
+            </button>
+          ) : null}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-1 text-sm text-muted-foreground">
