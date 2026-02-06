@@ -27,6 +27,15 @@ function mockFetchWithSkills(skills: string[]) {
       )
     }
 
+    if (url.startsWith('/api/jobs/save')) {
+      return Promise.resolve(
+        new Response(JSON.stringify({ success: true, data: [] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      )
+    }
+
     if (url.startsWith('/api/jobs')) {
       return Promise.resolve(
         new Response(JSON.stringify({ success: true, data: { hits: [] } }), {
@@ -95,8 +104,7 @@ describe('JobSearch skill search', () => {
     )
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenNthCalledWith(
-        2,
+      expect(fetchMock).toHaveBeenCalledWith(
         '/api/jobs?q=React%20TypeScript'
       )
     })
@@ -116,8 +124,7 @@ describe('JobSearch skill search', () => {
     )
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenNthCalledWith(
-        2,
+      expect(fetchMock).toHaveBeenCalledWith(
         '/api/jobs?q=React%20TypeScript%20Node'
       )
     })

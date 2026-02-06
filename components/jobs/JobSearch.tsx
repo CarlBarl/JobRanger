@@ -41,6 +41,7 @@ export function JobSearch() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([])
   const [skillsLoading, setSkillsLoading] = useState(false)
   const [skillsError, setSkillsError] = useState<string | null>(null)
+  const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set())
 
   const skillQuery = useMemo(
     () => selectedSkills.filter(Boolean).join(' ').trim(),
@@ -117,6 +118,62 @@ export function JobSearch() {
       active = false
     }
   }, [t])
+
+  useEffect(() => {
+    const loadSavedJobs = async () => {
+      try {
+        const res = await fetch('/api/jobs/save')
+        const json: unknown = await res.json()
+        if (isApiEnvelope(json) && json.success && Array.isArray(json.data)) {
+          const ids = new Set(
+            (json.data as Array<{ afJobId: string }>).map((j) => j.afJobId)
+          )
+          setSavedJobIds(ids)
+        }
+      } catch {
+        // Silent fail — save buttons just won't show pre-saved state
+      }
+    }
+    void loadSavedJobs()
+  }, [])
+
+  const handleToggleSave = useCallback(async (afJobId: string) => {
+    const wasSaved = savedJobIds.has(afJobId)
+
+    // Optimistic update
+    setSavedJobIds((prev) => {
+      const next = new Set(prev)
+      if (wasSaved) {
+        next.delete(afJobId)
+      } else {
+        next.add(afJobId)
+      }
+      return next
+    })
+
+    try {
+      if (wasSaved) {
+        await fetch(`/api/jobs/save/${afJobId}`, { method: 'DELETE' })
+      } else {
+        await fetch('/api/jobs/save', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ afJobId }),
+        })
+      }
+    } catch {
+      // Revert optimistic update on failure
+      setSavedJobIds((prev) => {
+        const next = new Set(prev)
+        if (wasSaved) {
+          next.add(afJobId)
+        } else {
+          next.delete(afJobId)
+        }
+        return next
+      })
+    }
+  }, [savedJobIds])
 
   const runSearch = useCallback(
     async (overrideQuery?: string) => {
@@ -267,7 +324,12 @@ export function JobSearch() {
       {jobs.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
           {jobs.map((job) => (
-            <JobCard key={job.id} job={job} />
+            <JobCard
+              key={job.id}
+              job={job}
+              isSaved={savedJobIds.has(job.id)}
+              onToggleSave={handleToggleSave}
+            />
           ))}
         </div>
       ) : null}

@@ -185,7 +185,10 @@
       "deadline": "Sista ansökningsdag",
       "viewListing": "Visa annons",
       "unknownEmployer": "Okänd arbetsgivare",
-      "untitledRole": "Namnlös roll"
+      "untitledRole": "Namnlös roll",
+      "save": "Spara",
+      "saved": "Sparad",
+      "unsave": "Ta bort"
     },
     "detail": {
       "apply": "Ansök",
