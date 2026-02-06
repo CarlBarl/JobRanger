@@ -200,6 +200,7 @@
   "letters": {
     "title": "Generated Letters",
     "jobIdLabel": "Job ID",
+    "jobTitleLabel": "Job",
     "empty": "No letters generated yet. Search for jobs and generate personal letters.",
     "aiAdapted": "Personal Letter AI-adapted for this job",
     "copy": "Copy",

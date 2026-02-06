@@ -200,6 +200,7 @@
   "letters": {
     "title": "Genererade Brev",
     "jobIdLabel": "Jobb-ID",
+    "jobTitleLabel": "Jobb",
     "empty": "Inga brev genererade än. Sök jobb och generera personliga brev.",
     "aiAdapted": "Personligt Brev AI-anpassat för detta jobb",
     "copy": "Kopiera",

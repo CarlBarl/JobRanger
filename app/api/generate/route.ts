@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         savedJobId: savedJob?.id,
         afJobId,
+        jobTitle: job.headline ?? null,
         content,
       },
     })
