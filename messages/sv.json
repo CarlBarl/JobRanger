@@ -167,6 +167,8 @@
     "errorNoSkills": "Inga kompetenser att söka med",
     "errorUnexpectedResponse": "Oväntat svar från servern",
     "errorSearchFailed": "Sökningen misslyckades",
+    "relevanceToggle": "Kompetensmatchning (experimentell)",
+    "relevanceBadge": "{matched}/{total} kompetenser matchar",
     "actions": {
       "saved": "Sparad",
       "saving": "Sparar...",

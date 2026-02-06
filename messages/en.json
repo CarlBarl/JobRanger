@@ -167,6 +167,8 @@
     "errorNoSkills": "No skills available to search",
     "errorUnexpectedResponse": "Unexpected response from server",
     "errorSearchFailed": "Search failed",
+    "relevanceToggle": "Skill matching (experimental)",
+    "relevanceBadge": "{matched}/{total} skills match",
     "actions": {
       "saved": "Saved",
       "saving": "Saving...",
