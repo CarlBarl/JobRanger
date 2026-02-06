@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 
@@ -26,10 +27,10 @@ function getDocuments(data: unknown): DocumentRecord[] {
 
 export function JobActions({ afJobId }: { afJobId: string }) {
   const t = useTranslations('jobs')
+  const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [generating, setGenerating] = useState(false)
-  const [letterId, setLetterId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const handleSave = useCallback(async () => {
@@ -61,7 +62,6 @@ export function JobActions({ afJobId }: { afJobId: string }) {
   const handleGenerate = useCallback(async () => {
     setGenerating(true)
     setError(null)
-    setLetterId(null)
 
     try {
       const docsRes = await fetch('/api/documents')
@@ -97,8 +97,7 @@ export function JobActions({ afJobId }: { afJobId: string }) {
         return
       }
 
-      const id = (genJson.data as { id?: unknown }).id
-      setLetterId(typeof id === 'string' ? id : t('actions.unknownId'))
+      router.push('/letters')
     } catch {
       setError(t('actions.failedToGenerate'))
     } finally {
@@ -114,11 +113,6 @@ export function JobActions({ afJobId }: { afJobId: string }) {
       <Button type="button" onClick={handleGenerate} disabled={generating}>
         {generating ? t('actions.generating') : t('actions.generateLetter')}
       </Button>
-      {letterId ? (
-        <span className="text-sm text-muted-foreground">
-          {t('actions.generated', { id: letterId })}
-        </span>
-      ) : null}
       {error ? <span className="text-sm text-destructive">{error}</span> : null}
     </div>
   )
