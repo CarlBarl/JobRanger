@@ -34,7 +34,7 @@ export default async function LettersPage() {
               <Card key={letter.id}>
                 <CardHeader>
                   <CardTitle className="text-base">
-                    {t('jobIdLabel')}: {letter.afJobId}
+                    {letter.jobTitle ?? `${t('jobIdLabel')}: ${letter.afJobId}`}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">

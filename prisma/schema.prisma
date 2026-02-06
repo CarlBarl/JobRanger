@@ -60,6 +60,7 @@ model GeneratedLetter {
   savedJobId String?
   savedJob   SavedJob? @relation(fields: [savedJobId], references: [id], onDelete: SetNull)
   afJobId    String
+  jobTitle   String?
   content    String    @db.Text
   createdAt  DateTime  @default(now())
 
