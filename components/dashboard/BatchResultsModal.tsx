@@ -92,21 +92,21 @@ export function BatchResultsModal({
                     >
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-muted-foreground">
-                          {item.previousSkills.length} → {item.newSkills.length} {t('dashboard.batchResults.skills')}
+                          {(item.previousSkills ?? []).length} → {(item.newSkills ?? []).length} {t('dashboard.batchResults.skills')}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {formatDate(item.createdAt)}
                         </span>
                       </div>
                       {/* Added skills */}
-                      {item.added.length > 0 && (
+                      {(item.added ?? []).length > 0 && (
                         <div className="mt-2">
                           <div className="flex items-center gap-1 text-xs font-medium text-green-700 dark:text-green-300">
                             <Plus className="h-3 w-3" />
-                            {t('dashboard.batchResults.added')} ({item.added.length})
+                            {t('dashboard.batchResults.added')} ({(item.added ?? []).length})
                           </div>
                           <div className="mt-1 flex flex-wrap gap-1">
-                            {item.added.map((skill, i) => (
+                            {(item.added ?? []).map((skill, i) => (
                               <span
                                 key={i}
                                 className="rounded bg-green-200 px-1.5 py-0.5 text-xs text-green-800 dark:bg-green-800 dark:text-green-200"
@@ -118,14 +118,14 @@ export function BatchResultsModal({
                         </div>
                       )}
                       {/* Removed skills */}
-                      {item.removed.length > 0 && (
+                      {(item.removed ?? []).length > 0 && (
                         <div className="mt-2">
                           <div className="flex items-center gap-1 text-xs font-medium text-red-700 dark:text-red-300">
                             <Minus className="h-3 w-3" />
-                            {t('dashboard.batchResults.removed')} ({item.removed.length})
+                            {t('dashboard.batchResults.removed')} ({(item.removed ?? []).length})
                           </div>
                           <div className="mt-1 flex flex-wrap gap-1">
-                            {item.removed.map((skill, i) => (
+                            {(item.removed ?? []).map((skill, i) => (
                               <span
                                 key={i}
                                 className="rounded bg-red-200 px-1.5 py-0.5 text-xs text-red-800 line-through dark:bg-red-800 dark:text-red-200"
@@ -137,7 +137,7 @@ export function BatchResultsModal({
                         </div>
                       )}
                       {/* No changes */}
-                      {item.added.length === 0 && item.removed.length === 0 && (
+                      {(item.added ?? []).length === 0 && (item.removed ?? []).length === 0 && (
                         <div className="mt-2 text-xs text-muted-foreground italic">
                           {t('dashboard.batchResults.noChanges')}
                         </div>

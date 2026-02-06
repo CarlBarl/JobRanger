@@ -12,7 +12,7 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 vi.mock('@/lib/prisma', () => ({
-  default: {
+  prisma: {
     document: {
       findMany: vi.fn(),
       update: vi.fn()
@@ -25,7 +25,7 @@ vi.mock('@/lib/services/gemini', () => ({
 }))
 
 import { createClient } from '@/lib/supabase/server'
-import prisma from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import { extractSkillsFromCV } from '@/lib/services/gemini'
 
 describe('POST /api/skills/batch', () => {
@@ -152,12 +152,18 @@ describe('POST /api/skills/batch', () => {
       expect(data.data.updated).toHaveLength(2)
       expect(data.data.updated[0]).toEqual({
         documentId: 'cv-1',
-        skills: ['JavaScript', 'React'],
+        previousSkills: [],
+        newSkills: ['JavaScript', 'React'],
+        added: ['JavaScript', 'React'],
+        removed: [],
         createdAt: '2024-01-01T00:00:00.000Z'
       })
       expect(data.data.updated[1]).toEqual({
         documentId: 'cv-2',
-        skills: ['Python', 'Django'],
+        previousSkills: [],
+        newSkills: ['Python', 'Django'],
+        added: ['Python', 'Django'],
+        removed: [],
         createdAt: '2024-01-02T00:00:00.000Z'
       })
       expect(data.data.failed).toHaveLength(0)
