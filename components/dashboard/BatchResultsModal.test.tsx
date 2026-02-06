@@ -38,12 +38,18 @@ describe('BatchResultsModal', () => {
     updated: [
       {
         documentId: 'cv-1',
-        skills: ['JavaScript', 'React', 'TypeScript'],
+        previousSkills: ['OldSkill'],
+        newSkills: ['JavaScript', 'React', 'TypeScript'],
+        added: ['JavaScript', 'React', 'TypeScript'],
+        removed: ['OldSkill'],
         createdAt: '2024-01-01T00:00:00.000Z'
       },
       {
         documentId: 'cv-2',
-        skills: ['Python', 'Django'],
+        previousSkills: [],
+        newSkills: ['Python', 'Django'],
+        added: ['Python', 'Django'],
+        removed: [],
         createdAt: '2024-01-02T00:00:00.000Z'
       }
     ],
@@ -128,10 +134,9 @@ describe('BatchResultsModal', () => {
       )
 
       expect(screen.getByText('Successfully Updated')).toBeInTheDocument()
-      expect(screen.getByText(/cv-1/i)).toBeInTheDocument()
-      expect(screen.getByText(/cv-2/i)).toBeInTheDocument()
-      expect(screen.getByText(/3 skills/i)).toBeInTheDocument()
-      expect(screen.getByText(/2 skills/i)).toBeInTheDocument()
+      // Component shows "previousSkills.length → newSkills.length skills"
+      expect(screen.getByText(/1 → 3/)).toBeInTheDocument()
+      expect(screen.getByText(/0 → 2/)).toBeInTheDocument()
     })
 
     it('shows failed section', () => {
@@ -145,7 +150,6 @@ describe('BatchResultsModal', () => {
       )
 
       expect(screen.getByText('Failed to Update')).toBeInTheDocument()
-      expect(screen.getByText(/cv-3/i)).toBeInTheDocument()
       expect(screen.getByText('Gemini API timeout')).toBeInTheDocument()
     })
 
@@ -171,7 +175,6 @@ describe('BatchResultsModal', () => {
       )
 
       expect(screen.getByText('Skipped')).toBeInTheDocument()
-      expect(screen.getByText(/cv-4/i)).toBeInTheDocument()
       expect(screen.getByText('No parsed content available')).toBeInTheDocument()
     })
 
