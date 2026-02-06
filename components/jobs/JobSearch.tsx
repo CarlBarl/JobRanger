@@ -44,6 +44,7 @@ export function JobSearch() {
   const [skillsError, setSkillsError] = useState<string | null>(null)
   const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set())
   const [relevanceEnabled, setRelevanceEnabled] = useState(false)
+  const [selectedRegion, setSelectedRegion] = useState<string>('')
 
   const skillQuery = useMemo(
     () => selectedSkills.filter(Boolean).join(' ').trim(),
@@ -51,6 +52,13 @@ export function JobSearch() {
   )
 
   const allSkillsQuery = useMemo(() => skills.filter(Boolean).join(' ').trim(), [skills])
+
+  const availableRegions = useMemo(() => {
+    const regions = jobs
+      .map((job) => job.workplace_address?.region)
+      .filter((r): r is string => !!r && r.trim().length > 0)
+    return Array.from(new Set(regions)).sort()
+  }, [jobs])
 
   useEffect(() => {
     let active = true
@@ -187,6 +195,7 @@ export function JobSearch() {
 
       setLoading(true)
       setError(null)
+      setSelectedRegion('')
 
       try {
         const res = await fetch(`/api/jobs?q=${encodeURIComponent(q)}`)
@@ -246,9 +255,19 @@ export function JobSearch() {
   }, [allSkillsQuery, runSearch, t])
 
   const scoredJobs = useMemo(() => {
-    if (!relevanceEnabled || skills.length === 0) return jobs
+    let filtered = jobs
 
-    return [...jobs]
+    // Apply region filter
+    if (selectedRegion) {
+      filtered = filtered.filter(
+        (job) => job.workplace_address?.region === selectedRegion
+      )
+    }
+
+    // Apply relevance scoring
+    if (!relevanceEnabled || skills.length === 0) return filtered
+
+    return [...filtered]
       .map((job) => ({
         ...job,
         relevance: scoreJobRelevance(
@@ -261,7 +280,7 @@ export function JobSearch() {
         ),
       }))
       .sort((a, b) => b.relevance.score - a.relevance.score)
-  }, [jobs, skills, relevanceEnabled])
+  }, [jobs, skills, relevanceEnabled, selectedRegion])
 
   return (
     <div className="space-y-4">
@@ -350,6 +369,27 @@ export function JobSearch() {
             />
             <span>{t('relevanceToggle')}</span>
           </label>
+        </div>
+      )}
+
+      {availableRegions.length > 1 && (
+        <div className="flex items-center gap-2">
+          <label htmlFor="region-filter" className="text-sm font-medium">
+            {t('regionFilter')}:
+          </label>
+          <select
+            id="region-filter"
+            value={selectedRegion}
+            onChange={(e) => setSelectedRegion(e.target.value)}
+            className="rounded-md border px-3 py-1.5 text-sm bg-background"
+          >
+            <option value="">{t('allRegions')}</option>
+            {availableRegions.map((region) => (
+              <option key={region} value={region}>
+                {region}
+              </option>
+            ))}
+          </select>
         </div>
       )}
 
