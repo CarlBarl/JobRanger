@@ -4,12 +4,18 @@ import { NextRequest } from 'next/server'
 const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
   findMany: vi.fn(),
+  createSignedUrl: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     auth: {
       getUser: mocks.getUser,
+    },
+    storage: {
+      from: () => ({
+        createSignedUrl: mocks.createSignedUrl,
+      }),
     },
   }),
 }))
@@ -44,13 +50,19 @@ describe('GET /api/documents', () => {
 
   it('returns documents for the user', async () => {
     mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
-    mocks.findMany.mockResolvedValue([{ id: 'd1' }])
+    mocks.findMany.mockResolvedValue([{ id: 'd1', fileUrl: 'u1/cv.txt' }])
+    mocks.createSignedUrl.mockResolvedValue({
+      data: { signedUrl: 'https://example.com/signed-url' },
+      error: null,
+    })
 
     const req = new NextRequest('http://localhost/api/documents')
     const res = await GET(req)
 
     expect(res.status).toBe(200)
-    await expect(res.json()).resolves.toEqual({ success: true, data: [{ id: 'd1' }] })
+    await expect(res.json()).resolves.toEqual({
+      success: true,
+      data: [{ id: 'd1', fileUrl: 'https://example.com/signed-url' }],
+    })
   })
 })
-

@@ -44,7 +44,7 @@ async function ensureBucketExists(supabase: any): Promise<void> {
   if (!bucketExists) {
     console.log(`📦 Creating "${BUCKET_NAME}" bucket...`)
     const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
-      public: true,
+      public: false,
     })
 
     if (createError) {
@@ -267,16 +267,13 @@ async function seedUserDocuments(
     throw new Error(`Failed to upload CV: ${cvUploadError.message}`)
   }
 
-  const {
-    data: { publicUrl: cvUrl },
-  } = supabase.storage.from('documents').getPublicUrl(cvFileName)
-  console.log(`âœ… CV uploaded to: ${cvUrl}`)
+  console.log(`âœ… CV uploaded to path: ${cvFileName}`)
 
   const cv = await prisma.document.create({
     data: {
       userId: user.id,
       type: DocumentType.cv,
-      fileUrl: cvUrl,
+      fileUrl: cvFileName,
       parsedContent: cvContent,
       skills: input.skills,
     },
@@ -296,16 +293,13 @@ async function seedUserDocuments(
     throw new Error(`Failed to upload Personal Letter: ${letterUploadError.message}`)
   }
 
-  const {
-    data: { publicUrl: letterUrl },
-  } = supabase.storage.from('documents').getPublicUrl(letterFileName)
-  console.log(`âœ… Personal Letter uploaded to: ${letterUrl}`)
+  console.log(`âœ… Personal Letter uploaded to path: ${letterFileName}`)
 
   const personalLetter = await prisma.document.create({
     data: {
       userId: user.id,
       type: DocumentType.personal_letter,
-      fileUrl: letterUrl,
+      fileUrl: letterFileName,
       parsedContent: letterContent,
     },
   })

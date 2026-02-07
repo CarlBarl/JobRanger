@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { resolveDocumentAccessUrl } from '@/lib/storage'
 
 export async function GET(request: NextRequest) {
   void request
@@ -21,5 +22,12 @@ export async function GET(request: NextRequest) {
     orderBy: { createdAt: 'desc' },
   })
 
-  return NextResponse.json({ success: true, data: documents })
+  const documentsWithAccessUrls = await Promise.all(
+    documents.map(async (document) => ({
+      ...document,
+      fileUrl: await resolveDocumentAccessUrl(supabase, document.fileUrl),
+    }))
+  )
+
+  return NextResponse.json({ success: true, data: documentsWithAccessUrls })
 }

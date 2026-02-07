@@ -1,19 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
-
-function parseStoragePathFromPublicUrl(fileUrl: string): string | null {
-  try {
-    const url = new URL(fileUrl)
-    const parts = url.pathname.split('/').filter(Boolean)
-    const bucketIndex = parts.indexOf('documents')
-    if (bucketIndex === -1) return null
-    const path = parts.slice(bucketIndex + 1).join('/')
-    return path || null
-  } catch {
-    return null
-  }
-}
+import { getDocumentStoragePath } from '@/lib/storage'
 
 export async function DELETE(
   _request: NextRequest,
@@ -51,7 +39,7 @@ export async function DELETE(
   }
 
   if (document.fileUrl) {
-    const storagePath = parseStoragePathFromPublicUrl(document.fileUrl)
+    const storagePath = getDocumentStoragePath(document.fileUrl)
     if (storagePath) {
       await supabase.storage.from('documents').remove([storagePath])
     }
@@ -118,7 +106,7 @@ export async function PATCH(
 
   // Update file in Supabase Storage if fileUrl exists
   if (document.fileUrl) {
-    const storagePath = parseStoragePathFromPublicUrl(document.fileUrl)
+    const storagePath = getDocumentStoragePath(document.fileUrl)
     if (storagePath) {
       const { error: storageError } = await supabase.storage
         .from('documents')

@@ -29,8 +29,8 @@ describe('getOrCreateUser', () => {
     const result = await getOrCreateUser('auth-id-123', 'test@example.com')
 
     expect(prisma.user.upsert).toHaveBeenCalledWith({
-      where: { email: 'test@example.com' },
-      update: {},
+      where: { id: 'auth-id-123' },
+      update: { email: 'test@example.com' },
       create: {
         id: 'auth-id-123',
         email: 'test@example.com',
@@ -39,4 +39,3 @@ describe('getOrCreateUser', () => {
     expect(result).toEqual(mockUser)
   })
 })
-

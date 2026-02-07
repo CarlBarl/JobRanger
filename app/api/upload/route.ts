@@ -91,10 +91,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from('documents').getPublicUrl(fileName)
-
     // Basic parsing: TXT can be read when the runtime supports it; PDF/DOCX parsing is deferred.
     // In some test environments (jsdom), File lacks `text()`/`arrayBuffer()`, so we feature-detect.
     let parsedContent: string | null = '[File parsing not implemented]'
@@ -125,7 +121,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: user.id,
         type: typeValue,
-        fileUrl: publicUrl,
+        fileUrl: fileName,
         parsedContent,
       },
     })
