@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 
@@ -31,11 +32,21 @@ export async function DELETE(
       where: { userId_afJobId: { userId: user.id, afJobId } },
     })
     return NextResponse.json({ success: true })
-  } catch {
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2025'
+    ) {
+      return NextResponse.json(
+        { success: false, error: { code: 'NOT_FOUND', message: 'Saved job not found' } },
+        { status: 404 }
+      )
+    }
+
+    console.error('Delete saved job error:', error)
     return NextResponse.json(
-      { success: false, error: { code: 'NOT_FOUND', message: 'Saved job not found' } },
-      { status: 404 }
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to delete saved job' } },
+      { status: 500 }
     )
   }
 }
-

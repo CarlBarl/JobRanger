@@ -33,7 +33,10 @@ export function SkillsEditor({
     setSkills(initialSkills)
   }, [initialSkills])
 
-  const saveSkills = async (newSkills: string[]) => {
+  const saveSkills = async (
+    newSkills: string[],
+    previousSkills: string[]
+  ) => {
     if (!documentId) return
 
     setIsSaving(true)
@@ -44,13 +47,14 @@ export function SkillsEditor({
         body: JSON.stringify({ documentId, skills: newSkills })
       })
 
-      if (response.ok) {
-        onSkillsChange?.(newSkills)
+      if (!response.ok) {
+        throw new Error('Failed to save skills')
       }
+
+      onSkillsChange?.(newSkills)
     } catch (error) {
       console.error('Failed to save skills:', error)
-      // Revert on error
-      setSkills(initialSkills)
+      setSkills(previousSkills)
     } finally {
       setIsSaving(false)
     }
@@ -63,6 +67,7 @@ export function SkillsEditor({
       return
     }
 
+    const previousSkills = skills
     const newSkills = [...skills, trimmed]
     setSkills(newSkills)
     setRecentlyAdded(trimmed)
@@ -72,18 +77,24 @@ export function SkillsEditor({
     // Clear the "recently added" highlight after animation
     setTimeout(() => setRecentlyAdded(null), 600)
 
-    await saveSkills(newSkills)
+    await saveSkills(newSkills, previousSkills)
   }
 
-  const handleRemoveSkill = async (skillToRemove: string) => {
+  const handleRemoveSkill = (skillToRemove: string) => {
+    if (removingSkill || isSaving) {
+      return
+    }
+
     setRemovingSkill(skillToRemove)
 
     // Wait for exit animation
-    setTimeout(async () => {
-      const newSkills = skills.filter(s => s !== skillToRemove)
-      setSkills(newSkills)
+    setTimeout(() => {
+      setSkills((previousSkills) => {
+        const newSkills = previousSkills.filter(s => s !== skillToRemove)
+        void saveSkills(newSkills, previousSkills)
+        return newSkills
+      })
       setRemovingSkill(null)
-      await saveSkills(newSkills)
     }, 200)
   }
 
@@ -147,7 +158,7 @@ export function SkillsEditor({
                     'focus:outline-none focus:ring-2 focus:ring-red-200 dark:focus:ring-red-800'
                   )}
                   aria-label={t('skills.removeSkill', { skill })}
-                  disabled={isSaving}
+                  disabled={isSaving || removingSkill !== null}
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>

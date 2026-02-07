@@ -163,13 +163,19 @@ export function JobSearch() {
 
     try {
       if (wasSaved) {
-        await fetch(`/api/jobs/save/${afJobId}`, { method: 'DELETE' })
+        const response = await fetch(`/api/jobs/save/${afJobId}`, { method: 'DELETE' })
+        if (!response.ok) {
+          throw new Error('Failed to remove saved job')
+        }
       } else {
-        await fetch('/api/jobs/save', {
+        const response = await fetch('/api/jobs/save', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ afJobId }),
         })
+        if (!response.ok) {
+          throw new Error('Failed to save job')
+        }
       }
     } catch {
       // Revert optimistic update on failure
@@ -182,8 +188,9 @@ export function JobSearch() {
         }
         return next
       })
+      setError(t('actions.failedToSave'))
     }
-  }, [savedJobIds])
+  }, [savedJobIds, t])
 
   const runSearch = useCallback(
     async (overrideQuery?: string) => {

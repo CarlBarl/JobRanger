@@ -4,7 +4,6 @@ import type { NextRequest } from 'next/server'
 const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
   upload: vi.fn(),
-  getPublicUrl: vi.fn(),
   getOrCreateUser: vi.fn(),
   create: vi.fn(),
 }))
@@ -17,7 +16,6 @@ vi.mock('@/lib/supabase/server', () => ({
     storage: {
       from: () => ({
         upload: mocks.upload,
-        getPublicUrl: mocks.getPublicUrl,
       }),
     },
   }),
@@ -111,8 +109,7 @@ describe('POST /api/upload', () => {
     mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
     mocks.getOrCreateUser.mockResolvedValue({ id: 'u1' })
     mocks.upload.mockResolvedValue({ data: { path: 'u1/1-cv.txt' }, error: null })
-    mocks.getPublicUrl.mockReturnValue({ data: { publicUrl: 'https://example.com/u1/1-cv.txt' } })
-    mocks.create.mockResolvedValue({ id: 'doc-1', fileUrl: 'https://example.com/u1/1-cv.txt' })
+    mocks.create.mockResolvedValue({ id: 'doc-1', fileUrl: 'u1/1-cv.txt' })
 
     const fd = new FormData()
     fd.set('type', 'cv')
@@ -124,7 +121,13 @@ describe('POST /api/upload', () => {
       success: true,
       data: { id: 'doc-1' },
     })
-    expect(mocks.create).toHaveBeenCalled()
+    expect(mocks.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'u1',
+        type: 'cv',
+        parsedContent: expect.any(String),
+        fileUrl: expect.stringMatching(/^u1\/\d+-cv\.txt$/),
+      }),
+    })
   })
 })
-

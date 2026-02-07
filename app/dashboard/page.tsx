@@ -13,6 +13,7 @@ import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { DebugChat } from '@/components/dashboard/DebugChat'
 import { GEMINI_MODEL } from '@/lib/services/gemini'
+import { resolveDocumentAccessUrl } from '@/lib/storage'
 
 const DEBUG_EMAIL = process.env.DEBUG_EMAIL
 
@@ -47,13 +48,18 @@ export default async function DashboardPage() {
     prisma.generatedLetter.count({ where: { userId: user.id } }),
   ])
 
+  const [cvAccessUrl, personalLetterAccessUrl] = await Promise.all([
+    resolveDocumentAccessUrl(supabase, cvDocument?.fileUrl),
+    resolveDocumentAccessUrl(supabase, personalLetter?.fileUrl),
+  ])
+
   // Serialize documents for client component
   const serializedCv = cvDocument
     ? {
         id: cvDocument.id,
         createdAt: cvDocument.createdAt.toISOString().slice(0, 10),
         parsedContent: cvDocument.parsedContent,
-        fileUrl: cvDocument.fileUrl,
+        fileUrl: cvAccessUrl,
         skills: cvDocument.skills as string[] | null,
       }
     : null
@@ -63,7 +69,7 @@ export default async function DashboardPage() {
         id: personalLetter.id,
         createdAt: personalLetter.createdAt.toISOString().slice(0, 10),
         parsedContent: personalLetter.parsedContent,
-        fileUrl: personalLetter.fileUrl,
+        fileUrl: personalLetterAccessUrl,
         skills: personalLetter.skills as string[] | null,
       }
     : null
