@@ -34,7 +34,8 @@ export default async function LettersPage() {
               <Card key={letter.id}>
                 <CardHeader>
                   <CardTitle className="text-base">
-                    {letter.jobTitle ?? `${t('jobIdLabel')}: ${letter.afJobId}`}
+                    {(letter as typeof letter & { jobTitle?: string | null }).jobTitle ??
+                      `${t('jobIdLabel')}: ${letter.afJobId}`}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
