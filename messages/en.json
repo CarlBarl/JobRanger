@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "JobRanger",
+    "appName": "JobbJägaren",
     "signIn": "Sign In",
     "signOut": "Sign Out",
     "save": "Save",
@@ -35,7 +35,7 @@
     }
   },
   "auth": {
-    "signInTitle": "Sign in to JobRanger",
+    "signInTitle": "Sign in to JobbJägaren",
     "signInDescription": "Enter your email to receive a magic link",
     "signInDescriptionPassword": "Enter your email and password",
     "email": "Email",

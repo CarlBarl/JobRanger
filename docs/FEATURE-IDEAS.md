@@ -17,7 +17,7 @@ Let users set up saved searches and get notified (email or in-app) when new matc
 Generate downloadable PDF versions of cover letters with proper formatting, ready to attach to applications.
 
 ### Application Tracking
-Track which jobs the user has applied to, with status (applied, interview, rejected, offer). Turn JobRanger into a full job hunt management tool.
+Track which jobs the user has applied to, with status (applied, interview, rejected, offer). Turn JobbJägaren into a full job hunt management tool.
 
 ### Multiple CV Support
 Allow users to upload different CVs for different job types (e.g., one for admin roles, one for tech roles) and generate letters based on the relevant CV.
