@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { NextResponse, type NextRequest } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
@@ -83,14 +84,25 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    const createData: Prisma.GeneratedLetterUncheckedCreateInput = {
+      userId: user.id,
+      savedJobId: savedJob?.id,
+      afJobId,
+      content,
+    }
+
+    const generatedLetterModel = Prisma.dmmf.datamodel.models.find(
+      (model) => model.name === 'GeneratedLetter'
+    )
+    const supportsJobTitle = generatedLetterModel?.fields.some((field) => field.name === 'jobTitle')
+
+    if (supportsJobTitle) {
+      ;(createData as Prisma.GeneratedLetterUncheckedCreateInput & { jobTitle?: string | null })
+        .jobTitle = job.headline ?? null
+    }
+
     const letter = await prisma.generatedLetter.create({
-      data: {
-        userId: user.id,
-        savedJobId: savedJob?.id,
-        afJobId,
-        jobTitle: job.headline ?? null,
-        content,
-      },
+      data: createData,
     })
 
     return NextResponse.json({
