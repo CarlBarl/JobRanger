@@ -21,8 +21,8 @@ export default async function LettersPage() {
   return (
     <div className="min-h-screen">
       <DashboardHeader />
-      <main className="container mx-auto px-4 py-8 space-y-6">
-        <h1 className="text-3xl font-bold">{t('title')}</h1>
+      <main className="container mx-auto space-y-6 px-4 py-6 sm:py-8">
+        <h1 className="text-2xl font-bold sm:text-3xl">{t('title')}</h1>
 
         {letters.length === 0 ? (
           <p className="text-sm text-muted-foreground">
@@ -33,7 +33,7 @@ export default async function LettersPage() {
             {letters.map((letter) => (
               <Card key={letter.id}>
                 <CardHeader>
-                  <CardTitle className="text-base">
+                  <CardTitle className="break-words text-base">
                     {(letter as typeof letter & { jobTitle?: string | null }).jobTitle ??
                       `${t('jobIdLabel')}: ${letter.afJobId}`}
                   </CardTitle>
@@ -42,7 +42,9 @@ export default async function LettersPage() {
                   <p className="text-xs text-muted-foreground">
                     {new Date(letter.createdAt).toLocaleString()}
                   </p>
-                  <pre className="whitespace-pre-wrap text-sm">{letter.content}</pre>
+                  <pre className="whitespace-pre-wrap break-words text-sm">
+                    {letter.content}
+                  </pre>
                 </CardContent>
               </Card>
             ))}

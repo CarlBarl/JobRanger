@@ -57,20 +57,20 @@ export function JobCard({ job, isSaved = false, onToggleSave }: JobCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base flex items-start gap-3">
+        <CardTitle className="flex min-w-0 items-start gap-3 text-base">
           {job.logo_url ? (
             <img
               src={job.logo_url}
               alt={`${employerName} logo`}
-              className="h-10 w-10 rounded object-contain border"
+              className="h-10 w-10 shrink-0 rounded border object-contain"
               loading="lazy"
             />
           ) : null}
-          <div className="space-y-1 flex-1">
-            <Link href={`/jobs/${job.id}`} className="hover:underline">
+          <div className="min-w-0 flex-1 space-y-1">
+            <Link href={`/jobs/${job.id}`} className="block break-words hover:underline">
               {job.headline ?? t('card.untitledRole')}
             </Link>
-            <p className="text-sm text-muted-foreground">{employerName}</p>
+            <p className="break-words text-sm text-muted-foreground">{employerName}</p>
           </div>
           {onToggleSave ? (
             <button
@@ -80,7 +80,7 @@ export function JobCard({ job, isSaved = false, onToggleSave }: JobCardProps) {
                 e.stopPropagation()
                 onToggleSave(job.id)
               }}
-              className="shrink-0 p-1 rounded hover:bg-muted transition-colors"
+              className="shrink-0 rounded p-2 transition-colors hover:bg-muted"
               aria-label={isSaved ? t('card.unsave') : t('card.save')}
             >
               <svg
@@ -101,7 +101,7 @@ export function JobCard({ job, isSaved = false, onToggleSave }: JobCardProps) {
           ) : null}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-1 text-sm text-muted-foreground">
+      <CardContent className="space-y-1 break-words text-sm text-muted-foreground">
         {occupation ? <p>{occupation}</p> : null}
         {location ? <p>{location}</p> : null}
         {employmentType || workingHours ? (

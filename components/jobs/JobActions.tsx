@@ -106,11 +106,22 @@ export function JobActions({ afJobId }: { afJobId: string }) {
   }, [afJobId, t])
 
   return (
-    <div className="flex flex-wrap gap-2 items-center">
-      <Button type="button" variant="outline" onClick={handleSave} disabled={saving || saved}>
+    <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={handleSave}
+        disabled={saving || saved}
+        className="w-full sm:w-auto"
+      >
         {saved ? t('actions.saved') : saving ? t('actions.saving') : t('actions.saveJob')}
       </Button>
-      <Button type="button" onClick={handleGenerate} disabled={generating}>
+      <Button
+        type="button"
+        onClick={handleGenerate}
+        disabled={generating}
+        className="w-full sm:w-auto"
+      >
         {generating ? t('actions.generating') : t('actions.generateLetter')}
       </Button>
       {error ? <span className="text-sm text-destructive">{error}</span> : null}

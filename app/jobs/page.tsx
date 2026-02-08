@@ -8,8 +8,8 @@ export default async function JobsPage() {
   return (
     <div className="min-h-screen">
       <DashboardHeader />
-      <main className="container mx-auto px-4 py-8 space-y-6">
-        <h1 className="text-3xl font-bold">{t('title')}</h1>
+      <main className="container mx-auto space-y-6 px-4 py-6 sm:py-8">
+        <h1 className="text-2xl font-bold sm:text-3xl">{t('title')}</h1>
         <JobSearch />
       </main>
     </div>

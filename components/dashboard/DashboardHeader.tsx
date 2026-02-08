@@ -14,21 +14,27 @@ export async function DashboardHeader() {
 
   return (
     <header className="border-b">
-      <div className="container mx-auto flex items-center justify-between px-4 py-4">
-        <Link href="/dashboard" className="text-xl font-semibold">
+      <div className="container mx-auto flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <Link href="/dashboard" className="text-lg font-semibold sm:text-xl">
           {t('appName')}
         </Link>
-        <nav className="flex items-center gap-2">
+        <nav className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
           <Link href="/jobs">
-            <Button variant="ghost">{t('navJobs')}</Button>
+            <Button variant="ghost" size="sm">
+              {t('navJobs')}
+            </Button>
           </Link>
           <Link href="/letters">
-            <Button variant="ghost">{t('navLetters')}</Button>
+            <Button variant="ghost" size="sm">
+              {t('navLetters')}
+            </Button>
           </Link>
           <LanguageSwitcher />
           {user?.email ? (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">{user.email}</span>
+            <div className="flex min-w-0 items-center gap-2 sm:ml-1">
+              <span className="hidden max-w-[14rem] truncate text-sm text-muted-foreground md:inline">
+                {user.email}
+              </span>
               <SignOutButton />
             </div>
           ) : null}

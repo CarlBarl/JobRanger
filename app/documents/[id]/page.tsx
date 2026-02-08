@@ -35,14 +35,16 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
   return (
     <div className="min-h-screen">
       <DashboardHeader />
-      <main className="container mx-auto px-4 py-8 space-y-6">
-        <h1 className="text-2xl font-bold">{title}</h1>
+      <main className="container mx-auto space-y-6 px-4 py-6 sm:py-8">
+        <h1 className="text-2xl font-bold break-words">{title}</h1>
         <div className="text-sm text-muted-foreground">
           {t('uploaded')}: {document.createdAt.toLocaleDateString()}
         </div>
         {document.parsedContent ? (
           <div className="prose max-w-none">
-            <pre className="whitespace-pre-wrap text-sm">{document.parsedContent}</pre>
+            <pre className="whitespace-pre-wrap break-words text-sm">
+              {document.parsedContent}
+            </pre>
           </div>
         ) : (
           <p className="text-muted-foreground">{t('noContent')}</p>
