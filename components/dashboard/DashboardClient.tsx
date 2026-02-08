@@ -102,7 +102,7 @@ export function DashboardClient({
     <>
       {/* Batch Skills Button */}
       {cvDocument && (
-        <div className="mb-4 flex justify-end">
+        <div className="mb-4 flex justify-stretch sm:justify-end">
           <BatchSkillsButton
             onTrigger={handleBatchRegenerate}
             loading={batchLoading}
@@ -152,11 +152,11 @@ export function DashboardClient({
                   </div>
                 </div>
               )}
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-2"
+                  className="w-full gap-2 sm:w-auto"
                   onClick={(e) => {
                     e.stopPropagation()
                     setCvUploadDialogOpen(true)
@@ -205,11 +205,11 @@ export function DashboardClient({
               <p className="text-xs text-muted-foreground line-clamp-3">
                 {personalLetter.parsedContent?.substring(0, 150)}...
               </p>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-2"
+                  className="w-full gap-2 sm:w-auto"
                   onClick={(e) => {
                     e.stopPropagation()
                     setLetterUploadDialogOpen(true)

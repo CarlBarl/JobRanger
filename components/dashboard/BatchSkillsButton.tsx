@@ -30,7 +30,7 @@ export function BatchSkillsButton({
       aria-label={t('dashboard.regenerateAllSkills')}
       aria-busy={loading}
       variant="outline"
-      className="gap-2"
+      className="w-full gap-2 sm:w-auto"
     >
       <RefreshCw
         className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}

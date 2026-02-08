@@ -77,8 +77,8 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen">
       <DashboardHeader />
-      <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">
+      <main className="container mx-auto px-4 py-6 sm:py-8">
+        <h1 className="mb-6 break-words text-2xl font-bold leading-tight sm:mb-8 sm:text-3xl">
           {t('welcome', { name: user.name || user.email })}
         </h1>
 
@@ -94,7 +94,7 @@ export default async function DashboardPage() {
           {/* Saved Jobs */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <Briefcase className="h-5 w-5" />
                 {t('savedJobs')}
               </CardTitle>
@@ -113,7 +113,7 @@ export default async function DashboardPage() {
           {/* Generated Letters */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">{t('generatedLetters')}</CardTitle>
+              <CardTitle className="text-base sm:text-lg">{t('generatedLetters')}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold">{lettersCount}</p>

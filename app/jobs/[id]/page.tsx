@@ -67,18 +67,18 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
     return (
       <div className="min-h-screen">
         <DashboardHeader />
-        <main className="container mx-auto px-4 py-8 space-y-6">
+        <main className="container mx-auto space-y-6 px-4 py-6 sm:py-8">
           <header className="space-y-2">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold">{title}</h1>
-                <p className="text-muted-foreground">{employerName}</p>
+              <div className="min-w-0 space-y-2">
+                <h1 className="break-words text-2xl font-bold leading-tight sm:text-3xl">{title}</h1>
+                <p className="break-words text-muted-foreground">{employerName}</p>
               </div>
               {job.logo_url ? (
                 <img
                   src={job.logo_url}
                   alt={`${employerName} logo`}
-                  className="h-16 w-16 rounded object-contain border"
+                  className="h-16 w-16 shrink-0 rounded border object-contain"
                 />
               ) : null}
             </div>
@@ -124,7 +124,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           </header>
 
           {description ? (
-            <section className="prose max-w-none">
+            <section className="prose max-w-none break-words">
               <p>{description}</p>
             </section>
           ) : (

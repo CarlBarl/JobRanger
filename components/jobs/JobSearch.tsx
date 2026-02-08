@@ -314,7 +314,7 @@ export function JobSearch() {
             {skills.map((skill) => (
               <label
                 key={skill}
-                className="flex items-center gap-2 text-sm border rounded-md px-2 py-1"
+                className="flex items-center gap-2 rounded-md border px-2 py-1 text-sm"
               >
                 <input
                   type="checkbox"
@@ -322,7 +322,7 @@ export function JobSearch() {
                   onChange={() => toggleSkill(skill)}
                   disabled={loading}
                 />
-                <span>{skill}</span>
+                <span className="break-all">{skill}</span>
               </label>
             ))}
           </div>
@@ -337,6 +337,7 @@ export function JobSearch() {
             type="button"
             onClick={handleSkillSearch}
             disabled={loading || skills.length === 0}
+            className="w-full sm:w-auto"
           >
             {t('searchWithSelectedSkills')}
           </Button>
@@ -345,6 +346,7 @@ export function JobSearch() {
             variant="outline"
             onClick={handleAllSkillsSearch}
             disabled={loading || skills.length === 0}
+            className="w-full sm:w-auto"
           >
             {t('searchWithAllSkills')}
           </Button>
@@ -362,13 +364,18 @@ export function JobSearch() {
             disabled={loading}
           />
         </div>
-        <Button type="button" onClick={handleSearch} disabled={loading}>
+        <Button
+          type="button"
+          onClick={handleSearch}
+          disabled={loading}
+          className="w-full sm:w-auto"
+        >
           {loading ? t('searching') : t('search')}
         </Button>
       </div>
 
       {skills.length > 0 && (
-        <div className="flex items-center gap-3 rounded-lg border border-dashed p-3">
+        <div className="flex flex-col gap-3 rounded-lg border border-dashed p-3 sm:flex-row sm:items-center">
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input
               type="checkbox"
@@ -382,7 +389,7 @@ export function JobSearch() {
       )}
 
       {availableRegions.length > 1 && (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <label htmlFor="region-filter" className="text-sm font-medium">
             {t('regionFilter')}:
           </label>
@@ -390,7 +397,7 @@ export function JobSearch() {
             id="region-filter"
             value={selectedRegion}
             onChange={(e) => setSelectedRegion(e.target.value)}
-            className="rounded-md border px-3 py-1.5 text-sm bg-background"
+            className="w-full rounded-md border bg-background px-3 py-1.5 text-sm sm:w-auto"
           >
             <option value="">{t('allRegions')}</option>
             {availableRegions.map((region) => (
