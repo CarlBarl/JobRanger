@@ -24,7 +24,7 @@
       "Bash(node:*)",
       "Bash(npx prisma db execute:*)",
       "Bash(npm run build:*)",
-      "Bash(del \"C:\\\\Users\\\\Calle\\\\Dev\\\\JobJägaren\\\\verify-seed.js\")",
+      "Bash(del \"C:\\\\Users\\\\Calle\\\\Dev\\\\JobbJägaren\\\\verify-seed.js\")",
       "Bash(npx prisma generate)",
       "Bash(tasklist:*)",
       "Bash(findstr:*)",

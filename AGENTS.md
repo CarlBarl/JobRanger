@@ -1,4 +1,4 @@
-# JobRanger Agent Notes
+# JobbJägaren Agent Notes
 
 ## Build command in Codex sandbox
 - Use `npx next build --webpack` for build validation.
@@ -12,6 +12,11 @@
   - `{ params }: { params: Promise<{ id: string }> }`
   - `const { id } = await params`
 - Tests for these handlers must pass `params` as a Promise (for example `params: Promise.resolve({ id: '123' })`).
+
+## Vercel + Prisma deploy pitfalls
+- Git-connected Vercel deploys run `npm run build` in Vercel (Turbopack) and can restore build cache, so type errors may differ from local sandbox builds.
+- After Prisma schema field changes, ensure Vercel build regenerates Prisma client types (for example via `prisma generate` in build/prebuild) to avoid stale-client TS errors like missing model properties.
+- For failed Vercel builds, use `npx vercel inspect <deployment-url> --logs` to get the exact failing file/line quickly.
 
 ## Autonomous memory updates
 - The agent may decide on its own to append notes to this file when it discovers stable, high-value project workflow knowledge.
