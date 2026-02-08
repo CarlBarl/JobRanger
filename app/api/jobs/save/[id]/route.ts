@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient()
   const {
@@ -19,7 +19,7 @@ export async function DELETE(
     )
   }
 
-  const afJobId = params.id
+  const { id: afJobId } = await params
   if (!afJobId) {
     return NextResponse.json(
       { success: false, error: { code: 'BAD_REQUEST', message: 'Missing job id' } },

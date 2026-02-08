@@ -34,7 +34,7 @@ describe('DELETE /api/jobs/save/[id]', () => {
     mocks.getUser.mockResolvedValue({ data: { user: null } })
 
     const req = new NextRequest('http://localhost/api/jobs/save/123', { method: 'DELETE' })
-    const res = await DELETE(req, { params: { id: '123' } })
+    const res = await DELETE(req, { params: Promise.resolve({ id: '123' }) })
 
     expect(res.status).toBe(401)
     await expect(res.json()).resolves.toMatchObject({
@@ -48,7 +48,7 @@ describe('DELETE /api/jobs/save/[id]', () => {
     mocks.delete.mockResolvedValue({ id: 'sj1' })
 
     const req = new NextRequest('http://localhost/api/jobs/save/123', { method: 'DELETE' })
-    const res = await DELETE(req, { params: { id: '123' } })
+    const res = await DELETE(req, { params: Promise.resolve({ id: '123' }) })
 
     expect(res.status).toBe(200)
     await expect(res.json()).resolves.toEqual({ success: true })
@@ -68,7 +68,7 @@ describe('DELETE /api/jobs/save/[id]', () => {
     )
 
     const req = new NextRequest('http://localhost/api/jobs/save/123', { method: 'DELETE' })
-    const res = await DELETE(req, { params: { id: '123' } })
+    const res = await DELETE(req, { params: Promise.resolve({ id: '123' }) })
 
     expect(res.status).toBe(404)
     await expect(res.json()).resolves.toMatchObject({
@@ -82,7 +82,7 @@ describe('DELETE /api/jobs/save/[id]', () => {
     mocks.delete.mockRejectedValue(new Error('db offline'))
 
     const req = new NextRequest('http://localhost/api/jobs/save/123', { method: 'DELETE' })
-    const res = await DELETE(req, { params: { id: '123' } })
+    const res = await DELETE(req, { params: Promise.resolve({ id: '123' }) })
 
     expect(res.status).toBe(500)
     await expect(res.json()).resolves.toMatchObject({

@@ -4,7 +4,7 @@ import { getJobById } from '@/lib/services/arbetsformedlingen'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient()
   const {
@@ -21,7 +21,9 @@ export async function GET(
     )
   }
 
-  if (!params.id) {
+  const { id } = await params
+
+  if (!id) {
     return NextResponse.json(
       {
         success: false,
@@ -31,7 +33,7 @@ export async function GET(
     )
   }
 
-  const data = await getJobById(params.id)
+  const data = await getJobById(id)
   return NextResponse.json({ success: true, data })
 }
 

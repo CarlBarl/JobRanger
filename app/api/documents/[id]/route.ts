@@ -5,7 +5,7 @@ import { getDocumentStoragePath } from '@/lib/storage'
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient()
   const {
@@ -19,7 +19,7 @@ export async function DELETE(
     )
   }
 
-  const id = params.id
+  const { id } = await params
   if (!id) {
     return NextResponse.json(
       { success: false, error: { code: 'BAD_REQUEST', message: 'Missing document id' } },
@@ -52,7 +52,7 @@ export async function DELETE(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient()
   const {
@@ -66,7 +66,7 @@ export async function PATCH(
     )
   }
 
-  const id = params.id
+  const { id } = await params
   if (!id) {
     return NextResponse.json(
       { success: false, error: { code: 'BAD_REQUEST', message: 'Missing document id' } },

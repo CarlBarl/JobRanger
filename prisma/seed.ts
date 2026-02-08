@@ -31,7 +31,6 @@ function getSupabaseClient() {
 const BUCKET_NAME = 'documents'
 
 // Ensure the documents bucket exists, create if not
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function ensureBucketExists(supabase: any): Promise<void> {
   const { data: buckets, error: listError } = await supabase.storage.listBuckets()
 
