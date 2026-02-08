@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient()
   const {
@@ -18,7 +18,7 @@ export async function DELETE(
     )
   }
 
-  const id = params.id
+  const { id } = await params
   if (!id) {
     return NextResponse.json(
       { success: false, error: { code: 'BAD_REQUEST', message: 'Missing letter id' } },

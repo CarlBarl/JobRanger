@@ -16,6 +16,8 @@ type DocumentRecord = {
   skills?: unknown
 }
 
+type ScoredJob = AFJobHit & { relevance?: { matched: number; total: number; score: number } }
+
 function isApiEnvelope(value: unknown): value is ApiEnvelope {
   return (
     !!value &&
@@ -261,7 +263,7 @@ export function JobSearch() {
     void runSearch(allSkillsQuery)
   }, [allSkillsQuery, runSearch, t])
 
-  const scoredJobs = useMemo(() => {
+  const scoredJobs: ScoredJob[] = useMemo(() => {
     let filtered = jobs
 
     // Apply region filter
@@ -286,7 +288,7 @@ export function JobSearch() {
           skills
         ),
       }))
-      .sort((a, b) => b.relevance.score - a.relevance.score)
+      .sort((a, b) => (b.relevance?.score ?? 0) - (a.relevance?.score ?? 0))
   }, [jobs, skills, relevanceEnabled, selectedRegion])
 
   return (
@@ -406,7 +408,7 @@ export function JobSearch() {
         <div className="grid gap-4 md:grid-cols-2">
           {scoredJobs.map((job) => (
             <div key={job.id} className="relative">
-              {'relevance' in job && job.relevance.matched > 0 && (
+              {job.relevance && job.relevance.matched > 0 && (
                 <span className="absolute top-2 right-2 z-10 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                   {t('relevanceBadge', {
                     matched: job.relevance.matched,

@@ -29,7 +29,7 @@ describe('GET /api/jobs/[id]', () => {
     mocks.getUser.mockResolvedValue({ data: { user: null } })
 
     const req = new NextRequest('http://localhost/api/jobs/123')
-    const res = await GET(req, { params: { id: '123' } })
+    const res = await GET(req, { params: Promise.resolve({ id: '123' }) })
 
     expect(res.status).toBe(401)
     await expect(res.json()).resolves.toMatchObject({
@@ -43,7 +43,7 @@ describe('GET /api/jobs/[id]', () => {
     mocks.getJobById.mockResolvedValue({ id: '123', headline: 'Dev' })
 
     const req = new NextRequest('http://localhost/api/jobs/123')
-    const res = await GET(req, { params: { id: '123' } })
+    const res = await GET(req, { params: Promise.resolve({ id: '123' }) })
 
     expect(res.status).toBe(200)
     await expect(res.json()).resolves.toEqual({
@@ -53,4 +53,3 @@ describe('GET /api/jobs/[id]', () => {
     expect(mocks.getJobById).toHaveBeenCalledWith('123')
   })
 })
-
