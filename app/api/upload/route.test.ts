@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   upload: vi.fn(),
   getOrCreateUser: vi.fn(),
   create: vi.fn(),
+  pdfGetText: vi.fn(),
+  pdfDestroy: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -30,6 +32,13 @@ vi.mock('@/lib/prisma', () => ({
     document: {
       create: mocks.create,
     },
+  },
+}))
+
+vi.mock('pdf-parse', () => ({
+  PDFParse: class {
+    getText = mocks.pdfGetText
+    destroy = mocks.pdfDestroy
   },
 }))
 
@@ -127,6 +136,103 @@ describe('POST /api/upload', () => {
         type: 'cv',
         parsedContent: expect.any(String),
         fileUrl: expect.stringMatching(/^u1\/\d+-cv\.txt$/),
+      }),
+    })
+  })
+
+  it('parses PDF content on upload', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
+    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1' })
+    mocks.upload.mockResolvedValue({ data: { path: 'u1/1-cv.pdf' }, error: null })
+    mocks.create.mockResolvedValue({ id: 'doc-2', fileUrl: 'u1/1-cv.pdf' })
+    mocks.pdfGetText.mockResolvedValue({ text: 'Extracted PDF text content' })
+    mocks.pdfDestroy.mockResolvedValue(undefined)
+
+    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46]).buffer
+    const pdfFile = new File(['%PDF-fake'], 'cv.pdf', { type: 'application/pdf' })
+    pdfFile.arrayBuffer = async () => pdfBytes
+
+    const fd = new FormData()
+    fd.set('type', 'cv')
+    fd.set('file', pdfFile)
+
+    const res = await POST(makeRequest(fd))
+    expect(res.status).toBe(200)
+    await expect(res.json()).resolves.toMatchObject({
+      success: true,
+      data: { id: 'doc-2' },
+    })
+    expect(mocks.pdfGetText).toHaveBeenCalled()
+    expect(mocks.pdfDestroy).toHaveBeenCalled()
+    expect(mocks.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'u1',
+        type: 'cv',
+        parsedContent: 'Extracted PDF text content',
+      }),
+    })
+  })
+
+  it('saves document with null parsedContent when PDF parsing fails', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
+    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1' })
+    mocks.upload.mockResolvedValue({ data: { path: 'u1/1-cv.pdf' }, error: null })
+    mocks.create.mockResolvedValue({ id: 'doc-3', fileUrl: 'u1/1-cv.pdf' })
+    mocks.pdfGetText.mockRejectedValue(new Error('Invalid PDF'))
+
+    const pdfBytes = new Uint8Array([0x00]).buffer
+    const pdfFile = new File(['not-a-pdf'], 'cv.pdf', { type: 'application/pdf' })
+    pdfFile.arrayBuffer = async () => pdfBytes
+
+    const fd = new FormData()
+    fd.set('type', 'cv')
+    fd.set('file', pdfFile)
+
+    const res = await POST(makeRequest(fd))
+    expect(res.status).toBe(200)
+    await expect(res.json()).resolves.toMatchObject({
+      success: true,
+      data: { id: 'doc-3' },
+    })
+    expect(mocks.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'u1',
+        type: 'cv',
+        parsedContent: null,
+      }),
+    })
+    expect(mocks.pdfDestroy).toHaveBeenCalled()
+  })
+
+  it('preserves parsed PDF content when parser cleanup fails', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
+    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1' })
+    mocks.upload.mockResolvedValue({ data: { path: 'u1/1-cv.pdf' }, error: null })
+    mocks.create.mockResolvedValue({ id: 'doc-4', fileUrl: 'u1/1-cv.pdf' })
+    mocks.pdfGetText.mockResolvedValue({ text: 'Extracted PDF text content' })
+    mocks.pdfDestroy.mockRejectedValue(new Error('Cleanup failure'))
+
+    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46]).buffer
+    const pdfFile = new File(['%PDF-fake'], 'cv.pdf', { type: 'application/pdf' })
+    pdfFile.arrayBuffer = async () => pdfBytes
+
+    const fd = new FormData()
+    fd.set('type', 'cv')
+    fd.set('file', pdfFile)
+
+    const res = await POST(makeRequest(fd))
+    expect(res.status).toBe(200)
+    await expect(res.json()).resolves.toMatchObject({
+      success: true,
+      data: { id: 'doc-4' },
+    })
+    expect(mocks.pdfGetText).toHaveBeenCalled()
+    expect(mocks.pdfDestroy).toHaveBeenCalled()
+    expect(mocks.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'u1',
+        type: 'cv',
+        parsedContent: 'Extracted PDF text content',
       }),
     })
   })
