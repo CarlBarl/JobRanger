@@ -43,3 +43,9 @@
 - Header baseline rule (`next.config.mjs`): maintain global security headers (`CSP`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`) unless a reviewed exception is required.
 - Auth error rule (`app/api/auth/signin/route.ts`): keep generic client-facing invalid-credentials message.
 - Storage RLS baseline (`storage.objects`): for bucket `documents`, enforce per-user folder policies so authenticated users can only `SELECT/INSERT/UPDATE/DELETE` objects under `<auth.uid()>/...` (see `prisma/storage-rls-policies.sql`).
+
+## Lessons learned: PDF upload incident (2026-02-10)
+- Browser uploads may send PDF as `application/x-pdf`, empty MIME, or `application/octet-stream`; normalize to `application/pdf` only when extension is `.pdf` and signature matches `%PDF-`.
+- Keep upload success independent from PDF text extraction: if parsing fails, still persist document with `parsedContent: null` and log structured `requestId` diagnostics.
+- In Next.js server runtime, PDF.js worker resolution can fail in dev chunks; keep explicit worker bootstrap/setup in `app/api/upload/route.ts` and maintain `types/pdfjs-worker.d.ts` for `pdf.worker.mjs` typing.
+- Route tests must mirror current Supabase client usage: when route uploads via `createClient().storage`, mocks must include `storage.from().upload` on `createClient`.
