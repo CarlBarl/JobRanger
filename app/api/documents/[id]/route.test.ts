@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
+import { MAX_PARSED_CONTENT_CHARS } from '@/lib/constants'
 
 const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
@@ -140,6 +141,22 @@ describe('PATCH /api/documents/[id]', () => {
     await expect(res.json()).resolves.toMatchObject({
       success: false,
       error: { code: 'BAD_REQUEST' },
+    })
+  })
+
+  it('returns 413 when parsedContent is too large', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
+
+    const req = new NextRequest('http://localhost/api/documents/d1', {
+      method: 'PATCH',
+      body: JSON.stringify({ parsedContent: 'a'.repeat(MAX_PARSED_CONTENT_CHARS + 1) }),
+    })
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'd1' }) })
+
+    expect(res.status).toBe(413)
+    await expect(res.json()).resolves.toMatchObject({
+      success: false,
+      error: { code: 'PAYLOAD_TOO_LARGE' },
     })
   })
 

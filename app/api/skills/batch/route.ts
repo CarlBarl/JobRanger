@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { extractSkillsFromCV } from '@/lib/services/gemini'
+import { enforceCsrfProtection } from '@/lib/security/csrf'
+import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 interface BatchResult {
   total: number
@@ -26,6 +28,9 @@ interface BatchResult {
 }
 
 export async function POST(request: NextRequest) {
+  const csrfError = enforceCsrfProtection(request)
+  if (csrfError) return csrfError
+
   try {
     // Check authentication
     const supabase = await createClient()
@@ -44,6 +49,14 @@ export async function POST(request: NextRequest) {
           }
         },
         { status: 401 }
+      )
+    }
+
+    const batchLimit = consumeRateLimit('skills-batch-user', user.id, 5, 60 * 60 * 1000)
+    if (!batchLimit.allowed) {
+      return rateLimitResponse(
+        'Batch extraction limit reached. Please try again later.',
+        batchLimit.retryAfterSeconds
       )
     }
 

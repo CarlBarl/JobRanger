@@ -3,6 +3,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { extractSkillsFromCV } from '@/lib/services/gemini'
+import { enforceCsrfProtection } from '@/lib/security/csrf'
+import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 const RequestSchema = z.object({
   documentId: z.string().min(1),
@@ -14,6 +16,9 @@ const UpdateSkillsSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
+  const csrfError = enforceCsrfProtection(request)
+  if (csrfError) return csrfError
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -26,6 +31,14 @@ export async function POST(request: NextRequest) {
         error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
       },
       { status: 401 }
+    )
+  }
+
+  const extractLimit = consumeRateLimit('skills-extract-user', user.id, 30, 60 * 60 * 1000)
+  if (!extractLimit.allowed) {
+    return rateLimitResponse(
+      'Skills extraction limit reached. Please try again later.',
+      extractLimit.retryAfterSeconds
     )
   }
 
@@ -87,6 +100,9 @@ export async function POST(request: NextRequest) {
 
 // PATCH: Update skills manually
 export async function PATCH(request: NextRequest) {
+  const csrfError = enforceCsrfProtection(request)
+  if (csrfError) return csrfError
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -99,6 +115,14 @@ export async function PATCH(request: NextRequest) {
         error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
       },
       { status: 401 }
+    )
+  }
+
+  const updateLimit = consumeRateLimit('skills-update-user', user.id, 120, 60 * 60 * 1000)
+  if (!updateLimit.allowed) {
+    return rateLimitResponse(
+      'Skills update limit reached. Please try again later.',
+      updateLimit.retryAfterSeconds
     )
   }
 

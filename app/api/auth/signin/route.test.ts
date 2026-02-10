@@ -53,7 +53,7 @@ describe('POST /api/auth/signin', () => {
     expect(res.status).toBe(401)
     await expect(res.json()).resolves.toMatchObject({
       success: false,
-      error: { code: 'UNAUTHORIZED', message: 'Invalid login credentials' },
+      error: { code: 'UNAUTHORIZED', message: 'Invalid email or password' },
     })
   })
 

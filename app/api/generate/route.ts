@@ -6,6 +6,8 @@ import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
 import { getJobById } from '@/lib/services/arbetsformedlingen'
 import { generateCoverLetter } from '@/lib/services/gemini'
+import { enforceCsrfProtection } from '@/lib/security/csrf'
+import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 const RequestSchema = z.object({
   afJobId: z.string().min(1),
@@ -13,6 +15,9 @@ const RequestSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
+  const csrfError = enforceCsrfProtection(request)
+  if (csrfError) return csrfError
+
   const supabase = await createClient()
   const {
     data: { user: authUser },
@@ -41,6 +46,14 @@ export async function POST(request: NextRequest) {
 
     // Ensure the DB user exists (GeneratedLetter has a FK to User).
     const user = await getOrCreateUser(authUser.id, authUser.email)
+
+    const userLimit = consumeRateLimit('generate-letter-user', user.id, 20, 60 * 60 * 1000)
+    if (!userLimit.allowed) {
+      return rateLimitResponse(
+        'Letter generation limit reached. Please try again later.',
+        userLimit.retryAfterSeconds
+      )
+    }
 
     const job = await getJobById(afJobId)
     if (!job) {

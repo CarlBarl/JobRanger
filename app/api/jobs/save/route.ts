@@ -3,6 +3,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
+import { enforceCsrfProtection } from '@/lib/security/csrf'
+import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 const SaveJobSchema = z.object({
   afJobId: z.string().min(1),
@@ -10,6 +12,9 @@ const SaveJobSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
+  const csrfError = enforceCsrfProtection(request)
+  if (csrfError) return csrfError
+
   const supabase = await createClient()
   const {
     data: { user: authUser },
@@ -37,6 +42,13 @@ export async function POST(request: NextRequest) {
     }
 
     const user = await getOrCreateUser(authUser.id, authUser.email)
+    const writeLimit = consumeRateLimit('saved-job-write-user', user.id, 120, 60 * 60 * 1000)
+    if (!writeLimit.allowed) {
+      return rateLimitResponse(
+        'Save job rate limit exceeded. Please try again later.',
+        writeLimit.retryAfterSeconds
+      )
+    }
 
     const savedJob = await prisma.savedJob.upsert({
       where: {

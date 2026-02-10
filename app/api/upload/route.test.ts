@@ -148,7 +148,7 @@ describe('POST /api/upload', () => {
     mocks.pdfGetText.mockResolvedValue({ text: 'Extracted PDF text content' })
     mocks.pdfDestroy.mockResolvedValue(undefined)
 
-    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46]).buffer
+    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]).buffer
     const pdfFile = new File(['%PDF-fake'], 'cv.pdf', { type: 'application/pdf' })
     pdfFile.arrayBuffer = async () => pdfBytes
 
@@ -180,7 +180,7 @@ describe('POST /api/upload', () => {
     mocks.create.mockResolvedValue({ id: 'doc-3', fileUrl: 'u1/1-cv.pdf' })
     mocks.pdfGetText.mockRejectedValue(new Error('Invalid PDF'))
 
-    const pdfBytes = new Uint8Array([0x00]).buffer
+    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]).buffer
     const pdfFile = new File(['not-a-pdf'], 'cv.pdf', { type: 'application/pdf' })
     pdfFile.arrayBuffer = async () => pdfBytes
 
@@ -212,7 +212,7 @@ describe('POST /api/upload', () => {
     mocks.pdfGetText.mockResolvedValue({ text: 'Extracted PDF text content' })
     mocks.pdfDestroy.mockRejectedValue(new Error('Cleanup failure'))
 
-    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46]).buffer
+    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]).buffer
     const pdfFile = new File(['%PDF-fake'], 'cv.pdf', { type: 'application/pdf' })
     pdfFile.arrayBuffer = async () => pdfBytes
 

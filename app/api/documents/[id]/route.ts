@@ -2,11 +2,17 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getDocumentStoragePath } from '@/lib/storage'
+import { MAX_PARSED_CONTENT_CHARS } from '@/lib/constants'
+import { enforceCsrfProtection } from '@/lib/security/csrf'
+import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const csrfError = enforceCsrfProtection(request)
+  if (csrfError) return csrfError
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -16,6 +22,14 @@ export async function DELETE(
     return NextResponse.json(
       { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
       { status: 401 }
+    )
+  }
+
+  const deleteLimit = consumeRateLimit('document-delete-user', user.id, 120, 60 * 60 * 1000)
+  if (!deleteLimit.allowed) {
+    return rateLimitResponse(
+      'Delete document rate limit exceeded. Please try again later.',
+      deleteLimit.retryAfterSeconds
     )
   }
 
@@ -54,6 +68,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const csrfError = enforceCsrfProtection(request)
+  if (csrfError) return csrfError
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -63,6 +80,14 @@ export async function PATCH(
     return NextResponse.json(
       { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
       { status: 401 }
+    )
+  }
+
+  const patchLimit = consumeRateLimit('document-patch-user', user.id, 120, 60 * 60 * 1000)
+  if (!patchLimit.allowed) {
+    return rateLimitResponse(
+      'Document update rate limit exceeded. Please try again later.',
+      patchLimit.retryAfterSeconds
     )
   }
 
@@ -90,6 +115,19 @@ export async function PATCH(
     return NextResponse.json(
       { success: false, error: { code: 'BAD_REQUEST', message: 'parsedContent must be a string' } },
       { status: 400 }
+    )
+  }
+
+  if (parsedContent.length > MAX_PARSED_CONTENT_CHARS) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'PAYLOAD_TOO_LARGE',
+          message: `parsedContent must be at most ${MAX_PARSED_CONTENT_CHARS} characters`,
+        },
+      },
+      { status: 413 }
     )
   }
 

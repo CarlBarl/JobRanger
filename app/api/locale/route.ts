@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { locales, type Locale } from '@/i18n/config'
+import { enforceCsrfProtection } from '@/lib/security/csrf'
 
 export async function POST(request: NextRequest) {
+  const csrfError = enforceCsrfProtection(request)
+  if (csrfError) return csrfError
+
   const { locale } = await request.json()
 
   if (!locales.includes(locale as Locale)) {
@@ -16,6 +20,8 @@ export async function POST(request: NextRequest) {
     path: '/',
     maxAge: 60 * 60 * 24 * 365, // 1 year
     sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
   })
 
   return response
