@@ -15,6 +15,8 @@ vi.mock('@/lib/supabase/server', () => ({
     auth: {
       getUser: mocks.getUser,
     },
+  }),
+  createServiceClient: () => ({
     storage: {
       from: () => ({
         upload: mocks.upload,

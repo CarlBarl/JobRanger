@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
 import {
@@ -209,7 +209,10 @@ export async function POST(request: NextRequest) {
     const safeName = sanitizeFilename(file.name)
     const fileName = `${user.id}/${Date.now()}-${safeName}`
 
-    const { error: uploadError } = await supabase.storage
+    // Use service-role client for storage upload to bypass RLS.
+    // Auth is already verified above via supabase.auth.getUser().
+    const serviceClient = createServiceClient()
+    const { error: uploadError } = await serviceClient.storage
       .from('documents')
       .upload(fileName, file)
 
