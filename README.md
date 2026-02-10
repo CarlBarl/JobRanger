@@ -71,6 +71,10 @@ An AI-powered job matching platform that helps Swedish job seekers find relevant
    npx prisma db push
    ```
 
+   Then apply Supabase RLS policies in SQL Editor:
+   - `prisma/rls-policies.sql` (app tables)
+   - `prisma/storage-rls-policies.sql` (Storage bucket `documents`)
+
 5. **Start the development server**
    ```bash
    npm run dev
