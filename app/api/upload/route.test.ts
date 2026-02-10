@@ -8,12 +8,18 @@ const mocks = vi.hoisted(() => ({
   create: vi.fn(),
   pdfGetText: vi.fn(),
   pdfDestroy: vi.fn(),
+  pdfSetWorker: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     auth: {
       getUser: mocks.getUser,
+    },
+    storage: {
+      from: () => ({
+        upload: mocks.upload,
+      }),
     },
   }),
   createServiceClient: () => ({
@@ -39,6 +45,7 @@ vi.mock('@/lib/prisma', () => ({
 
 vi.mock('pdf-parse', () => ({
   PDFParse: class {
+    static setWorker = mocks.pdfSetWorker
     getText = mocks.pdfGetText
     destroy = mocks.pdfDestroy
   },
@@ -114,6 +121,81 @@ describe('POST /api/upload', () => {
       success: false,
       error: { code: 'BAD_REQUEST' },
     })
+  })
+
+  it('accepts application/x-pdf MIME alias', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
+    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1' })
+    mocks.upload.mockResolvedValue({ data: { path: 'u1/1-cv.pdf' }, error: null })
+    mocks.create.mockResolvedValue({ id: 'doc-alias', fileUrl: 'u1/1-cv.pdf' })
+    mocks.pdfGetText.mockResolvedValue({ text: 'Extracted PDF text content' })
+    mocks.pdfDestroy.mockResolvedValue(undefined)
+
+    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]).buffer
+    const pdfFile = new File(['%PDF-fake'], 'cv.pdf', { type: 'application/x-pdf' })
+    pdfFile.arrayBuffer = async () => pdfBytes
+
+    const fd = new FormData()
+    fd.set('type', 'cv')
+    fd.set('file', pdfFile)
+
+    const res = await POST(makeRequest(fd))
+    expect(res.status).toBe(200)
+    expect(mocks.upload).toHaveBeenCalledWith(
+      expect.stringMatching(/^u1\/\d+-cv\.pdf$/),
+      expect.any(Blob),
+      { contentType: 'application/pdf' }
+    )
+  })
+
+  it('accepts application/octet-stream PDFs when extension and signature match', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
+    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1' })
+    mocks.upload.mockResolvedValue({ data: { path: 'u1/1-cv.pdf' }, error: null })
+    mocks.create.mockResolvedValue({ id: 'doc-octet', fileUrl: 'u1/1-cv.pdf' })
+    mocks.pdfGetText.mockResolvedValue({ text: 'Extracted PDF text content' })
+    mocks.pdfDestroy.mockResolvedValue(undefined)
+
+    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]).buffer
+    const pdfFile = new File(['%PDF-fake'], 'cv.pdf', { type: 'application/octet-stream' })
+    pdfFile.arrayBuffer = async () => pdfBytes
+
+    const fd = new FormData()
+    fd.set('type', 'cv')
+    fd.set('file', pdfFile)
+
+    const res = await POST(makeRequest(fd))
+    expect(res.status).toBe(200)
+    expect(mocks.upload).toHaveBeenCalledWith(
+      expect.stringMatching(/^u1\/\d+-cv\.pdf$/),
+      expect.any(Blob),
+      { contentType: 'application/pdf' }
+    )
+  })
+
+  it('accepts PDFs with empty MIME type when extension and signature match', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
+    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1' })
+    mocks.upload.mockResolvedValue({ data: { path: 'u1/1-cv.pdf' }, error: null })
+    mocks.create.mockResolvedValue({ id: 'doc-empty', fileUrl: 'u1/1-cv.pdf' })
+    mocks.pdfGetText.mockResolvedValue({ text: 'Extracted PDF text content' })
+    mocks.pdfDestroy.mockResolvedValue(undefined)
+
+    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]).buffer
+    const pdfFile = new File(['%PDF-fake'], 'cv.pdf')
+    pdfFile.arrayBuffer = async () => pdfBytes
+
+    const fd = new FormData()
+    fd.set('type', 'cv')
+    fd.set('file', pdfFile)
+
+    const res = await POST(makeRequest(fd))
+    expect(res.status).toBe(200)
+    expect(mocks.upload).toHaveBeenCalledWith(
+      expect.stringMatching(/^u1\/\d+-cv\.pdf$/),
+      expect.any(Blob),
+      { contentType: 'application/pdf' }
+    )
   })
 
   it('uploads to storage and creates document record', async () => {

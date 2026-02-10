@@ -42,3 +42,4 @@
 - Redirect rule (`app/auth/callback/route.ts`): keep `next` path sanitization (relative-path only; reject protocol-relative/absolute/newline payloads).
 - Header baseline rule (`next.config.mjs`): maintain global security headers (`CSP`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`) unless a reviewed exception is required.
 - Auth error rule (`app/api/auth/signin/route.ts`): keep generic client-facing invalid-credentials message.
+- Storage RLS baseline (`storage.objects`): for bucket `documents`, enforce per-user folder policies so authenticated users can only `SELECT/INSERT/UPDATE/DELETE` objects under `<auth.uid()>/...` (see `prisma/storage-rls-policies.sql`).

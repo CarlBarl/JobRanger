@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createRequire } from 'node:module'
+import { readFileSync } from 'node:fs'
+import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
 import {
@@ -7,7 +9,6 @@ import {
   ALLOWED_UPLOAD_MIME_SET,
   ALLOWED_UPLOAD_EXTENSIONS,
 } from '@/lib/constants'
-import { PDFParse } from 'pdf-parse'
 import { enforceCsrfProtection } from '@/lib/security/csrf'
 import {
   consumeRateLimit,
@@ -24,6 +25,21 @@ function getFileExtension(filename: string) {
   const dotIndex = lower.lastIndexOf('.')
   if (dotIndex === -1) return ''
   return lower.slice(dotIndex)
+}
+
+function normalizeMimeType(rawMimeType: string, filename: string) {
+  const extension = getFileExtension(filename)
+  const mimeType = rawMimeType.trim().toLowerCase()
+
+  if (mimeType === 'application/pdf' || mimeType === 'application/x-pdf') {
+    return 'application/pdf'
+  }
+
+  if (extension === '.pdf' && (mimeType === '' || mimeType === 'application/octet-stream')) {
+    return 'application/pdf'
+  }
+
+  return mimeType
 }
 
 function hasPdfSignature(bytes: Uint8Array) {
@@ -87,21 +103,159 @@ function extensionMatchesMime(filename: string, mimeType: string) {
   return false
 }
 
+type PdfParser = {
+  getText: () => Promise<{ text: string }>
+  destroy: () => Promise<void>
+}
+
+type PdfParseConstructor = {
+  new (params: { data: Uint8Array }): PdfParser
+  setWorker: (workerSrc?: string) => string
+}
+
+type PdfWorkerBootstrapStatus =
+  | 'skipped_test'
+  | 'already_initialized'
+  | 'initialized_from_module'
+  | 'module_missing_handler'
+  | 'module_import_failed'
+
+let isPdfWorkerConfigured = false
+let resolvedPdfWorkerSrc: string | null | undefined
+const require = createRequire(import.meta.url)
+
+function resolvePdfWorkerSource() {
+  if (resolvedPdfWorkerSrc !== undefined) {
+    return resolvedPdfWorkerSrc
+  }
+
+  try {
+    const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.min.mjs')
+    const workerSource = readFileSync(workerPath, 'utf8')
+    resolvedPdfWorkerSrc = `data:text/javascript;base64,${Buffer.from(workerSource, 'utf8').toString('base64')}`
+  } catch {
+    resolvedPdfWorkerSrc = null
+  }
+
+  return resolvedPdfWorkerSrc
+}
+
+async function ensurePdfJsWorkerHandler(): Promise<{
+  status: PdfWorkerBootstrapStatus
+  message?: string
+}> {
+  if (process.env.NODE_ENV === 'test') {
+    return { status: 'skipped_test' }
+  }
+
+  const globalWithPdfWorker = globalThis as typeof globalThis & {
+    pdfjsWorker?: { WorkerMessageHandler?: unknown }
+  }
+
+  if (globalWithPdfWorker.pdfjsWorker?.WorkerMessageHandler) {
+    return { status: 'already_initialized' }
+  }
+
+  try {
+    const workerModule = (await import('pdfjs-dist/legacy/build/pdf.worker.mjs')) as {
+      WorkerMessageHandler?: unknown
+    }
+
+    if (!workerModule.WorkerMessageHandler) {
+      return { status: 'module_missing_handler' }
+    }
+
+    globalWithPdfWorker.pdfjsWorker = {
+      ...(globalWithPdfWorker.pdfjsWorker ?? {}),
+      WorkerMessageHandler: workerModule.WorkerMessageHandler,
+    }
+
+    return { status: 'initialized_from_module' }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return { status: 'module_import_failed', message }
+  }
+}
+
+async function getPdfParseConstructor(): Promise<PdfParseConstructor> {
+  const { PDFParse } = await import('pdf-parse')
+
+  const ctor = PDFParse as unknown as PdfParseConstructor
+
+  if (!isPdfWorkerConfigured) {
+    const workerSrc = resolvePdfWorkerSource()
+    if (workerSrc) {
+      ctor.setWorker(workerSrc)
+    }
+    isPdfWorkerConfigured = true
+  }
+
+  return ctor
+}
+
+function formatErrorForLog(error: unknown) {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    }
+  }
+
+  return {
+    message: String(error),
+  }
+}
+
 export async function POST(request: NextRequest) {
+  const requestId = crypto.randomUUID()
+  let stage = 'init'
+  const logPrefix = `[api/upload][${requestId}]`
+  const logInfo = (event: string, context?: Record<string, unknown>) => {
+    if (context) {
+      console.info(logPrefix, event, context)
+      return
+    }
+    console.info(logPrefix, event)
+  }
+  const logError = (event: string, error: unknown, context?: Record<string, unknown>) => {
+    const details = formatErrorForLog(error)
+    if (context) {
+      console.error(logPrefix, event, { ...context, error: details })
+      return
+    }
+    console.error(logPrefix, event, { error: details })
+  }
+
+  const header = (name: string) => request.headers?.get?.(name) ?? null
+
+  logInfo('request.start', {
+    method: request.method ?? null,
+    pathname: request.nextUrl?.pathname ?? null,
+    contentType: header('content-type'),
+    origin: header('origin'),
+  })
+
   const csrfError = enforceCsrfProtection(request)
-  if (csrfError) return csrfError
+  if (csrfError) {
+    logInfo('request.rejected.csrf')
+    return csrfError
+  }
 
   const ipLimit = consumeRateLimit('upload-ip', getClientIp(request), 30, 60 * 60 * 1000)
   if (!ipLimit.allowed) {
+    logInfo('request.rejected.rate_limit', { retryAfterSeconds: ipLimit.retryAfterSeconds })
     return rateLimitResponse('Upload rate limit exceeded. Please try again later.', ipLimit.retryAfterSeconds)
   }
 
+  stage = 'auth.get_user'
   const supabase = await createClient()
   const {
     data: { user: authUser },
   } = await supabase.auth.getUser()
 
   if (!authUser) {
+    logInfo('request.rejected.unauthenticated')
     return NextResponse.json(
       { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
       { status: 401 }
@@ -109,11 +263,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    stage = 'form_data.parse'
     const formData = await request.formData()
     const file = formData.get('file')
     const typeValue = formData.get('type')
 
     if (!(file instanceof File)) {
+      logInfo('request.rejected.no_file')
       return NextResponse.json(
         { success: false, error: { code: 'BAD_REQUEST', message: 'No file provided' } },
         { status: 400 }
@@ -121,6 +277,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (typeof typeValue !== 'string') {
+      logInfo('request.rejected.invalid_type_field')
       return NextResponse.json(
         { success: false, error: { code: 'BAD_REQUEST', message: 'Invalid document type' } },
         { status: 400 }
@@ -128,13 +285,24 @@ export async function POST(request: NextRequest) {
     }
 
     if (typeValue !== 'cv' && typeValue !== 'personal_letter') {
+      logInfo('request.rejected.invalid_document_type', { typeValue })
       return NextResponse.json(
         { success: false, error: { code: 'BAD_REQUEST', message: 'Invalid document type' } },
         { status: 400 }
       )
     }
 
-    if (!ALLOWED_UPLOAD_MIME_SET.has(file.type)) {
+    const normalizedMimeType = normalizeMimeType(file.type, file.name)
+    logInfo('file.received', {
+      name: file.name,
+      size: file.size,
+      rawMimeType: file.type,
+      normalizedMimeType,
+      documentType: typeValue,
+    })
+
+    if (!ALLOWED_UPLOAD_MIME_SET.has(normalizedMimeType)) {
+      logInfo('request.rejected.invalid_mime', { normalizedMimeType })
       return NextResponse.json(
         {
           success: false,
@@ -146,6 +314,7 @@ export async function POST(request: NextRequest) {
 
     const extension = getFileExtension(file.name)
     if (!ALLOWED_UPLOAD_EXTENSIONS.includes(extension as (typeof ALLOWED_UPLOAD_EXTENSIONS)[number])) {
+      logInfo('request.rejected.invalid_extension', { extension, fileName: file.name })
       return NextResponse.json(
         {
           success: false,
@@ -155,7 +324,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!extensionMatchesMime(file.name, file.type)) {
+    if (!extensionMatchesMime(file.name, normalizedMimeType)) {
+      logInfo('request.rejected.extension_mime_mismatch', {
+        extension,
+        normalizedMimeType,
+      })
       return NextResponse.json(
         {
           success: false,
@@ -166,16 +339,28 @@ export async function POST(request: NextRequest) {
     }
 
     if (file.size > MAX_UPLOAD_BYTES) {
+      logInfo('request.rejected.file_too_large', {
+        size: file.size,
+        maxBytes: MAX_UPLOAD_BYTES,
+      })
       return NextResponse.json(
         { success: false, error: { code: 'BAD_REQUEST', message: 'File must be less than 5MB' } },
         { status: 400 }
       )
     }
 
+    stage = 'file.signature_validation'
     let fileBytes: Uint8Array | null = null
     if (typeof file.arrayBuffer === 'function') {
       fileBytes = new Uint8Array(await file.arrayBuffer())
-      if (!validateFileSignature(file.type, fileBytes)) {
+      const signatureOk = validateFileSignature(normalizedMimeType, fileBytes)
+      if (!signatureOk) {
+        logInfo('request.rejected.signature_mismatch', {
+          normalizedMimeType,
+          firstBytesHex: Array.from(fileBytes.slice(0, 8))
+            .map((byte) => byte.toString(16).padStart(2, '0'))
+            .join(''),
+        })
         return NextResponse.json(
           {
             success: false,
@@ -184,7 +369,8 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         )
       }
-    } else if (file.type !== 'text/plain') {
+    } else if (normalizedMimeType !== 'text/plain') {
+      logInfo('request.rejected.no_arraybuffer_for_binary', { normalizedMimeType })
       return NextResponse.json(
         {
           success: false,
@@ -195,6 +381,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!authUser.email) {
+      logInfo('request.rejected.missing_auth_email')
       return NextResponse.json(
         {
           success: false,
@@ -204,30 +391,52 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    stage = 'user.resolve'
     const user = await getOrCreateUser(authUser.id, authUser.email)
 
     const safeName = sanitizeFilename(file.name)
     const fileName = `${user.id}/${Date.now()}-${safeName}`
 
-    // Use service-role client for storage upload to bypass RLS.
-    // Auth is already verified above via supabase.auth.getUser().
-    const serviceClient = createServiceClient()
-    const { error: uploadError } = await serviceClient.storage
+    const uploadPayload =
+      fileBytes && normalizedMimeType
+        ? new Blob([Uint8Array.from(fileBytes)], { type: normalizedMimeType })
+        : file
+
+    stage = 'storage.upload'
+    logInfo('storage.upload.start', {
+      bucket: 'documents',
+      fileName,
+      normalizedMimeType,
+      payloadKind: uploadPayload instanceof Blob ? 'blob' : 'file',
+    })
+    const { error: uploadError } = await supabase.storage
       .from('documents')
-      .upload(fileName, file)
+      .upload(fileName, uploadPayload, { contentType: normalizedMimeType || undefined })
 
     if (uploadError) {
-      console.error('Upload error:', uploadError)
+      logError('storage.upload.error', uploadError, {
+        fileName,
+        normalizedMimeType,
+      })
       return NextResponse.json(
-        { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to upload file' } },
-        { status: 500 }
+        {
+          success: false,
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to upload file',
+            requestId,
+          },
+        },
+        { status: 500, headers: { 'x-upload-request-id': requestId } }
       )
     }
+
+    logInfo('storage.upload.success', { fileName })
 
     // Parse file content based on MIME type.
     // In some test environments (jsdom), File lacks `text()`/`arrayBuffer()`, so we feature-detect.
     let parsedContent: string | null = '[File parsing not implemented]'
-    if (file.type === 'text/plain') {
+    if (normalizedMimeType === 'text/plain') {
       if (fileBytes) {
         const bytes = fileBytes
 
@@ -247,28 +456,38 @@ export async function POST(request: NextRequest) {
       } else if (typeof file.text === 'function') {
         parsedContent = await file.text()
       }
-    } else if (file.type === 'application/pdf') {
-      let parser: PDFParse | null = null
+    } else if (normalizedMimeType === 'application/pdf') {
+      stage = 'pdf.parse'
+      let parser: PdfParser | null = null
       try {
         const bytes = fileBytes ?? new Uint8Array(await file.arrayBuffer())
         const buffer = Buffer.from(bytes)
+        const workerBootstrap = await ensurePdfJsWorkerHandler()
+        logInfo('pdf.worker.bootstrap', workerBootstrap)
+        // Load lazily so parser module/runtime incompatibilities do not fail all uploads.
+        const PDFParse = await getPdfParseConstructor()
+        logInfo('pdf.worker.src', { workerSrc: PDFParse.setWorker() })
         parser = new PDFParse({ data: new Uint8Array(buffer) })
         const result = await parser.getText()
         parsedContent = result.text
       } catch (e) {
-        console.error('PDF parse error:', e)
+        logError('pdf.parse.error', e, {
+          fileName,
+          normalizedMimeType,
+        })
         parsedContent = null
       } finally {
         if (parser) {
           try {
             await parser.destroy()
           } catch (e) {
-            console.error('PDF parser cleanup error:', e)
+            logError('pdf.parse.cleanup_error', e, { fileName })
           }
         }
       }
     }
 
+    stage = 'db.document_create'
     const document = await prisma.document.create({
       data: {
         userId: user.id,
@@ -278,12 +497,24 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    logInfo('request.success', {
+      documentId: document.id,
+      fileName,
+      parsedContentLength: parsedContent?.length ?? null,
+    })
     return NextResponse.json({ success: true, data: document })
   } catch (error) {
-    console.error('Upload error:', error)
+    logError('request.failure', error, { stage })
     return NextResponse.json(
-      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to process upload' } },
-      { status: 500 }
+      {
+        success: false,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Failed to process upload',
+          requestId,
+        },
+      },
+      { status: 500, headers: { 'x-upload-request-id': requestId } }
     )
   }
 }

@@ -6,7 +6,11 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Upload, FileText, X, Loader2 } from 'lucide-react'
-import { MAX_UPLOAD_BYTES, ALLOWED_UPLOAD_MIME_TYPES } from '@/lib/constants'
+import {
+  MAX_UPLOAD_BYTES,
+  ALLOWED_UPLOAD_MIME_TYPES,
+  ALLOWED_UPLOAD_EXTENSIONS,
+} from '@/lib/constants'
 
 type DocumentType = 'cv' | 'cover_letter_template'
 
@@ -18,6 +22,13 @@ type FileUploadProps = {
   documentType?: DocumentType
   onUploadComplete?: (document: { id: string; fileUrl: string }) => void
   variant?: 'card' | 'embedded'
+}
+
+function getFileExtension(filename: string) {
+  const lower = filename.toLowerCase()
+  const dotIndex = lower.lastIndexOf('.')
+  if (dotIndex === -1) return ''
+  return lower.slice(dotIndex)
 }
 
 export function FileUpload({
@@ -35,7 +46,14 @@ export function FileUpload({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const selectedFile = e.target.files?.[0]
       if (selectedFile) {
-        if (!(ALLOWED_UPLOAD_MIME_TYPES as readonly string[]).includes(selectedFile.type)) {
+        const mimeType = selectedFile.type.trim().toLowerCase()
+        const extension = getFileExtension(selectedFile.name)
+        const hasAllowedMime = (ALLOWED_UPLOAD_MIME_TYPES as readonly string[]).includes(mimeType)
+        const hasAllowedExtension = (ALLOWED_UPLOAD_EXTENSIONS as readonly string[]).includes(
+          extension
+        )
+
+        if (!hasAllowedMime && !hasAllowedExtension) {
           setError(t('invalidType'))
           return
         }
