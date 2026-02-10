@@ -22,3 +22,23 @@
 - The agent may decide on its own to append notes to this file when it discovers stable, high-value project workflow knowledge.
 - Add only project-relevant operational guidance (build/test commands, environment constraints, recurring pitfalls).
 - Keep entries concise and actionable; do not add secrets, credentials, or personal data.
+
+## Security hardening baseline (2026-02-10)
+- Fix order used for the full security pass (keep this priority for future audits):
+  1. CSRF protections on cookie-authenticated state-changing routes.
+  2. Rate limiting on auth and high-cost endpoints.
+  3. Payload/file validation bounds (size + type/signature checks).
+  4. Redirect hardening and response-hardening headers.
+  5. Error-message hardening (avoid detailed auth/provider leakage).
+- CSRF rule: all `POST`/`PATCH`/`DELETE` route handlers should enforce `enforceCsrfProtection(request)` from `lib/security/csrf.ts` unless a route is explicitly cross-origin by design.
+  - Allowed origins can be extended with `CSRF_TRUSTED_ORIGINS` (comma-separated origins).
+- Rate-limit rule: sensitive routes should use `consumeRateLimit(...)` from `lib/security/rate-limit.ts` and return `rateLimitResponse(...)` on exhaustion.
+  - Current high-priority protected routes include signin, upload, generate, skills (single + batch), debug chat, and mutation routes for documents/jobs/letters.
+- Upload rule (`app/api/upload/route.ts`): keep all three checks:
+  - MIME allowlist
+  - extension allowlist + extension/MIME match
+  - file signature validation (PDF magic, DOCX zip signature, text sanity)
+- Document PATCH rule (`app/api/documents/[id]/route.ts`): keep `MAX_PARSED_CONTENT_CHARS` enforcement and return `413` for oversized payloads.
+- Redirect rule (`app/auth/callback/route.ts`): keep `next` path sanitization (relative-path only; reject protocol-relative/absolute/newline payloads).
+- Header baseline rule (`next.config.mjs`): maintain global security headers (`CSP`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`) unless a reviewed exception is required.
+- Auth error rule (`app/api/auth/signin/route.ts`): keep generic client-facing invalid-credentials message.

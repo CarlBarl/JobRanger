@@ -2,11 +2,16 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { enforceCsrfProtection } from '@/lib/security/csrf'
+import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const csrfError = enforceCsrfProtection(request)
+  if (csrfError) return csrfError
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -16,6 +21,14 @@ export async function DELETE(
     return NextResponse.json(
       { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
       { status: 401 }
+    )
+  }
+
+  const writeLimit = consumeRateLimit('saved-job-delete-user', user.id, 120, 60 * 60 * 1000)
+  if (!writeLimit.allowed) {
+    return rateLimitResponse(
+      'Delete saved job rate limit exceeded. Please try again later.',
+      writeLimit.retryAfterSeconds
     )
   }
 

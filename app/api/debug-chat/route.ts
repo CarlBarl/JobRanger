@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { chat, GEMINI_MODEL } from '@/lib/services/gemini'
+import { enforceCsrfProtection } from '@/lib/security/csrf'
+import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 const DEBUG_EMAIL = process.env.DEBUG_EMAIL
 
 export async function POST(request: NextRequest) {
+  const csrfError = enforceCsrfProtection(request)
+  if (csrfError) return csrfError
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -12,6 +17,14 @@ export async function POST(request: NextRequest) {
 
   if (!user?.email || user.email !== DEBUG_EMAIL) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+  }
+
+  const debugLimit = consumeRateLimit('debug-chat-user', user.id, 60, 60 * 60 * 1000)
+  if (!debugLimit.allowed) {
+    return rateLimitResponse(
+      'Debug chat rate limit exceeded. Please try again later.',
+      debugLimit.retryAfterSeconds
+    )
   }
 
   try {
