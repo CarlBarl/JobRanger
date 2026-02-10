@@ -1,6 +1,21 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createRequire } from 'node:module'
 import { readFileSync } from 'node:fs'
+
+// Polyfill DOM APIs needed by pdfjs-dist in serverless environments (Vercel).
+// Only text extraction is used — no actual rendering — so stubs suffice.
+if (typeof globalThis.DOMMatrix === 'undefined') {
+  // @ts-expect-error Minimal stub for text-only PDF extraction
+  globalThis.DOMMatrix = class DOMMatrix {}
+}
+if (typeof globalThis.ImageData === 'undefined') {
+  // @ts-expect-error Minimal stub for text-only PDF extraction
+  globalThis.ImageData = class ImageData {}
+}
+if (typeof globalThis.Path2D === 'undefined') {
+  // @ts-expect-error Minimal stub for text-only PDF extraction
+  globalThis.Path2D = class Path2D {}
+}
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
