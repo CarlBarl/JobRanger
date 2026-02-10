@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
 import { MAX_UPLOAD_BYTES, ALLOWED_UPLOAD_MIME_SET } from '@/lib/constants'
+import { PDFParse } from 'pdf-parse'
 
 function sanitizeFilename(filename: string) {
   return filename.replace(/[^\w.\-]+/g, '_')
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Basic parsing: TXT can be read when the runtime supports it; PDF/DOCX parsing is deferred.
+    // Parse file content based on MIME type.
     // In some test environments (jsdom), File lacks `text()`/`arrayBuffer()`, so we feature-detect.
     let parsedContent: string | null = '[File parsing not implemented]'
     if (file.type === 'text/plain') {
@@ -114,6 +115,25 @@ export async function POST(request: NextRequest) {
         parsedContent = text
       } else if (typeof file.text === 'function') {
         parsedContent = await file.text()
+      }
+    } else if (file.type === 'application/pdf') {
+      let parser: PDFParse | null = null
+      try {
+        const buffer = Buffer.from(await file.arrayBuffer())
+        parser = new PDFParse({ data: new Uint8Array(buffer) })
+        const result = await parser.getText()
+        parsedContent = result.text
+      } catch (e) {
+        console.error('PDF parse error:', e)
+        parsedContent = null
+      } finally {
+        if (parser) {
+          try {
+            await parser.destroy()
+          } catch (e) {
+            console.error('PDF parser cleanup error:', e)
+          }
+        }
       }
     }
 
