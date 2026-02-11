@@ -13,26 +13,35 @@ export async function DashboardHeader() {
   const t = await getTranslations('common')
 
   return (
-    <header className="border-b">
-      <div className="container mx-auto flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <Link href="/dashboard" className="text-lg font-semibold sm:text-xl">
+    <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-sm">
+      <div className="container mx-auto flex flex-col gap-3 px-6 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <Link
+          href="/dashboard"
+          className="text-sm font-semibold uppercase tracking-[0.2em] transition-opacity hover:opacity-70"
+        >
           {t('appName')}
         </Link>
-        <nav className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+        <nav className="flex w-full flex-wrap items-center gap-1 sm:w-auto sm:justify-end">
+          <Link href="/dashboard">
+            <Button variant="ghost" size="sm" className="text-xs uppercase tracking-wider">
+              {t('navDashboard')}
+            </Button>
+          </Link>
           <Link href="/jobs">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="text-xs uppercase tracking-wider">
               {t('navJobs')}
             </Button>
           </Link>
           <Link href="/letters">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="text-xs uppercase tracking-wider">
               {t('navLetters')}
             </Button>
           </Link>
+          <div className="mx-1 hidden h-4 w-px bg-border sm:block" />
           <LanguageSwitcher />
           {user?.email ? (
-            <div className="flex min-w-0 items-center gap-2 sm:ml-1">
-              <span className="hidden max-w-[14rem] truncate text-sm text-muted-foreground md:inline">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="hidden max-w-[12rem] truncate text-xs text-muted-foreground md:inline">
                 {user.email}
               </span>
               <SignOutButton />

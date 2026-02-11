@@ -11,6 +11,7 @@
     "error": "Ett fel uppstod",
     "success": "Klart!",
     "close": "Stäng",
+    "navDashboard": "Översikt",
     "navJobs": "Jobb",
     "navLetters": "Brev",
     "metaDescription": "En AI-driven jobbtjänst för svenska jobbsökare. Ladda upp ett CV, sök jobb och generera personliga brev."

@@ -11,6 +11,7 @@
     "error": "An error occurred",
     "success": "Done!",
     "close": "Close",
+    "navDashboard": "Dashboard",
     "navJobs": "Jobs",
     "navLetters": "Letters",
     "metaDescription": "An AI-powered job matching platform for Swedish job seekers. Upload a CV, search jobs, and generate cover letters."
