@@ -65,6 +65,12 @@ describe('JobSearch skill search', () => {
         noSkillsFound: 'No skills found',
         searchWithSelectedSkills: 'Search selected',
         searchWithAllSkills: 'Search all skills',
+        selectedSkillsCount: '{selected} selected of {total} skills',
+        selectAllSkills: 'Select all',
+        selectTopSkills: 'Top 5',
+        deselectAllSkills: 'Deselect all',
+        skillSearchBadge: '{count} matched skills',
+        skillSearchPartialFailure: 'Partial skill failure',
         searchPlaceholder: 'Search jobs',
         search: 'Find',
         searching: 'Finding...',
@@ -73,6 +79,17 @@ describe('JobSearch skill search', () => {
         errorNoSkills: 'No skills to search',
         errorUnexpectedResponse: 'Unexpected response',
         errorSearchFailed: 'Search failed',
+        relevanceToggle: 'Skill matching',
+        found: 'Found {count} jobs',
+        noResults: 'No jobs found',
+        enterSearch: 'Enter search',
+        savedJobsTitle: 'Saved jobs',
+        savedJobsDescription: 'Saved job list',
+        savedJobsCount: '{count} saved',
+        savedJobsLoading: 'Loading saved jobs',
+        savedJobsEmpty: 'No saved jobs',
+        savedJobsLoadFailed: 'Saved jobs failed',
+        savedJobsSomeUnavailable: 'Some saved jobs unavailable',
       },
     }
 
@@ -104,9 +121,12 @@ describe('JobSearch skill search', () => {
     )
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith(
-        '/api/jobs?q=React%20TypeScript'
+      const calledUrls = fetchMock.mock.calls.map(([input]) =>
+        typeof input === 'string' ? input : input.toString()
       )
+      expect(calledUrls).toContain('/api/jobs?q=React')
+      expect(calledUrls).toContain('/api/jobs?q=TypeScript')
+      expect(calledUrls).not.toContain('/api/jobs?q=React%20TypeScript')
     })
   })
 
@@ -124,9 +144,13 @@ describe('JobSearch skill search', () => {
     )
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith(
-        '/api/jobs?q=React%20TypeScript%20Node'
+      const calledUrls = fetchMock.mock.calls.map(([input]) =>
+        typeof input === 'string' ? input : input.toString()
       )
+      expect(calledUrls).toContain('/api/jobs?q=React')
+      expect(calledUrls).toContain('/api/jobs?q=TypeScript')
+      expect(calledUrls).toContain('/api/jobs?q=Node')
+      expect(calledUrls).not.toContain('/api/jobs?q=React%20TypeScript%20Node')
     })
   })
 })
