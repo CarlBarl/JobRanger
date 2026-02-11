@@ -1,0 +1,226 @@
+{
+  "generated_at": "2026-02-10T09:14:58.602100+00:00",
+  "repo": "/Users/carlelelid/code/JobRanger/JobRanger",
+  "parameters": {
+    "since": "12 months ago",
+    "until": null,
+    "half_life_days": 180.0,
+    "bus_factor_threshold": 1,
+    "stale_days": 365,
+    "owner_threshold": 0.5,
+    "sensitive_config": null,
+    "identity": "author",
+    "date_field": "author",
+    "include_merges": false,
+    "cochange_enabled": true,
+    "cochange_max_files": 50,
+    "cochange_min_count": 2,
+    "cochange_min_jaccard": 0.05,
+    "cochange_default_excludes": true,
+    "cochange_excludes": [
+      "**/Cargo.lock",
+      "**/Cargo.toml",
+      "**/package-lock.json",
+      "**/yarn.lock",
+      "**/pnpm-lock.yaml",
+      "**/go.sum",
+      "**/go.mod",
+      "**/Gemfile.lock",
+      "**/Pipfile.lock",
+      "**/poetry.lock",
+      "**/composer.lock",
+      "**/.github/**",
+      "**/.gitignore",
+      "**/.gitattributes",
+      "**/.gitmodules",
+      "**/.editorconfig",
+      "**/.vscode/**",
+      "**/.idea/**"
+    ],
+    "author_default_excludes": true,
+    "author_exclude_regexes": [
+      "dependabot"
+    ],
+    "community_top_owners": 5
+  },
+  "orphaned_sensitive_code": [],
+  "hidden_owners": [
+    {
+      "person": "145713155+CarlBarl@users.noreply.github.com",
+      "name": "CarlBarl",
+      "controls": "100% of auth code",
+      "category": "auth",
+      "share": 1.0
+    }
+  ],
+  "bus_factor_hotspots": [
+    {
+      "path": "components/auth/SignUpForm.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-02-10T10:55:11+02:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "components/auth/SignInForm.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-02-05T07:20:43+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "app/api/auth/signin/route.test.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-02-04T15:50:50+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "app/api/auth/signin/route.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-02-04T15:50:50+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "app/auth/callback/route.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-02-04T15:50:50+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "app/auth/reset/page.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-02-04T15:50:50+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "components/auth/SignInForm.test.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-02-04T11:15:27+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "app/auth/forgot/page.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-02-03T22:06:13+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "components/auth/ResetPasswordForm.test.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-02-03T22:06:13+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "components/auth/ResetPasswordForm.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-02-03T22:06:13+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "components/auth/ResetPasswordRequestForm.test.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-02-03T22:06:13+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "components/auth/ResetPasswordRequestForm.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-02-03T22:06:13+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "components/auth/SignOutButton.test.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-02-03T22:06:13+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "components/auth/SignOutButton.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-02-03T22:06:13+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "app/auth/signup/page.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-02-03T19:29:24+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "components/auth/SignUpForm.test.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-02-03T19:29:24+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    },
+    {
+      "path": "app/auth/signin/page.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-02-03T18:11:10+01:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "145713155+CarlBarl@users.noreply.github.com"
+    }
+  ],
+  "stats": {
+    "commits": 53,
+    "commits_seen": 53,
+    "commits_excluded_identities": 0,
+    "commits_excluded_merges": 0,
+    "edges": 397,
+    "people": 1,
+    "files": 151,
+    "cochange_pairs_total": 1504,
+    "cochange_edges": 199,
+    "cochange_commits_used": 33,
+    "cochange_commits_skipped": 2,
+    "cochange_commits_filtered": 1,
+    "cochange_files_excluded": 8
+  }
+}
