@@ -6,9 +6,6 @@ import { SkillsEditor } from '@/components/dashboard/SkillsEditor'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Briefcase } from 'lucide-react'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { DebugChat } from '@/components/dashboard/DebugChat'
@@ -77,59 +74,55 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen">
       <DashboardHeader />
-      <main className="container mx-auto px-4 py-6 sm:py-8">
-        <h1 className="mb-6 break-words text-2xl font-bold leading-tight sm:mb-8 sm:text-3xl">
-          {t('welcome', { name: user.name || user.email })}
-        </h1>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {/* CV and Personal Letter sections */}
-          <DashboardClient
-            cvDocument={serializedCv}
-            personalLetter={serializedLetter}
-            cvUploadComponent={<FileUpload />}
-            personalLetterUploadComponent={<PersonalLetterUpload />}
-          />
-
-          {/* Saved Jobs */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <Briefcase className="h-5 w-5" />
-                {t('savedJobs')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{savedJobsCount}</p>
-              <p className="text-sm text-muted-foreground">{t('jobsSaved')}</p>
-              <Link href="/jobs">
-                <Button variant="outline" size="sm" className="mt-3 w-full">
-                  {t('searchJobs')}
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Generated Letters */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base sm:text-lg">{t('generatedLetters')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{lettersCount}</p>
-              <p className="text-sm text-muted-foreground">{t('lettersGenerated')}</p>
-              <Link href="/letters">
-                <Button variant="outline" size="sm" className="mt-3 w-full">
-                  {t('viewLetters')}
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+      <main className="container mx-auto px-6 py-8 sm:py-12">
+        {/* Welcome + inline stats */}
+        <div className="animate-fade-up mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="mb-1 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+              {t('welcome', { name: '' }).trim()}
+            </p>
+            <h1 className="break-words text-2xl font-bold tracking-tight sm:text-3xl">
+              {user.name || user.email}
+            </h1>
+          </div>
+          <div className="flex gap-6">
+            <Link
+              href="/jobs"
+              className="group text-right transition-opacity hover:opacity-70"
+            >
+              <p className="text-2xl font-bold tracking-tight">{savedJobsCount}</p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                {t('jobsSaved')}
+              </p>
+            </Link>
+            <div className="w-px bg-border" />
+            <Link
+              href="/letters"
+              className="group text-right transition-opacity hover:opacity-70"
+            >
+              <p className="text-2xl font-bold tracking-tight">{lettersCount}</p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                {t('lettersGenerated')}
+              </p>
+            </Link>
+          </div>
         </div>
 
-        {/* Skills Editor - Full width below the grid */}
+        {/* Documents section */}
+        <div className="animate-fade-up delay-1">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+            <DashboardClient
+              cvDocument={serializedCv}
+              personalLetter={serializedLetter}
+              cvUploadComponent={<FileUpload />}
+              personalLetterUploadComponent={<PersonalLetterUpload />}
+            />
+          </div>
+        </div>
+
+        {/* Skills Editor - Full width below */}
         {serializedCv && (
-          <div className="mt-6">
+          <div className="animate-fade-up delay-2 mt-8">
             <SkillsEditor
               skills={serializedCv.skills || []}
               documentId={serializedCv.id}

@@ -100,19 +100,9 @@ export function DashboardClient({
 
   return (
     <>
-      {/* Batch Skills Button */}
-      {cvDocument && (
-        <div className="mb-4 flex justify-stretch sm:justify-end">
-          <BatchSkillsButton
-            onTrigger={handleBatchRegenerate}
-            loading={batchLoading}
-          />
-        </div>
-      )}
-
       {/* CV Section */}
       <Card
-        className={cvDocument ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}
+        className={cvDocument ? 'cursor-pointer transition-shadow hover:shadow-md' : ''}
         onClick={() => cvDocument && setCvDialogOpen(true)}
         onKeyDown={
           cvDocument
@@ -124,51 +114,46 @@ export function DashboardClient({
         aria-label={cvDocument ? cvAriaLabel : undefined}
       >
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <FileText className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
+            <FileText className="h-4 w-4" strokeWidth={1.5} />
             {t('yourCV')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {cvDocument ? (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                {t('uploaded')}: {cvDocument.createdAt}
+            <div className="space-y-3">
+              <p className="font-mono text-xs text-muted-foreground">
+                {cvDocument.createdAt}
               </p>
               {cvDocument.skills && (
-                <div>
-                  <p className="text-xs font-medium mb-1">{t('extractedSkills')}:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {cvDocument.skills.slice(0, 3).map((skill, i) => (
-                      <span key={i} className="text-xs bg-muted px-2 py-0.5 rounded">
-                        {skill}
-                      </span>
-                    ))}
-                    {cvDocument.skills.length > 3 && (
-                      <span className="text-xs text-muted-foreground">
-                        {t('moreSkills', { count: cvDocument.skills.length - 3 })}
-                      </span>
-                    )}
-                  </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {cvDocument.skills.slice(0, 3).map((skill, i) => (
+                    <span key={i} className="rounded-full border bg-muted/50 px-2.5 py-0.5 text-xs">
+                      {skill}
+                    </span>
+                  ))}
+                  {cvDocument.skills.length > 3 && (
+                    <span className="rounded-full border border-dashed px-2.5 py-0.5 text-xs text-muted-foreground">
+                      +{cvDocument.skills.length - 3}
+                    </span>
+                  )}
                 </div>
               )}
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full gap-2 sm:w-auto"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setCvUploadDialogOpen(true)
-                  }}
-                >
-                  <Upload className="h-4 w-4" />
-                  {t('uploadNewFile')}
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-2 text-xs uppercase tracking-wider sm:w-auto"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setCvUploadDialogOpen(true)
+                }}
+              >
+                <Upload className="h-3.5 w-3.5" />
+                {t('uploadNewFile')}
+              </Button>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <p className="text-sm text-muted-foreground">{t('noCV')}</p>
               {cvUploadComponent}
             </div>
@@ -178,7 +163,7 @@ export function DashboardClient({
 
       {/* Personal Letter Section */}
       <Card
-        className={personalLetter ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}
+        className={personalLetter ? 'cursor-pointer transition-shadow hover:shadow-md' : ''}
         onClick={() => personalLetter && setLetterDialogOpen(true)}
         onKeyDown={
           personalLetter
@@ -191,43 +176,51 @@ export function DashboardClient({
         aria-label={personalLetter ? personalLetterAriaLabel : undefined}
       >
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Mail className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
+            <Mail className="h-4 w-4" strokeWidth={1.5} />
             {t('yourPersonalLetter')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {personalLetter ? (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                {t('uploaded')}: {personalLetter.createdAt}
+            <div className="space-y-3">
+              <p className="font-mono text-xs text-muted-foreground">
+                {personalLetter.createdAt}
               </p>
-              <p className="text-xs text-muted-foreground line-clamp-3">
+              <p className="text-xs leading-relaxed text-muted-foreground line-clamp-3">
                 {personalLetter.parsedContent?.substring(0, 150)}...
               </p>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full gap-2 sm:w-auto"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setLetterUploadDialogOpen(true)
-                  }}
-                >
-                  <Upload className="h-4 w-4" />
-                  {t('uploadNewFile')}
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-2 text-xs uppercase tracking-wider sm:w-auto"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setLetterUploadDialogOpen(true)
+                }}
+              >
+                <Upload className="h-3.5 w-3.5" />
+                {t('uploadNewFile')}
+              </Button>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <p className="text-sm text-muted-foreground">{t('noPersonalLetter')}</p>
               {personalLetterUploadComponent}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Batch Skills Button - spans full grid width */}
+      {cvDocument && (
+        <div className="flex justify-end md:col-span-2">
+          <BatchSkillsButton
+            onTrigger={handleBatchRegenerate}
+            loading={batchLoading}
+          />
+        </div>
+      )}
 
       {/* CV Preview Dialog */}
       {cvDocument && (

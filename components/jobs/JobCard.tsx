@@ -55,22 +55,31 @@ export function JobCard({ job, isSaved = false, onToggleSave }: JobCardProps) {
   const occupation = job.occupation?.label ?? null
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="group transition-all hover:shadow-md">
+      <CardHeader className="pb-3">
         <CardTitle className="flex min-w-0 items-start gap-3 text-base">
           {job.logo_url ? (
             <img
               src={job.logo_url}
               alt={`${employerName} logo`}
-              className="h-10 w-10 shrink-0 rounded border object-contain"
+              className="h-10 w-10 shrink-0 rounded border object-contain grayscale transition-all group-hover:grayscale-0"
               loading="lazy"
             />
-          ) : null}
-          <div className="min-w-0 flex-1 space-y-1">
-            <Link href={`/jobs/${job.id}`} className="block break-words hover:underline">
+          ) : (
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded border bg-muted">
+              <span className="text-xs font-bold text-muted-foreground">
+                {employerName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <Link
+              href={`/jobs/${job.id}`}
+              className="block break-words font-semibold tracking-tight hover:underline"
+            >
               {job.headline ?? t('card.untitledRole')}
             </Link>
-            <p className="break-words text-sm text-muted-foreground">{employerName}</p>
+            <p className="break-words text-xs text-muted-foreground">{employerName}</p>
           </div>
           {onToggleSave ? (
             <button
@@ -80,7 +89,7 @@ export function JobCard({ job, isSaved = false, onToggleSave }: JobCardProps) {
                 e.stopPropagation()
                 onToggleSave(job.id)
               }}
-              className="shrink-0 rounded p-2 transition-colors hover:bg-muted"
+              className="shrink-0 rounded-full p-2 transition-colors hover:bg-muted"
               aria-label={isSaved ? t('card.unsave') : t('card.save')}
             >
               <svg
@@ -88,7 +97,7 @@ export function JobCard({ job, isSaved = false, onToggleSave }: JobCardProps) {
                 viewBox="0 0 24 24"
                 fill={isSaved ? 'currentColor' : 'none'}
                 stroke="currentColor"
-                strokeWidth={2}
+                strokeWidth={isSaved ? 0 : 1.5}
                 className="h-5 w-5"
               >
                 <path
@@ -101,34 +110,40 @@ export function JobCard({ job, isSaved = false, onToggleSave }: JobCardProps) {
           ) : null}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-1 break-words text-sm text-muted-foreground">
-        {occupation ? <p>{occupation}</p> : null}
-        {location ? <p>{location}</p> : null}
-        {employmentType || workingHours ? (
-          <p>
-            {[employmentType, workingHours].filter(Boolean).join(' • ')}
-          </p>
-        ) : null}
-        {publishedDate ? (
-          <p>
-            {t('card.published')}: {publishedDate}
-          </p>
-        ) : null}
-        {deadlineDate ? (
-          <p>
-            {t('card.deadline')}: {deadlineDate}
-          </p>
-        ) : null}
-        {job.webpage_url ? (
-          <a
-            href={job.webpage_url}
-            target="_blank"
-            rel="noreferrer"
-            className="text-primary hover:underline inline-block"
-          >
-            {t('card.viewListing')}
-          </a>
-        ) : null}
+      <CardContent>
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          {occupation ? (
+            <span className="rounded-full border px-2.5 py-0.5">{occupation}</span>
+          ) : null}
+          {location ? (
+            <span className="rounded-full border px-2.5 py-0.5">{location}</span>
+          ) : null}
+          {employmentType || workingHours ? (
+            <span className="rounded-full border px-2.5 py-0.5">
+              {[employmentType, workingHours].filter(Boolean).join(' / ')}
+            </span>
+          ) : null}
+        </div>
+        <div className="mt-3 flex items-center justify-between border-t pt-3">
+          <div className="flex gap-4 font-mono text-[11px] text-muted-foreground">
+            {publishedDate ? <span>{publishedDate}</span> : null}
+            {deadlineDate ? (
+              <span>
+                &rarr; {deadlineDate}
+              </span>
+            ) : null}
+          </div>
+          {job.webpage_url ? (
+            <a
+              href={job.webpage_url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs font-medium uppercase tracking-wider transition-opacity hover:opacity-70"
+            >
+              {t('card.viewListing')} &rarr;
+            </a>
+          ) : null}
+        </div>
       </CardContent>
     </Card>
   )
