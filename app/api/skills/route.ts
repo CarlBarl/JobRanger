@@ -86,8 +86,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Avoid logging sensitive content (CV text). We only log the error itself.
-    console.error('Skills extraction error:', error)
+    console.error('Skills extraction error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
       {
         success: false,
@@ -158,7 +157,7 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    console.error('Skills update error:', error)
+    console.error('Skills update error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
       {
         success: false,

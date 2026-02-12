@@ -8,8 +8,8 @@ import { enforceCsrfProtection } from '@/lib/security/csrf'
 import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 const SaveJobSchema = z.object({
-  afJobId: z.string().min(1),
-  notes: z.string().optional(),
+  afJobId: z.string().min(1).regex(/^\d{1,15}$/, 'Invalid job ID format'),
+  notes: z.string().max(2000).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.error('Save job error:', error)
+    console.error('Save job error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
       { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to save job' } },
       { status: 500 }

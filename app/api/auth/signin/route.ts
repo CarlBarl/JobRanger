@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.error('Password sign in error:', error)
+    console.error('Password sign in error:', error instanceof Error ? error.message : error)
     return NextResponse.json<SignInError>(
       {
         success: false,

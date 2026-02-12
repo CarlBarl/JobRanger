@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Batch skills extraction error:', error)
+    console.error('Batch skills extraction error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
       {
         success: false,

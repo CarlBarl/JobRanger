@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { enforceCsrfProtection } from '@/lib/security/csrf'
 import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
+import { isValidAfJobId } from '@/lib/security/sanitize'
 
 export async function DELETE(
   request: NextRequest,
@@ -33,9 +34,9 @@ export async function DELETE(
   }
 
   const { id: afJobId } = await params
-  if (!afJobId) {
+  if (!afJobId || !isValidAfJobId(afJobId)) {
     return NextResponse.json(
-      { success: false, error: { code: 'BAD_REQUEST', message: 'Missing job id' } },
+      { success: false, error: { code: 'BAD_REQUEST', message: 'Invalid job ID format' } },
       { status: 400 }
     )
   }
@@ -56,7 +57,7 @@ export async function DELETE(
       )
     }
 
-    console.error('Delete saved job error:', error)
+    console.error('Delete saved job error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
       { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to delete saved job' } },
       { status: 500 }

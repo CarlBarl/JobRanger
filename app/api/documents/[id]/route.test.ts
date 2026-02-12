@@ -32,6 +32,15 @@ vi.mock('@/lib/prisma', () => ({
       delete: mocks.delete,
       update: mocks.update,
     },
+    $transaction: async (fn: (tx: unknown) => Promise<unknown>) => {
+      return fn({
+        document: {
+          findFirst: mocks.findFirst,
+          delete: mocks.delete,
+          update: mocks.update,
+        },
+      })
+    },
   },
 }))
 

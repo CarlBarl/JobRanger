@@ -30,10 +30,7 @@ import {
   getClientIp,
   rateLimitResponse,
 } from '@/lib/security/rate-limit'
-
-function sanitizeFilename(filename: string) {
-  return filename.replace(/[^\w.\-]+/g, '_')
-}
+import { sanitizeFilename } from '@/lib/security/sanitize'
 
 function getFileExtension(filename: string) {
   const lower = filename.toLowerCase()
@@ -213,7 +210,7 @@ function formatErrorForLog(error: unknown) {
     return {
       name: error.name,
       message: error.message,
-      stack: error.stack,
+      ...(process.env.NODE_ENV !== 'production' && { stack: error.stack }),
     }
   }
 

@@ -10,7 +10,7 @@ import { enforceCsrfProtection } from '@/lib/security/csrf'
 import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 const RequestSchema = z.object({
-  afJobId: z.string().min(1),
+  afJobId: z.string().min(1).regex(/^\d{1,15}$/, 'Invalid job ID format'),
   documentId: z.string().min(1),
 })
 
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.error('Letter generation error:', error)
+    console.error('Letter generation error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
       { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to generate letter' } },
       { status: 500 }

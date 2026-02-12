@@ -152,8 +152,13 @@ export function SignInForm() {
   }
 
   async function handleQuickSignIn() {
-    const devEmail = process.env.NEXT_PUBLIC_DEV_EMAIL || 'test@example.com'
-    const devPassword = process.env.NEXT_PUBLIC_DEV_PASSWORD || 'password123'
+    const devEmail = process.env.NEXT_PUBLIC_DEV_EMAIL
+    const devPassword = process.env.NEXT_PUBLIC_DEV_PASSWORD
+    if (!devEmail || !devPassword) {
+      setLoading(false)
+      setError('Dev credentials not configured. Set NEXT_PUBLIC_DEV_EMAIL and NEXT_PUBLIC_DEV_PASSWORD in .env.local')
+      return
+    }
 
     setEmail(devEmail)
     setPassword(devPassword)

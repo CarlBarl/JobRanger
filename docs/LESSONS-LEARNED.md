@@ -64,3 +64,11 @@ Dashboard keys use `dashboard.*` namespace. Nested keys like `dashboard.skills.t
 ### Server vs Client Translations
 - Server Components: `getTranslations()` from `next-intl/server`
 - Client Components: `useTranslations()` hook from `next-intl`
+
+## Security
+
+### Prompt Section Escaping for LLM Calls
+When embedding user-provided text inside tagged prompt sections (`<cv_content>...</cv_content>`), sanitization alone is not enough. Always escape XML-like characters (`<`, `>`, `&`, quotes) to prevent tag breakout payloads (for example `</cv_content>`).
+
+### Account Deletion Should Fail Closed on Auth Delete Errors
+In multi-system account deletion (Auth + DB + Storage), do not return success if auth user deletion fails. Failing closed prevents a state where the user can still authenticate after a "successful" delete response.

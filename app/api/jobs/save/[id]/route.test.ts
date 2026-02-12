@@ -58,6 +58,20 @@ describe('DELETE /api/jobs/save/[id]', () => {
     })
   })
 
+  it('returns 400 when afJobId format is invalid', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
+
+    const req = new NextRequest('http://localhost/api/jobs/save/../../etc/passwd', { method: 'DELETE' })
+    const res = await DELETE(req, { params: Promise.resolve({ id: '../../etc/passwd' }) })
+
+    expect(res.status).toBe(400)
+    await expect(res.json()).resolves.toMatchObject({
+      success: false,
+      error: { code: 'BAD_REQUEST', message: 'Invalid job ID format' },
+    })
+    expect(mocks.delete).not.toHaveBeenCalled()
+  })
+
   it('returns 404 when saved job does not exist', async () => {
     mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
     mocks.delete.mockRejectedValue(

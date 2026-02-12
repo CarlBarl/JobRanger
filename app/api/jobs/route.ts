@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { searchJobs } from '@/lib/services/arbetsformedlingen'
+import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 const JobsSearchQuerySchema = z.object({
   q: z.string().min(1),
@@ -23,6 +24,11 @@ export async function GET(request: NextRequest) {
       },
       { status: 401 }
     )
+  }
+
+  const searchLimit = consumeRateLimit('jobs-search-user', user.id, 120, 60 * 60 * 1000)
+  if (!searchLimit.allowed) {
+    return rateLimitResponse('Search rate limit exceeded.', searchLimit.retryAfterSeconds)
   }
 
   const { searchParams } = new URL(request.url)

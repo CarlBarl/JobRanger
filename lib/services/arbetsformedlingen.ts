@@ -1,3 +1,5 @@
+import { isValidAfJobId } from '@/lib/security/sanitize'
+
 const AF_BASE_URL = 'https://jobsearch.api.jobtechdev.se'
 
 type WorkplaceAddress = {
@@ -77,6 +79,10 @@ export async function searchJobs(options: SearchJobsOptions): Promise<AFSearchRe
 }
 
 export async function getJobById(id: string): Promise<AFJobAd> {
+  if (!isValidAfJobId(id)) {
+    throw new Error('Invalid AF job ID format')
+  }
+
   const response = await fetch(`${AF_BASE_URL}/ad/${id}`, {
     headers: {
       accept: 'application/json',
