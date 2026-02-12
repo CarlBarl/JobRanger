@@ -59,7 +59,14 @@ export function SignUpForm() {
     setLoading(false)
 
     if (signUpError) {
-      setError(signUpError.message)
+      const msg = signUpError.message.toLowerCase()
+      if (msg.includes('rate limit') || msg.includes('too many')) {
+        setError(t('signUpRateLimited'))
+      } else if (msg.includes('sending') && msg.includes('email')) {
+        setError(t('signUpEmailFailed'))
+      } else {
+        setError(signUpError.message)
+      }
       return
     }
 

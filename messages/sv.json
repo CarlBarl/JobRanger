@@ -78,7 +78,9 @@
     "loadingProfile": "Laddar din profil...",
     "almostThere": "Nästan klar...",
     "signUpCheckEmail": "Kolla din e-post",
-    "signUpCheckEmailDescription": "Vi skickade en verifieringslänk till {email}. Klicka på länken för att verifiera ditt konto."
+    "signUpCheckEmailDescription": "Vi skickade en verifieringslänk till {email}. Klicka på länken för att verifiera ditt konto.",
+    "signUpRateLimited": "För många försök. Vänta några minuter och försök igen.",
+    "signUpEmailFailed": "Kunde inte skicka verifieringsmail. Försök igen senare."
   },
   "dashboard": {
     "welcome": "Välkommen, {name}",
