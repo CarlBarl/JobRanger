@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
@@ -20,12 +19,12 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function SignUpForm() {
   const t = useTranslations('auth')
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [sent, setSent] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -53,7 +52,7 @@ export function SignUpForm() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/auth/signin`,
       },
     })
 
@@ -64,7 +63,25 @@ export function SignUpForm() {
       return
     }
 
-    router.push('/dashboard')
+    setSent(true)
+  }
+
+  if (sent) {
+    return (
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>{t('signUpCheckEmail')}</CardTitle>
+          <CardDescription>
+            {t('signUpCheckEmailDescription', { email })}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/auth/signin" className="text-primary hover:underline text-sm">
+            {t('backToSignIn')}
+          </Link>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
