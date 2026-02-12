@@ -78,7 +78,9 @@
     "loadingProfile": "Loading your profile...",
     "almostThere": "Almost there...",
     "signUpCheckEmail": "Check your email",
-    "signUpCheckEmailDescription": "We sent a verification link to {email}. Click the link to verify your account."
+    "signUpCheckEmailDescription": "We sent a verification link to {email}. Click the link to verify your account.",
+    "signUpRateLimited": "Too many attempts. Please wait a few minutes and try again.",
+    "signUpEmailFailed": "Could not send verification email. Please try again later."
   },
   "dashboard": {
     "welcome": "Welcome, {name}",
