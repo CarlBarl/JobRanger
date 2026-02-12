@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --no-config-lookup --parser @typescript-eslint/parser --plugin @typescript-eslint --parser-options '{\"ecmaVersion\":2022,\"sourceType\":\"module\",\"ecmaFeatures\":{\"jsx\":true}}' --ignore-pattern .next --ignore-pattern node_modules --max-warnings=0",
     "test": "vitest run",
