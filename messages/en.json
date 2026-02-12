@@ -237,6 +237,51 @@
     "useAI": "Use AI-adapted letter",
     "createdAt": "Created"
   },
+  "onboarding": {
+    "welcome": {
+      "greeting": "Hi! I'm your job search companion. Let's get you set up — it only takes a few minutes.",
+      "namePrompt": "What should I call you?",
+      "namePlaceholder": "Your name",
+      "continue": "Continue"
+    },
+    "documents": {
+      "cvPrompt": "Upload your CV and I'll analyze it to find jobs that match your experience.",
+      "letterPrompt": "If you have a personal letter, I can use it as a reference for your writing style. This is optional.",
+      "tip": "You can replace these anytime from your dashboard.",
+      "cvRequired": "Required",
+      "letterOptional": "Optional",
+      "cvTitle": "Your CV",
+      "letterTitle": "Personal Letter",
+      "continue": "Continue"
+    },
+    "skills": {
+      "reading": "Reading your CV...",
+      "extracting": "Extracting your key skills...",
+      "found": "I found these skills in your CV. On the Jobs page, you'll search using these — so make sure they look right.",
+      "tip": "You can always edit your skills from the dashboard later. The more accurate they are, the better your job matches.",
+      "continue": "Continue"
+    },
+    "jobs": {
+      "searching": "Let me search for jobs matching your skills.",
+      "results": "Save jobs you like — you can generate personalized cover letters for them later.",
+      "tip": "This is just a preview. The full Jobs page has advanced search, filters, and all your saved jobs.",
+      "locationFilter": "Filter by location",
+      "allLocations": "All locations",
+      "seeMore": "See more on the Jobs page",
+      "noResults": "No jobs found for these skills yet. Try adjusting your skills or check the Jobs page later.",
+      "continue": "Continue"
+    },
+    "completion": {
+      "message": "You're all set! Here's what you can do now:",
+      "tip": "Come back anytime to update your CV, manage skills, or generate new letters.",
+      "welcomeName": "Welcome, {name}",
+      "cvUploaded": "CV uploaded",
+      "skillsFound": "{count} skills found",
+      "jobsSaved": "{count} jobs saved",
+      "searchJobs": "Search for jobs",
+      "goToDashboard": "Go to dashboard"
+    }
+  },
   "upload": {
     "dropCV": "Click to upload CV (PDF, DOCX, or TXT)",
     "dropPersonalLetter": "Click to upload Personal Letter (PDF, DOCX, or TXT)",

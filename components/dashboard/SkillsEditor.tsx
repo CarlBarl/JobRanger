@@ -103,9 +103,9 @@ export function SkillsEditor({
   }
 
   return (
-    <div className={cn('card-elevated rounded-[10px] border bg-card p-5', className)}>
+    <div className={cn('card-elevated rounded-xl border bg-card p-5', className)}>
       <div className="flex items-center justify-between">
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        <h2 className="text-[13px] font-medium text-foreground/70">
           {t('skills.title')}
         </h2>
         <div className="flex items-center gap-3">

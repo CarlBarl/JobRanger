@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { DashboardClient } from '@/components/dashboard/DashboardClient'
 import { FileUpload } from '@/components/upload/FileUpload'
@@ -28,6 +29,11 @@ export default async function DashboardPage() {
   }
 
   const user = await getOrCreateUser(authUser.id, authUser.email)
+
+  // Redirect to onboarding if not completed
+  if (!user.onboardingCompleted) {
+    redirect('/onboarding')
+  }
 
   const cvDocument = await prisma.document.findFirst({
     where: { userId: user.id, type: 'cv' },
@@ -109,24 +115,24 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader />
-      <main className="container mx-auto space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+      <main className="container mx-auto space-y-5 px-4 py-6 sm:px-6 sm:py-8">
         {/* Hero: name + stats */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-foreground">
+            <h1 className="text-xl font-medium tracking-[-0.01em] text-foreground">
               {user.name || user.email}
             </h1>
             {user.name && (
-              <p className="mt-0.5 text-[13px] text-muted-foreground/80">{user.email}</p>
+              <p className="mt-0.5 text-[13px] text-muted-foreground/60">{user.email}</p>
             )}
           </div>
-          <div className="flex gap-8">
+          <div className="flex gap-6">
             <Link
               href="/jobs"
               className="group flex items-baseline gap-1.5 transition-colors duration-200 hover:opacity-80"
             >
-              <span className="text-[22px] font-semibold tabular-nums tracking-tight text-foreground">{savedJobsCount}</span>
-              <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground transition-colors duration-200 group-hover:text-foreground">
+              <span className="text-lg font-medium tabular-nums text-foreground">{savedJobsCount}</span>
+              <span className="text-[11px] font-normal text-muted-foreground/60 transition-colors duration-200 group-hover:text-foreground">
                 {t('jobsSaved')}
               </span>
             </Link>
@@ -134,8 +140,8 @@ export default async function DashboardPage() {
               href="/letters"
               className="group flex items-baseline gap-1.5 transition-colors duration-200 hover:opacity-80"
             >
-              <span className="text-[22px] font-semibold tabular-nums tracking-tight text-foreground">{lettersCount}</span>
-              <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground transition-colors duration-200 group-hover:text-foreground">
+              <span className="text-lg font-medium tabular-nums text-foreground">{lettersCount}</span>
+              <span className="text-[11px] font-normal text-muted-foreground/60 transition-colors duration-200 group-hover:text-foreground">
                 {t('lettersGenerated')}
               </span>
             </Link>

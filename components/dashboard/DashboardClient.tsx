@@ -110,7 +110,7 @@ export function DashboardClient({
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* CV Card */}
         {cvDocument ? (
           <div
@@ -119,19 +119,19 @@ export function DashboardClient({
             onClick={() => setCvDialogOpen(true)}
             onKeyDown={(e) => handleCardKeyDown(e, () => setCvDialogOpen(true))}
             aria-label={cvAriaLabel}
-            className="card-elevated cursor-pointer rounded-[10px] border bg-card p-5"
+            className="card-elevated cursor-pointer rounded-xl border bg-card p-5"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              <h2 className="text-[13px] font-medium text-foreground/70">
                 {t('yourCV')}
               </h2>
-              <span className="text-[11px] tabular-nums text-muted-foreground/60">
+              <span className="text-[11px] tabular-nums text-muted-foreground/50">
                 {formatDateTime(cvDocument.createdAt)}
               </span>
             </div>
 
-            <div className="mt-4 space-y-4">
-              <p className="text-[13px] leading-[1.6] text-muted-foreground/80 line-clamp-3">
+            <div className="mt-3.5 space-y-3.5">
+              <p className="text-[13px] leading-relaxed text-muted-foreground/70 line-clamp-3">
                 {cvDocument.parsedContent?.substring(0, 160)}...
               </p>
 
@@ -153,14 +153,14 @@ export function DashboardClient({
             </div>
           </div>
         ) : (
-          <div className="card-elevated rounded-[10px] border bg-card p-5">
+          <div className="card-elevated rounded-xl border bg-card p-5">
             <div className="flex items-center justify-between">
-              <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              <h2 className="text-[13px] font-medium text-foreground/70">
                 {t('yourCV')}
               </h2>
             </div>
-            <div className="mt-4 space-y-3">
-              <p className="text-[13px] leading-relaxed text-muted-foreground">{t('noCV')}</p>
+            <div className="mt-3.5 space-y-3">
+              <p className="text-[13px] leading-relaxed text-muted-foreground/70">{t('noCV')}</p>
               {cvUploadComponent}
             </div>
           </div>
@@ -174,19 +174,19 @@ export function DashboardClient({
             onClick={() => setLetterDialogOpen(true)}
             onKeyDown={(e) => handleCardKeyDown(e, () => setLetterDialogOpen(true))}
             aria-label={personalLetterAriaLabel}
-            className="card-elevated cursor-pointer rounded-[10px] border bg-card p-5"
+            className="card-elevated cursor-pointer rounded-xl border bg-card p-5"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              <h2 className="text-[13px] font-medium text-foreground/70">
                 {t('yourPersonalLetter')}
               </h2>
-              <span className="text-[11px] tabular-nums text-muted-foreground/60">
+              <span className="text-[11px] tabular-nums text-muted-foreground/50">
                 {formatDateTime(personalLetter.createdAt)}
               </span>
             </div>
 
-            <div className="mt-4 space-y-4">
-              <p className="text-[13px] leading-[1.6] text-muted-foreground/80 line-clamp-3">
+            <div className="mt-3.5 space-y-3.5">
+              <p className="text-[13px] leading-relaxed text-muted-foreground/70 line-clamp-3">
                 {personalLetter.parsedContent?.substring(0, 160)}...
               </p>
 
@@ -208,14 +208,14 @@ export function DashboardClient({
             </div>
           </div>
         ) : (
-          <div className="card-elevated rounded-[10px] border bg-card p-5">
+          <div className="card-elevated rounded-xl border bg-card p-5">
             <div className="flex items-center justify-between">
-              <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              <h2 className="text-[13px] font-medium text-foreground/70">
                 {t('yourPersonalLetter')}
               </h2>
             </div>
-            <div className="mt-4 space-y-3">
-              <p className="text-[13px] leading-relaxed text-muted-foreground">{t('noPersonalLetter')}</p>
+            <div className="mt-3.5 space-y-3">
+              <p className="text-[13px] leading-relaxed text-muted-foreground/70">{t('noPersonalLetter')}</p>
               {personalLetterUploadComponent}
             </div>
           </div>
