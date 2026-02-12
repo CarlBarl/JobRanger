@@ -1,158 +1,129 @@
-# JobMatch 🎯
+# JobRanger
 
-An AI-powered job matching platform that helps Swedish job seekers find relevant positions and generate personalized cover letters.
+An AI-powered job matching platform for Swedish job seekers. Upload your CV, get matched with jobs from Arbetsförmedlingen, and generate personalized cover letters with Gemini AI.
 
 ## Features
 
-- **📄 CV & Cover Letter Upload** - Upload your documents in PDF, DOCX, or TXT format
-- **🔍 Smart Job Matching** - Find relevant jobs from Arbetsförmedlingen based on your profile
-- **✨ AI Cover Letters** - Generate personalized cover letters tailored to each job
-- **💾 Save & Organize** - Save interesting jobs and manage your applications
+- **CV & Cover Letter Upload** - PDF, DOCX, or TXT. Parsed and stored for matching.
+- **AI Skills Extraction** - Gemini analyzes your CV and extracts skills automatically.
+- **Job Search** - Search Arbetsförmedlingen's job listings, filtered by your profile.
+- **Save Jobs** - Bookmark jobs and see them on your dashboard.
+- **AI Cover Letters** - Generate tailored cover letters for specific job postings.
+- **Dashboard** - Overview of your documents, skills, saved jobs, and stats.
+- **i18n** - Swedish and English, switchable in-app.
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14 (App Router), React, TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes, Prisma ORM
-- **Database**: Supabase (PostgreSQL)
-- **AI**: Google Gemini API
-- **Jobs Data**: Arbetsförmedlingen JobSearch API
-- **Testing**: Vitest, React Testing Library, Claude Code Chrome Integration
-- **Hosting**: Vercel
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 14 (App Router), TypeScript (strict) |
+| Styling | Tailwind CSS, shadcn/ui |
+| Database | Supabase (PostgreSQL + Storage) |
+| ORM | Prisma |
+| AI | Google Gemini API |
+| Jobs API | Arbetsformedlingen JobSearch API |
+| Auth | Supabase Auth |
+| i18n | next-intl (sv, en) |
+| Testing | Vitest, React Testing Library |
+| Hosting | Vercel |
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ 
-- npm or yarn
-- A Supabase account (free tier works)
-- Arbetsförmedlingen API key (optional)
+- Node.js 18+
+- Supabase account (free tier works)
 - Google AI API key (Gemini)
+- Arbetsformedlingen API key (optional)
 
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd jobmatch
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment variables**
-   ```bash
-   cp env.example .env.local
-   ```
-   
-   Fill in the values in `.env.local`:
-   ```
-   # Supabase
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-   
-   # Database
-   DATABASE_URL=your_database_url
-   
-   # Arbetsförmedlingen API (optional)
-   # Leave empty to use the public endpoint without a key
-   AF_API_KEY=
-   
-   # Gemini AI
-   GEMINI_API_KEY=your_gemini_api_key
-   ```
-
-4. **Set up the database**
-   ```bash
-   npx prisma generate
-   npx prisma db push
-   ```
-
-   Then apply Supabase RLS policies in SQL Editor:
-   - `prisma/rls-policies.sql` (app tables)
-   - `prisma/storage-rls-policies.sql` (Storage bucket `documents`)
-
-5. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-6. **Open the app**
-   
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## Development
-
-### Available Scripts
+### Setup
 
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run test         # Run tests
-npm run test:watch   # Run tests in watch mode
-npm run test:coverage # Run tests with coverage
+git clone <repository-url>
+cd JobRanger
+npm install
+cp env.example .env.local   # Fill in values below
+npx prisma generate
+npx prisma db push
+npm run dev
 ```
 
-### Project Structure
+### Environment Variables
 
 ```
-jobmatch/
-├── app/                    # Next.js App Router
-│   ├── page.tsx           # Home page
-│   ├── layout.tsx         # Root layout
-│   ├── dashboard/         # User dashboard
-│   ├── jobs/              # Job listings
-│   └── api/               # API routes
-├── components/            # React components
-├── lib/                   # Utilities and clients
-├── prisma/               # Database schema
-├── messages/             # i18n translations (en, sv)
-└── public/               # Static assets
-# Tests are co-located: ComponentName.test.tsx alongside source
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+DATABASE_URL=
+GEMINI_API_KEY=
+AF_API_KEY=                  # Optional
+NEXT_PUBLIC_APP_URL=
+DEBUG_EMAIL=                 # Optional - enables debug chat
 ```
 
-### Testing Philosophy
+### Database Setup
 
-This project uses **Test-Driven Development (TDD)**:
+After `prisma db push`, apply RLS policies in Supabase SQL Editor:
+- `prisma/rls-policies.sql` (app tables)
+- `prisma/storage-rls-policies.sql` (Storage bucket)
 
-1. Write a failing test first
-2. Write minimal code to make it pass
-3. Refactor while keeping tests green
+## Project Structure
 
-**Unit Tests** are written with Vitest and React Testing Library.
+```
+app/
+  dashboard/              # User dashboard (server + client components)
+  jobs/                   # Job search and listings
+  letters/                # Generated cover letters
+  api/
+    upload/               # File upload endpoint
+    jobs/                 # Job search + save (proxies AF API)
+    generate/             # Cover letter generation
+    skills/               # Skills extraction + batch regeneration
+components/
+  dashboard/              # DashboardClient, SkillsEditor, SavedJobsList, etc.
+  jobs/                   # JobSearch, JobCard
+  letters/                # LetterCard, LetterPreview
+  upload/                 # FileUpload, PersonalLetterUpload
+  ui/                     # shadcn/ui base components
+  auth/                   # SignOutButton
+lib/
+  services/gemini.ts      # Gemini AI client
+  services/arbetsformedlingen.ts  # AF JobSearch API client
+  supabase/               # Supabase client (auth + storage)
+  prisma.ts               # Database client
+  constants.ts            # Shared constants
+  storage.ts              # Document URL resolution
+  auth.ts                 # User creation/lookup
+prisma/schema.prisma      # Database schema
+messages/                 # i18n translations (en.json, sv.json)
+```
 
-**UI/E2E Tests** use Claude Code's Chrome integration for browser automation.
+## Scripts
 
-See [CLAUDE.md](./CLAUDE.md) for detailed testing and development guidelines.
+```bash
+npm run dev               # Dev server (localhost:3000)
+npm run build             # Production build
+npm run lint              # ESLint
+npm run test              # Vitest
+npm run test:watch        # Watch mode
+npm run test:coverage     # Coverage report
+```
 
-## API Documentation
+## Data Flow
 
-### Arbetsförmedlingen JobSearch API
+1. **Upload**: User uploads CV -> Supabase Storage -> Parse content -> Gemini extracts skills -> Save to DB
+2. **Search**: User skills -> Query AF API -> Display matched jobs
+3. **Save**: User bookmarks job -> Store AF job ID in DB -> Show on dashboard
+4. **Generate**: Selected job + user CV -> Gemini generates personalized cover letter
 
-We use the Swedish Employment Agency's open API to fetch job listings. An API key is optional.
+## API Integrations
 
-- **Documentation**: https://jobsearch.api.jobtechdev.se
-- **Get API Key**: https://apirequest.jobtechdev.se
-
-See [CLAUDE.md](./CLAUDE.md) for integration details.
-
-## Contributing
-
-1. Create a feature branch
-2. Write tests first (TDD)
-3. Implement the feature
-4. Ensure all tests pass
-5. Submit a pull request
+| Service | Endpoint | Auth |
+|---------|----------|------|
+| Arbetsformedlingen | `https://jobsearch.api.jobtechdev.se` | Optional `api-key` header |
+| Gemini AI | `@google/generative-ai` | `GEMINI_API_KEY` env var |
+| Supabase | Project URL in env | `SUPABASE_SERVICE_ROLE_KEY` |
 
 ## License
 
 MIT
-
-## Support
-
-For questions or issues, please open a GitHub issue.

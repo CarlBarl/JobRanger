@@ -18,8 +18,14 @@
 - After Prisma schema field changes, ensure Vercel build regenerates Prisma client types (for example via `prisma generate` in build/prebuild) to avoid stale-client TS errors like missing model properties.
 - For failed Vercel builds, use `npx vercel inspect <deployment-url> --logs` to get the exact failing file/line quickly.
 
+## Lessons Learned
+- **Read first:** Before starting any task, read `docs/LESSONS-LEARNED.md` for accumulated project knowledge (deployment gotchas, API quirks, design patterns, DB decisions).
+- **Write back:** When you discover something new that would save future time, add it to the relevant section in `docs/LESSONS-LEARNED.md`. If no section fits, create one.
+- Categories to watch for: Vercel deployment issues, AF API behavior, UI/UX patterns, Prisma/Supabase quirks, i18n, security.
+
 ## Autonomous memory updates
 - The agent may decide on its own to append notes to this file when it discovers stable, high-value project workflow knowledge.
+- For broader lessons (not just build/deploy), prefer `docs/LESSONS-LEARNED.md` over this file.
 - Add only project-relevant operational guidance (build/test commands, environment constraints, recurring pitfalls).
 - Keep entries concise and actionable; do not add secrets, credentials, or personal data.
 

@@ -2,9 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { FileText, Mail, Upload } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 import { DocumentPreviewDialog } from './DocumentPreviewDialog'
 import { UploadDialog } from './UploadDialog'
 import { BatchSkillsButton } from './BatchSkillsButton'
@@ -48,6 +46,21 @@ interface BatchResults {
   }>
 }
 
+function formatDateTime(iso: string) {
+  const d = new Date(iso)
+  const date = d.toLocaleDateString('sv-SE', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+  const time = d.toLocaleTimeString('sv-SE', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+  return `${date}, ${time}`
+}
+
 export function DashboardClient({
   cvDocument,
   personalLetter,
@@ -82,16 +95,13 @@ export function DashboardClient({
     try {
       const response = await fetch('/api/skills/batch', { method: 'POST' })
       const data = await response.json()
-
       if (data.success) {
         setBatchResults(data.data)
         setBatchModalOpen(true)
       } else {
-        // TODO: Show error toast/alert
         console.error('Batch skills regeneration failed:', data.error)
       }
     } catch (error) {
-      // TODO: Show error toast/alert
       console.error('Batch skills regeneration error:', error)
     } finally {
       setBatchLoading(false)
@@ -100,121 +110,121 @@ export function DashboardClient({
 
   return (
     <>
-      {/* CV Section */}
-      <Card
-        className={cvDocument ? 'cursor-pointer transition-shadow hover:shadow-md' : ''}
-        onClick={() => cvDocument && setCvDialogOpen(true)}
-        onKeyDown={
-          cvDocument
-            ? (event) => handleCardKeyDown(event, () => setCvDialogOpen(true))
-            : undefined
-        }
-        role={cvDocument ? 'button' : undefined}
-        tabIndex={cvDocument ? 0 : undefined}
-        aria-label={cvDocument ? cvAriaLabel : undefined}
-      >
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
-            <FileText className="h-4 w-4" strokeWidth={1.5} />
-            {t('yourCV')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {cvDocument ? (
-            <div className="space-y-3">
-              <p className="font-mono text-xs text-muted-foreground">
-                {cvDocument.createdAt}
-              </p>
-              {cvDocument.skills && (
-                <div className="flex flex-wrap gap-1.5">
-                  {cvDocument.skills.slice(0, 3).map((skill, i) => (
-                    <span key={i} className="rounded-full border bg-muted/50 px-2.5 py-0.5 text-xs">
-                      {skill}
-                    </span>
-                  ))}
-                  {cvDocument.skills.length > 3 && (
-                    <span className="rounded-full border border-dashed px-2.5 py-0.5 text-xs text-muted-foreground">
-                      +{cvDocument.skills.length - 3}
-                    </span>
-                  )}
-                </div>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full gap-2 text-xs uppercase tracking-wider sm:w-auto"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setCvUploadDialogOpen(true)
-                }}
-              >
-                <Upload className="h-3.5 w-3.5" />
-                {t('uploadNewFile')}
-              </Button>
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        {/* CV Card */}
+        {cvDocument ? (
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setCvDialogOpen(true)}
+            onKeyDown={(e) => handleCardKeyDown(e, () => setCvDialogOpen(true))}
+            aria-label={cvAriaLabel}
+            className="card-elevated cursor-pointer rounded-[10px] border bg-card p-5"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                {t('yourCV')}
+              </h2>
+              <span className="text-[11px] tabular-nums text-muted-foreground/60">
+                {formatDateTime(cvDocument.createdAt)}
+              </span>
             </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">{t('noCV')}</p>
+
+            <div className="mt-4 space-y-4">
+              <p className="text-[13px] leading-[1.6] text-muted-foreground/80 line-clamp-3">
+                {cvDocument.parsedContent?.substring(0, 160)}...
+              </p>
+
+              <div className="flex items-center gap-5 pt-0.5">
+                <span className="inline-flex items-center gap-1 text-[13px] font-medium text-primary">
+                  {t('viewDocument')}
+                  <ArrowUpRight className="h-3 w-3" />
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setCvUploadDialogOpen(true)
+                  }}
+                  className="link-underline text-[13px] text-muted-foreground transition-colors duration-200 hover:text-foreground"
+                >
+                  {t('uploadNewFile')}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="card-elevated rounded-[10px] border bg-card p-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                {t('yourCV')}
+              </h2>
+            </div>
+            <div className="mt-4 space-y-3">
+              <p className="text-[13px] leading-relaxed text-muted-foreground">{t('noCV')}</p>
               {cvUploadComponent}
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
 
-      {/* Personal Letter Section */}
-      <Card
-        className={personalLetter ? 'cursor-pointer transition-shadow hover:shadow-md' : ''}
-        onClick={() => personalLetter && setLetterDialogOpen(true)}
-        onKeyDown={
-          personalLetter
-            ? (event) =>
-                handleCardKeyDown(event, () => setLetterDialogOpen(true))
-            : undefined
-        }
-        role={personalLetter ? 'button' : undefined}
-        tabIndex={personalLetter ? 0 : undefined}
-        aria-label={personalLetter ? personalLetterAriaLabel : undefined}
-      >
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
-            <Mail className="h-4 w-4" strokeWidth={1.5} />
-            {t('yourPersonalLetter')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {personalLetter ? (
-            <div className="space-y-3">
-              <p className="font-mono text-xs text-muted-foreground">
-                {personalLetter.createdAt}
-              </p>
-              <p className="text-xs leading-relaxed text-muted-foreground line-clamp-3">
-                {personalLetter.parsedContent?.substring(0, 150)}...
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full gap-2 text-xs uppercase tracking-wider sm:w-auto"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setLetterUploadDialogOpen(true)
-                }}
-              >
-                <Upload className="h-3.5 w-3.5" />
-                {t('uploadNewFile')}
-              </Button>
+        {/* Personal Letter Card */}
+        {personalLetter ? (
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setLetterDialogOpen(true)}
+            onKeyDown={(e) => handleCardKeyDown(e, () => setLetterDialogOpen(true))}
+            aria-label={personalLetterAriaLabel}
+            className="card-elevated cursor-pointer rounded-[10px] border bg-card p-5"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                {t('yourPersonalLetter')}
+              </h2>
+              <span className="text-[11px] tabular-nums text-muted-foreground/60">
+                {formatDateTime(personalLetter.createdAt)}
+              </span>
             </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">{t('noPersonalLetter')}</p>
+
+            <div className="mt-4 space-y-4">
+              <p className="text-[13px] leading-[1.6] text-muted-foreground/80 line-clamp-3">
+                {personalLetter.parsedContent?.substring(0, 160)}...
+              </p>
+
+              <div className="flex items-center gap-5 pt-0.5">
+                <span className="inline-flex items-center gap-1 text-[13px] font-medium text-primary">
+                  {t('viewDocument')}
+                  <ArrowUpRight className="h-3 w-3" />
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setLetterUploadDialogOpen(true)
+                  }}
+                  className="link-underline text-[13px] text-muted-foreground transition-colors duration-200 hover:text-foreground"
+                >
+                  {t('uploadNewFile')}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="card-elevated rounded-[10px] border bg-card p-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                {t('yourPersonalLetter')}
+              </h2>
+            </div>
+            <div className="mt-4 space-y-3">
+              <p className="text-[13px] leading-relaxed text-muted-foreground">{t('noPersonalLetter')}</p>
               {personalLetterUploadComponent}
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </div>
 
-      {/* Batch Skills Button - spans full grid width */}
+      {/* Batch button */}
       {cvDocument && (
-        <div className="flex justify-end md:col-span-2">
+        <div className="mt-3 flex justify-end">
           <BatchSkillsButton
             onTrigger={handleBatchRegenerate}
             loading={batchLoading}
@@ -222,7 +232,7 @@ export function DashboardClient({
         </div>
       )}
 
-      {/* CV Preview Dialog */}
+      {/* Dialogs */}
       {cvDocument && (
         <DocumentPreviewDialog
           open={cvDialogOpen}
@@ -234,8 +244,6 @@ export function DashboardClient({
           type="cv"
         />
       )}
-
-      {/* Personal Letter Preview Dialog */}
       {personalLetter && (
         <DocumentPreviewDialog
           open={letterDialogOpen}
@@ -247,8 +255,6 @@ export function DashboardClient({
           type="personal_letter"
         />
       )}
-
-      {/* Upload Dialogs */}
       <UploadDialog
         open={cvUploadDialogOpen}
         onOpenChange={setCvUploadDialogOpen}
@@ -259,8 +265,6 @@ export function DashboardClient({
         onOpenChange={setLetterUploadDialogOpen}
         documentType="personal_letter"
       />
-
-      {/* Batch Results Modal */}
       <BatchResultsModal
         open={batchModalOpen}
         onClose={() => {

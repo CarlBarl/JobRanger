@@ -47,6 +47,14 @@ model SavedJob {
   notes   String?
   savedAt DateTime @default(now())
 
+  // Cached from AF API at save time
+  headline   String?
+  employer   String?
+  location   String?
+  occupation String?
+  deadline   String?
+  webpageUrl String?
+
   letters GeneratedLetter[]
 
   @@unique([userId, afJobId])
