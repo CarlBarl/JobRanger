@@ -72,3 +72,6 @@ When embedding user-provided text inside tagged prompt sections (`<cv_content>..
 
 ### Account Deletion Should Fail Closed on Auth Delete Errors
 In multi-system account deletion (Auth + DB + Storage), do not return success if auth user deletion fails. Failing closed prevents a state where the user can still authenticate after a "successful" delete response.
+
+### Admin Routes Gated by DEBUG_EMAIL
+The `/admin` page and `/api/admin/*` routes are restricted to the email in `DEBUG_EMAIL` env var. Same pattern as the debug chat on the dashboard. Non-admin users get redirected to `/dashboard` (page) or receive a 403 (API). The admin delete endpoint reuses the same 3-step deletion logic as `/api/account/delete` (Auth → Storage → Prisma cascade).

@@ -49,7 +49,25 @@
       "mcp__plugin_playwright_playwright__browser_type",
       "mcp__plugin_playwright_playwright__browser_close",
       "Bash(xargs kill:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(cmd /c \"rmdir /s /q node_modules\")",
+      "Bash(npx next dev)",
+      "Bash(cmd /c \"tasklist /fi \"\"PID eq 35172\"\"\")",
+      "Bash(cmd /c \"netstat -ano | findstr :3000\")",
+      "Bash(cmd /c \"rmdir /s /q .next\")",
+      "Bash(npx prisma db push:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx vitest:*)",
+      "Bash(git status:*)",
+      "Bash(gh run:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm ls:*)",
+      "Bash(git diff:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(wmic process where \"name=''node.exe''\" get processid,commandline)",
+      "Bash(wmic process:*)",
+      "Bash(npx next build:*)"
     ]
   }
 }

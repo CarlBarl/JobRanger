@@ -53,9 +53,11 @@ npx prisma studio              # Database GUI
 
 ```
 app/                    # Next.js pages and API routes
+  admin/                # Admin user management (DEBUG_EMAIL gated)
   api/upload/           # File upload endpoint
   api/jobs/             # Job search (proxies AF API)
   api/generate/         # Cover letter generation
+  api/admin/users/      # Admin: list users (GET), delete user (DELETE [id])
 components/
   ui/                   # shadcn/ui base components
   [feature]/            # Feature-specific components (upload/, jobs/, letters/)
