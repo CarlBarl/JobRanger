@@ -89,6 +89,7 @@ describe('SignUpForm', () => {
     expect(signUp).toHaveBeenCalledWith({
       email: 'test@example.com',
       password: 'password123',
+      options: expect.objectContaining({ emailRedirectTo: expect.any(String) }),
     })
 
     expect(await screen.findByText(/User already exists/i)).toBeInTheDocument()
@@ -108,6 +109,7 @@ describe('SignUpForm', () => {
     expect(signUp).toHaveBeenCalledWith({
       email: 'test@example.com',
       password: 'password123',
+      options: expect.objectContaining({ emailRedirectTo: expect.any(String) }),
     })
 
     expect(push).toHaveBeenCalledWith('/dashboard')
