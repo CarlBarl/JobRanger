@@ -41,25 +41,34 @@ export async function DELETE(
     )
   }
 
-  const document = await prisma.document.findFirst({
+  // Check ownership and get fileUrl for storage cleanup
+  const existing = await prisma.document.findFirst({
     where: { id, userId: user.id },
+    select: { id: true, fileUrl: true },
   })
 
-  if (!document) {
+  if (!existing) {
     return NextResponse.json(
       { success: false, error: { code: 'NOT_FOUND', message: 'Document not found' } },
       { status: 404 }
     )
   }
 
-  if (document.fileUrl) {
-    const storagePath = getDocumentStoragePath(document.fileUrl)
+  if (existing.fileUrl) {
+    const storagePath = getDocumentStoragePath(existing.fileUrl)
     if (storagePath) {
       await supabase.storage.from('documents').remove([storagePath])
     }
   }
 
-  await prisma.document.delete({ where: { id } })
+  // Atomic ownership check + delete
+  await prisma.$transaction(async (tx) => {
+    const doc = await tx.document.findFirst({
+      where: { id, userId: user.id },
+    })
+    if (!doc) return
+    await tx.document.delete({ where: { id } })
+  })
 
   return NextResponse.json({ success: true })
 }
@@ -131,11 +140,13 @@ export async function PATCH(
     )
   }
 
-  const document = await prisma.document.findFirst({
+  // Check ownership and get fileUrl for storage update
+  const existing = await prisma.document.findFirst({
     where: { id, userId: user.id },
+    select: { id: true, fileUrl: true },
   })
 
-  if (!document) {
+  if (!existing) {
     return NextResponse.json(
       { success: false, error: { code: 'NOT_FOUND', message: 'Document not found' } },
       { status: 404 }
@@ -143,8 +154,8 @@ export async function PATCH(
   }
 
   // Update file in Supabase Storage if fileUrl exists
-  if (document.fileUrl) {
-    const storagePath = getDocumentStoragePath(document.fileUrl)
+  if (existing.fileUrl) {
+    const storagePath = getDocumentStoragePath(existing.fileUrl)
     if (storagePath) {
       const { error: storageError } = await supabase.storage
         .from('documents')
@@ -154,16 +165,28 @@ export async function PATCH(
         })
       if (storageError) {
         console.error('Storage update failed:', storageError.message)
-        // Continue anyway - database is the source of truth
       }
     }
   }
 
-  // Update database
-  const updated = await prisma.document.update({
-    where: { id },
-    data: { parsedContent },
+  // Atomic ownership check + update
+  const updated = await prisma.$transaction(async (tx) => {
+    const doc = await tx.document.findFirst({
+      where: { id, userId: user.id },
+    })
+    if (!doc) return null
+    return tx.document.update({
+      where: { id },
+      data: { parsedContent },
+    })
   })
+
+  if (!updated) {
+    return NextResponse.json(
+      { success: false, error: { code: 'NOT_FOUND', message: 'Document not found' } },
+      { status: 404 }
+    )
+  }
 
   return NextResponse.json({ success: true, data: updated })
 }

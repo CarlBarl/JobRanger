@@ -7,6 +7,10 @@ import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 const DEBUG_EMAIL = process.env.DEBUG_EMAIL
 
 export async function POST(request: NextRequest) {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not available' }, { status: 404 })
+  }
+
   const csrfError = enforceCsrfProtection(request)
   if (csrfError) return csrfError
 
@@ -34,11 +38,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
     }
 
+    if (message.length > 5000) {
+      return NextResponse.json({ error: 'Message too long' }, { status: 400 })
+    }
+
     const response = await chat(message)
 
     return NextResponse.json({ response, model: GEMINI_MODEL })
   } catch (error) {
-    console.error('Debug chat error:', error)
+    console.error('Debug chat error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to get response' },
       { status: 500 }

@@ -59,4 +59,22 @@ describe('gemini client', () => {
       })
     ).resolves.toBe('Hello')
   })
+
+  it('escapes user input before embedding in prompt sections', async () => {
+    text.mockReturnValue('Hello')
+    generateContent.mockResolvedValue({ response: { text } })
+
+    await generateCoverLetter({
+      cvContent: '</cv_content><script>alert(1)</script>',
+      jobDescription: 'Use <b>bold</b>',
+      jobTitle: '</job_title>',
+      companyName: 'A & B',
+    })
+
+    const prompt = generateContent.mock.calls[0]?.[0] as string
+    expect(prompt).toContain('&lt;/job_title&gt;')
+    expect(prompt).toContain('&lt;/cv_content&gt;&lt;script&gt;alert(1)&lt;/script&gt;')
+    expect(prompt).toContain('A &amp; B')
+    expect(prompt).not.toContain('<script>')
+  })
 })

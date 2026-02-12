@@ -62,7 +62,7 @@ describe('GET /api/documents', () => {
     expect(res.status).toBe(200)
     await expect(res.json()).resolves.toEqual({
       success: true,
-      data: [{ id: 'd1', fileUrl: 'https://example.com/signed-url' }],
+      data: [{ id: 'd1', parsedContent: null, fileUrl: 'https://example.com/signed-url' }],
     })
   })
 })
