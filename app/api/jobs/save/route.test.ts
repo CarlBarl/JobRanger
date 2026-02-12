@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   getOrCreateUser: vi.fn(),
   upsert: vi.fn(),
   findMany: vi.fn(),
+  getJobById: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -27,6 +28,10 @@ vi.mock('@/lib/prisma', () => ({
       findMany: mocks.findMany,
     },
   },
+}))
+
+vi.mock('@/lib/services/arbetsformedlingen', () => ({
+  getJobById: mocks.getJobById,
 }))
 
 import { GET, POST } from './route'
@@ -69,9 +74,17 @@ describe('/api/jobs/save', () => {
       })
     })
 
-    it('upserts saved job', async () => {
+    it('upserts saved job with cached AF data', async () => {
       mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
       mocks.getOrCreateUser.mockResolvedValue({ id: 'u1' })
+      mocks.getJobById.mockResolvedValue({
+        headline: 'AI Engineer',
+        employer: { name: 'TechCorp' },
+        workplace_address: { municipality: 'Stockholm', region: 'Stockholm' },
+        occupation: { label: 'Software' },
+        application_deadline: '2026-07-01',
+        webpage_url: 'https://af.se/job-123',
+      })
       mocks.upsert.mockResolvedValue({ id: 'sj1', userId: 'u1', afJobId: '123', notes: 'n' })
 
       const req = new NextRequest('http://localhost/api/jobs/save', {
@@ -81,10 +94,45 @@ describe('/api/jobs/save', () => {
       const res = await POST(req)
 
       expect(res.status).toBe(200)
-      await expect(res.json()).resolves.toEqual({
-        success: true,
-        data: { id: 'sj1', userId: 'u1', afJobId: '123', notes: 'n' },
+      expect(mocks.getJobById).toHaveBeenCalledWith('123')
+      expect(mocks.upsert).toHaveBeenCalledWith({
+        where: { userId_afJobId: { userId: 'u1', afJobId: '123' } },
+        update: {
+          notes: 'n',
+          headline: 'AI Engineer',
+          employer: 'TechCorp',
+          location: 'Stockholm',
+          occupation: 'Software',
+          deadline: '2026-07-01',
+          webpageUrl: 'https://af.se/job-123',
+        },
+        create: {
+          userId: 'u1',
+          afJobId: '123',
+          notes: 'n',
+          headline: 'AI Engineer',
+          employer: 'TechCorp',
+          location: 'Stockholm',
+          occupation: 'Software',
+          deadline: '2026-07-01',
+          webpageUrl: 'https://af.se/job-123',
+        },
       })
+    })
+
+    it('saves without cache when AF API fails', async () => {
+      mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
+      mocks.getOrCreateUser.mockResolvedValue({ id: 'u1' })
+      mocks.getJobById.mockRejectedValue(new Error('AF API unavailable'))
+      mocks.upsert.mockResolvedValue({ id: 'sj1', userId: 'u1', afJobId: '123', notes: 'n' })
+
+      const req = new NextRequest('http://localhost/api/jobs/save', {
+        method: 'POST',
+        body: JSON.stringify({ afJobId: '123', notes: 'n' }),
+      })
+      const res = await POST(req)
+
+      expect(res.status).toBe(200)
       expect(mocks.upsert).toHaveBeenCalledWith({
         where: { userId_afJobId: { userId: 'u1', afJobId: '123' } },
         update: { notes: 'n' },

@@ -3,9 +3,11 @@ import { DashboardClient } from '@/components/dashboard/DashboardClient'
 import { FileUpload } from '@/components/upload/FileUpload'
 import { PersonalLetterUpload } from '@/components/upload/PersonalLetterUpload'
 import { SkillsEditor } from '@/components/dashboard/SkillsEditor'
+import { SavedJobsList } from '@/components/dashboard/SavedJobsList'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
+import { getJobById } from '@/lib/services/arbetsformedlingen'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { DebugChat } from '@/components/dashboard/DebugChat'
@@ -27,34 +29,67 @@ export default async function DashboardPage() {
 
   const user = await getOrCreateUser(authUser.id, authUser.email)
 
-  // Get user's CV
   const cvDocument = await prisma.document.findFirst({
     where: { userId: user.id, type: 'cv' },
     orderBy: { createdAt: 'desc' },
   })
 
-  // Get user's Personal Letter
   const personalLetter = await prisma.document.findFirst({
     where: { userId: user.id, type: 'personal_letter' },
     orderBy: { createdAt: 'desc' },
   })
 
-  // Get counts
-  const [savedJobsCount, lettersCount] = await Promise.all([
+  const [savedJobsCount, lettersCount, recentSavedJobs] = await Promise.all([
     prisma.savedJob.count({ where: { userId: user.id } }),
     prisma.generatedLetter.count({ where: { userId: user.id } }),
+    prisma.savedJob.findMany({
+      where: { userId: user.id },
+      orderBy: { savedAt: 'desc' },
+      take: 3,
+    }),
   ])
+
+  const savedJobsData = await Promise.all(
+    recentSavedJobs.map(async (saved) => {
+      try {
+        const job = await getJobById(saved.afJobId)
+        return {
+          afJobId: saved.afJobId,
+          headline: job.headline || saved.headline || 'Untitled',
+          employer: job.employer?.name || saved.employer || '',
+          location: job.workplace_address?.municipality || job.workplace_address?.region || saved.location || '',
+          occupation: job.occupation?.label || saved.occupation || '',
+          deadline: job.application_deadline || saved.deadline || null,
+          webpageUrl: job.webpage_url || saved.webpageUrl || null,
+          isStale: false,
+        }
+      } catch {
+        // AF API failed — use cached data from DB
+        return {
+          afJobId: saved.afJobId,
+          headline: saved.headline || `Jobb ${saved.afJobId.slice(0, 8)}`,
+          employer: saved.employer || '',
+          location: saved.location || '',
+          occupation: saved.occupation || '',
+          deadline: saved.deadline || null,
+          webpageUrl: saved.webpageUrl || null,
+          isStale: true,
+        }
+      }
+    })
+  )
+
+  const validSavedJobs = savedJobsData
 
   const [cvAccessUrl, personalLetterAccessUrl] = await Promise.all([
     resolveDocumentAccessUrl(supabase, cvDocument?.fileUrl),
     resolveDocumentAccessUrl(supabase, personalLetter?.fileUrl),
   ])
 
-  // Serialize documents for client component
   const serializedCv = cvDocument
     ? {
         id: cvDocument.id,
-        createdAt: cvDocument.createdAt.toISOString().slice(0, 10),
+        createdAt: cvDocument.createdAt.toISOString(),
         parsedContent: cvDocument.parsedContent,
         fileUrl: cvAccessUrl,
         skills: cvDocument.skills as string[] | null,
@@ -64,7 +99,7 @@ export default async function DashboardPage() {
   const serializedLetter = personalLetter
     ? {
         id: personalLetter.id,
-        createdAt: personalLetter.createdAt.toISOString().slice(0, 10),
+        createdAt: personalLetter.createdAt.toISOString(),
         parsedContent: personalLetter.parsedContent,
         fileUrl: personalLetterAccessUrl,
         skills: personalLetter.skills as string[] | null,
@@ -72,63 +107,62 @@ export default async function DashboardPage() {
     : null
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <DashboardHeader />
-      <main className="container mx-auto px-6 py-8 sm:py-12">
-        {/* Welcome + inline stats */}
-        <div className="animate-fade-up mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+      <main className="container mx-auto space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+        {/* Hero: name + stats */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="mb-1 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-              {t('welcome', { name: '' }).trim()}
-            </p>
-            <h1 className="break-words text-2xl font-bold tracking-tight sm:text-3xl">
+            <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-foreground">
               {user.name || user.email}
             </h1>
+            {user.name && (
+              <p className="mt-0.5 text-[13px] text-muted-foreground/80">{user.email}</p>
+            )}
           </div>
-          <div className="flex gap-6">
+          <div className="flex gap-8">
             <Link
               href="/jobs"
-              className="group text-right transition-opacity hover:opacity-70"
+              className="group flex items-baseline gap-1.5 transition-colors duration-200 hover:opacity-80"
             >
-              <p className="text-2xl font-bold tracking-tight">{savedJobsCount}</p>
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              <span className="text-[22px] font-semibold tabular-nums tracking-tight text-foreground">{savedJobsCount}</span>
+              <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground transition-colors duration-200 group-hover:text-foreground">
                 {t('jobsSaved')}
-              </p>
+              </span>
             </Link>
-            <div className="w-px bg-border" />
             <Link
               href="/letters"
-              className="group text-right transition-opacity hover:opacity-70"
+              className="group flex items-baseline gap-1.5 transition-colors duration-200 hover:opacity-80"
             >
-              <p className="text-2xl font-bold tracking-tight">{lettersCount}</p>
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              <span className="text-[22px] font-semibold tabular-nums tracking-tight text-foreground">{lettersCount}</span>
+              <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground transition-colors duration-200 group-hover:text-foreground">
                 {t('lettersGenerated')}
-              </p>
+              </span>
             </Link>
           </div>
         </div>
 
-        {/* Documents section */}
-        <div className="animate-fade-up delay-1">
-          <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
-            <DashboardClient
-              cvDocument={serializedCv}
-              personalLetter={serializedLetter}
-              cvUploadComponent={<FileUpload />}
-              personalLetterUploadComponent={<PersonalLetterUpload />}
-            />
-          </div>
-        </div>
+        {/* Documents */}
+        <DashboardClient
+          cvDocument={serializedCv}
+          personalLetter={serializedLetter}
+          cvUploadComponent={<FileUpload />}
+          personalLetterUploadComponent={<PersonalLetterUpload />}
+        />
 
-        {/* Skills Editor - Full width below */}
+        {/* Skills */}
         {serializedCv && (
-          <div className="animate-fade-up delay-2 mt-8">
-            <SkillsEditor
-              skills={serializedCv.skills || []}
-              documentId={serializedCv.id}
-            />
-          </div>
+          <SkillsEditor
+            skills={serializedCv.skills || []}
+            documentId={serializedCv.id}
+          />
         )}
+
+        {/* Saved Jobs */}
+        <SavedJobsList
+          jobs={validSavedJobs}
+          totalCount={savedJobsCount}
+        />
       </main>
 
       {authUser.email === DEBUG_EMAIL && <DebugChat modelName={GEMINI_MODEL} />}

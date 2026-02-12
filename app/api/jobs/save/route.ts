@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
+import { getJobById } from '@/lib/services/arbetsformedlingen'
 import { enforceCsrfProtection } from '@/lib/security/csrf'
 import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
@@ -50,6 +51,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Fetch job details from AF API to cache
+    let cached: {
+      headline?: string
+      employer?: string
+      location?: string
+      occupation?: string
+      deadline?: string | null
+      webpageUrl?: string | null
+    } = {}
+    try {
+      const job = await getJobById(afJobId)
+      cached = {
+        headline: job.headline || undefined,
+        employer: job.employer?.name || undefined,
+        location: job.workplace_address?.municipality || job.workplace_address?.region || undefined,
+        occupation: job.occupation?.label || undefined,
+        deadline: job.application_deadline || null,
+        webpageUrl: job.webpage_url || null,
+      }
+    } catch {
+      // AF API may be unavailable; save without cache
+    }
+
     const savedJob = await prisma.savedJob.upsert({
       where: {
         userId_afJobId: {
@@ -57,8 +81,8 @@ export async function POST(request: NextRequest) {
           afJobId,
         },
       },
-      update: { notes },
-      create: { userId: user.id, afJobId, notes },
+      update: { notes, ...cached },
+      create: { userId: user.id, afJobId, notes, ...cached },
     })
 
     return NextResponse.json({ success: true, data: savedJob })

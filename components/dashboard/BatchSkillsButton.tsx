@@ -2,7 +2,6 @@
 
 import { useTranslations } from 'next-intl'
 import { RefreshCw } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 interface BatchSkillsButtonProps {
   onTrigger: () => Promise<void>
@@ -24,18 +23,17 @@ export function BatchSkillsButton({
   }
 
   return (
-    <Button
+    <button
       onClick={handleClick}
       disabled={loading || disabled}
       aria-label={t('dashboard.regenerateAllSkills')}
       aria-busy={loading}
-      variant="outline"
-      className="w-full gap-2 sm:w-auto"
+      className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-medium text-muted-foreground/60 transition-all duration-200 hover:text-muted-foreground hover:bg-secondary/60 disabled:opacity-40 disabled:cursor-not-allowed"
     >
       <RefreshCw
-        className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+        className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`}
       />
       {loading ? t('dashboard.regenerating') : t('dashboard.regenerateAllSkills')}
-    </Button>
+    </button>
   )
 }
