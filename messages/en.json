@@ -76,7 +76,9 @@
     "requestNewResetLink": "Request a new reset link",
     "preparingDashboard": "Preparing your dashboard...",
     "loadingProfile": "Loading your profile...",
-    "almostThere": "Almost there..."
+    "almostThere": "Almost there...",
+    "signUpCheckEmail": "Check your email",
+    "signUpCheckEmailDescription": "We sent a verification link to {email}. Click the link to verify your account."
   },
   "dashboard": {
     "welcome": "Welcome, {name}",

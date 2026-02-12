@@ -4,19 +4,12 @@ import { render, screen } from '@/lib/test-utils'
 import { SignUpForm } from './SignUpForm'
 
 const signUp = vi.fn()
-const push = vi.fn()
 
 vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
     auth: {
       signUp,
     },
-  }),
-}))
-
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push,
   }),
 }))
 
@@ -95,7 +88,7 @@ describe('SignUpForm', () => {
     expect(await screen.findByText(/User already exists/i)).toBeInTheDocument()
   })
 
-  it('redirects on successful signup', async () => {
+  it('shows confirmation card after successful signup', async () => {
     signUp.mockResolvedValue({ data: { user: { id: '123' } }, error: null })
 
     const user = userEvent.setup()
@@ -112,7 +105,9 @@ describe('SignUpForm', () => {
       options: expect.objectContaining({ emailRedirectTo: expect.any(String) }),
     })
 
-    expect(push).toHaveBeenCalledWith('/dashboard')
+    expect(await screen.findByText(/check your email/i)).toBeInTheDocument()
+    expect(screen.getByText(/test@example.com/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /back to sign in/i })).toHaveAttribute('href', '/auth/signin')
   })
 
   it('has a link to sign in page', () => {

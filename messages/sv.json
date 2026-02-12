@@ -76,7 +76,9 @@
     "requestNewResetLink": "Begär ny återställningslänk",
     "preparingDashboard": "Förbereder din dashboard...",
     "loadingProfile": "Laddar din profil...",
-    "almostThere": "Nästan klar..."
+    "almostThere": "Nästan klar...",
+    "signUpCheckEmail": "Kolla din e-post",
+    "signUpCheckEmailDescription": "Vi skickade en verifieringslänk till {email}. Klicka på länken för att verifiera ditt konto."
   },
   "dashboard": {
     "welcome": "Välkommen, {name}",
