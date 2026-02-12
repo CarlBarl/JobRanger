@@ -231,10 +231,10 @@ describe('BatchResultsModal', () => {
         />
       )
 
-      // Dates should be formatted as locale strings
-      expect(screen.getByText(/1\/1\/2024/i)).toBeInTheDocument()
-      expect(screen.getByText(/1\/2\/2024/i)).toBeInTheDocument()
-      expect(screen.getByText(/1\/3\/2024/i)).toBeInTheDocument()
+      // Dates should be formatted as sv-SE locale strings
+      expect(screen.getByText('2024-01-01')).toBeInTheDocument()
+      expect(screen.getByText('2024-01-02')).toBeInTheDocument()
+      expect(screen.getByText('2024-01-03')).toBeInTheDocument()
     })
   })
 })

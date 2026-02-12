@@ -55,7 +55,7 @@ export function BatchResultsModal({
   }
 
   const formatDate = (isoString: string) => {
-    return new Date(isoString).toLocaleDateString()
+    return new Date(isoString).toLocaleDateString('sv-SE')
   }
 
   return (
