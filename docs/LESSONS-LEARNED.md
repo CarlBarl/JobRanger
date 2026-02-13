@@ -26,14 +26,17 @@ If one saved job is unavailable (expired/removed) but others are still resolvabl
 ### API Key is Optional
 The AF JobSearch API works without an API key for basic usage. The key is only needed for higher rate limits.
 
-### Region Filtering Needs Query Augmentation + Client Filter
-AF `/search` integration in this project uses `q`, `limit`, and `offset`; there is no dedicated region parameter in the provider wrapper. To improve region relevance during fetch, append the selected region to the search query on the server side, and still keep exact client-side `workplace_address.region` filtering for correctness.
+### Region Filtering Needs Query Augmentation + Client Ranking Hint
+AF `/search` integration in this project uses `q`, `limit`, and `offset`; there is no dedicated region parameter in the provider wrapper. Use region as a query augmentation signal and ranking hint. Do not hard-filter client-side by exact `workplace_address.region`, because AF location metadata can be missing or formatted differently (`Stockholm` vs `Stockholms län`).
 
 ### Region Input Must Be Available Pre-Search
 If region can only be selected from post-search result metadata, users cannot include region in their first query. Keep a separate top-level region input in the search bar and avoid auto-clearing `selectedRegion` when no regions are loaded yet.
 
 ### Region Matching Should Be Normalized and Tolerant
 Strict equality between typed region input and `workplace_address.region` can hide valid results (`stockholm` vs `Stockholms län`, diacritics/case differences). Normalize both sides (case + diacritics) and allow partial matches when applying client-side region filtering.
+
+### Job Skill Extraction Should Not Depend Only on Selected Skills
+Per-job "skills found" UI should be derived from listing text using a shared extractor (`lib/scoring.ts`) and a stable job-skill catalog, independent of the user's selected CV skills. Keep matched-vs-unmatched distinction in UI, but always show all extracted job skills when expanded.
 
 ## Next.js / React
 

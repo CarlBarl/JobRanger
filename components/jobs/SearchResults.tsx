@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { JobCard } from '@/components/jobs/JobCard'
@@ -20,7 +20,9 @@ import {
 } from '@/components/ui/select'
 import type { AFJobHit } from '@/lib/services/arbetsformedlingen'
 
-type ScoredJob = AFJobHit & { relevance?: { matched: number; total: number; score: number } }
+type ScoredJob = AFJobHit & {
+  relevance?: { matched: number; total: number; score: number; matchedSkills: string[] }
+}
 
 interface PaginationProps {
   currentPage: number
@@ -36,6 +38,8 @@ interface SearchResultsProps {
   hasSearched: boolean
   loading: boolean
   searchSkillMatches: Record<string, number>
+  jobSkillsByJob: Record<string, string[]>
+  matchedSkillsByJob: Record<string, string[]>
   savedJobIds: Set<string>
   onToggleSave: (afJobId: string) => void
   error: string | null
@@ -73,6 +77,8 @@ export function SearchResults({
   hasSearched,
   loading,
   searchSkillMatches,
+  jobSkillsByJob,
+  matchedSkillsByJob,
   savedJobIds,
   onToggleSave,
   error,
@@ -80,6 +86,7 @@ export function SearchResults({
 }: SearchResultsProps) {
   const t = useTranslations('jobs')
   const resultsRef = useRef<HTMLDivElement>(null)
+  const [expandedMatchedSkills, setExpandedMatchedSkills] = useState<Set<string>>(new Set())
 
   const handlePageChange = useCallback(
     (page: number) => {
@@ -91,6 +98,22 @@ export function SearchResults({
     },
     [pagination]
   )
+
+  useEffect(() => {
+    setExpandedMatchedSkills(new Set())
+  }, [jobs])
+
+  const toggleMatchedSkills = useCallback((jobId: string) => {
+    setExpandedMatchedSkills((prev) => {
+      const next = new Set(prev)
+      if (next.has(jobId)) {
+        next.delete(jobId)
+      } else {
+        next.add(jobId)
+      }
+      return next
+    })
+  }, [])
 
   const from = pagination
     ? pagination.totalItems === 0
@@ -121,28 +144,69 @@ export function SearchResults({
 
       {jobs.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
-          {jobs.map((job) => (
-            <div key={job.id} className="relative">
-              {searchSkillMatches[job.id] ? (
-                <span className="absolute top-2 right-2 z-10 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                  {t('skillSearchBadge', { count: searchSkillMatches[job.id] })}
-                </span>
-              ) : null}
-              {job.relevance && job.relevance.matched > 0 && !searchSkillMatches[job.id] ? (
-                <span className="absolute top-2 right-2 z-10 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                  {t('relevanceBadge', {
-                    matched: job.relevance.matched,
-                    total: job.relevance.total,
-                  })}
-                </span>
-              ) : null}
-              <JobCard
-                job={job}
-                isSaved={savedJobIds.has(job.id)}
-                onToggleSave={onToggleSave}
-              />
-            </div>
-          ))}
+          {jobs.map((job) => {
+            const extractedSkills = jobSkillsByJob[job.id] ?? []
+            const matchedSkills = matchedSkillsByJob[job.id] ?? []
+            const matchedSkillSet = new Set(matchedSkills.map((skill) => skill.toLowerCase()))
+            const isExpanded = expandedMatchedSkills.has(job.id)
+            const hasExtractedSkills = extractedSkills.length > 0
+
+            return (
+              <div key={job.id} className="relative">
+                {searchSkillMatches[job.id] ? (
+                  <span className="absolute top-2 right-2 z-10 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                    {t('skillSearchBadge', { count: searchSkillMatches[job.id] })}
+                  </span>
+                ) : null}
+                {job.relevance && job.relevance.matched > 0 && !searchSkillMatches[job.id] ? (
+                  <span className="absolute top-2 right-2 z-10 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                    {t('relevanceBadge', {
+                      matched: job.relevance.matched,
+                      total: job.relevance.total,
+                    })}
+                  </span>
+                ) : null}
+                <JobCard
+                  job={job}
+                  isSaved={savedJobIds.has(job.id)}
+                  onToggleSave={onToggleSave}
+                />
+
+                {hasExtractedSkills ? (
+                  <div className="mt-2 space-y-2 px-1">
+                    <button
+                      type="button"
+                      onClick={() => toggleMatchedSkills(job.id)}
+                      className="text-[11px] font-medium text-primary hover:underline"
+                    >
+                      {isExpanded ? t('hideJobSkills') : t('showJobSkills')}
+                    </button>
+
+                    {isExpanded ? (
+                      <div className="flex flex-wrap gap-1.5" data-testid={`job-skills-${job.id}`}>
+                        {extractedSkills.map((skill) => {
+                          const isMatched = matchedSkillSet.has(skill.toLowerCase())
+
+                          return (
+                          <span
+                            key={`${job.id}-${skill}`}
+                            className={
+                              isMatched
+                                ? 'inline-flex items-center rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary'
+                                : 'inline-flex items-center rounded-md border border-border/60 bg-secondary/80 px-2 py-0.5 text-[11px] font-medium text-muted-foreground'
+                            }
+                          >
+                            {skill}
+                          </span>
+                          )
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            )
+          })}
         </div>
       ) : null}
 

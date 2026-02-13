@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { scoreJobRelevance } from './scoring'
+import { extractJobSkills, scoreJobRelevance } from './scoring'
 
 describe('scoreJobRelevance', () => {
   it('returns 0 when no skills match', () => {
@@ -10,6 +10,7 @@ describe('scoreJobRelevance', () => {
     expect(result.matched).toBe(0)
     expect(result.total).toBe(2)
     expect(result.score).toBe(0)
+    expect(result.matchedSkills).toEqual([])
   })
 
   it('counts matching skills case-insensitively', () => {
@@ -20,6 +21,7 @@ describe('scoreJobRelevance', () => {
     expect(result.matched).toBe(2)
     expect(result.total).toBe(3)
     expect(result.score).toBeCloseTo(2 / 3)
+    expect(result.matchedSkills).toEqual(['JavaScript', 'React'])
   })
 
   it('matches skills in headline and occupation', () => {
@@ -30,6 +32,7 @@ describe('scoreJobRelevance', () => {
     expect(result.matched).toBe(2)
     expect(result.total).toBe(2)
     expect(result.score).toBe(1)
+    expect(result.matchedSkills).toEqual(['React', 'JavaScript'])
   })
 
   it('returns 0 for empty skills array', () => {
@@ -40,6 +43,7 @@ describe('scoreJobRelevance', () => {
     expect(result.matched).toBe(0)
     expect(result.total).toBe(0)
     expect(result.score).toBe(0)
+    expect(result.matchedSkills).toEqual([])
   })
 
   it('handles null/undefined fields gracefully', () => {
@@ -50,5 +54,51 @@ describe('scoreJobRelevance', () => {
     expect(result.matched).toBe(0)
     expect(result.total).toBe(1)
     expect(result.score).toBe(0)
+    expect(result.matchedSkills).toEqual([])
+  })
+
+  it('does not count partial token matches like go in google', () => {
+    const result = scoreJobRelevance(
+      { headline: 'Google Cloud Engineer', description: 'Experience with Golang preferred', occupation: 'Engineer' },
+      ['Go']
+    )
+
+    expect(result.matched).toBe(0)
+    expect(result.matchedSkills).toEqual([])
+  })
+
+  it('matches punctuated skill variants like Node.js', () => {
+    const result = scoreJobRelevance(
+      { headline: 'Backend Developer', description: 'Strong node js and TypeScript skills', occupation: 'Developer' },
+      ['Node.js', 'TypeScript']
+    )
+
+    expect(result.matched).toBe(2)
+    expect(result.matchedSkills).toEqual(['Node.js', 'TypeScript'])
+  })
+})
+
+describe('extractJobSkills', () => {
+  it('extracts skills from job text using default catalog', () => {
+    const skills = extractJobSkills({
+      headline: 'Backend Developer',
+      description: 'Build services with Node.js, Docker and PostgreSQL',
+      occupation: 'Developer',
+    })
+
+    expect(skills).toEqual(
+      expect.arrayContaining(['Node.js', 'Docker', 'PostgreSQL'])
+    )
+  })
+
+  it('does not rely on user-specific skills when extracting job skills', () => {
+    const skills = extractJobSkills({
+      headline: 'Frontend role',
+      description: 'Experience with React and CSS required',
+      occupation: 'Engineer',
+    })
+
+    expect(skills).toEqual(expect.arrayContaining(['React', 'CSS']))
+    expect(skills).not.toContain('Playwright')
   })
 })

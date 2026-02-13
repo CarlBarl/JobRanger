@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import userEvent from '@testing-library/user-event'
-import { render, screen, waitFor } from '@/lib/test-utils'
+import { render, screen, waitFor, within } from '@/lib/test-utils'
 import { JobSearch } from './JobSearch'
 
 function mockFetchWithSkills(skills: string[]) {
@@ -250,6 +250,114 @@ function mockFetchWithCountyRegionNaming() {
   })
 }
 
+function mockFetchWithMixedRegionMatches() {
+  return vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+    const url = typeof input === 'string' ? input : input.toString()
+
+    if (url === '/api/documents') {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: [{ id: 'doc-1', type: 'cv', skills: [] }],
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
+    if (url === '/api/jobs/save') {
+      return Promise.resolve(
+        new Response(JSON.stringify({ success: true, data: [] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      )
+    }
+
+    if (url.startsWith('/api/jobs')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              hits: [
+                {
+                  id: '1',
+                  headline: 'Stockholm Match Role',
+                  workplace_address: { region: 'Stockholms län' },
+                  publication_date: '2026-01-01T10:00:00.000Z',
+                },
+                {
+                  id: '2',
+                  headline: 'Remote Role',
+                  workplace_address: { region: 'Skåne län' },
+                  publication_date: '2026-01-02T10:00:00.000Z',
+                },
+              ],
+            },
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
+    return Promise.reject(new Error(`Unexpected fetch: ${url}`))
+  })
+}
+
+function mockFetchWithSkillMatchedJob() {
+  return vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+    const url = typeof input === 'string' ? input : input.toString()
+
+    if (url === '/api/documents') {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: [{ id: 'doc-1', type: 'cv', skills: ['Node.js'] }],
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
+    if (url === '/api/jobs/save') {
+      return Promise.resolve(
+        new Response(JSON.stringify({ success: true, data: [] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      )
+    }
+
+    if (url.startsWith('/api/jobs')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              hits: [
+                {
+                  id: '10',
+                  headline: 'Backend Developer',
+                  occupation: { label: 'Developer' },
+                  description: { text: 'Build APIs with node js, docker and postgresql' },
+                  workplace_address: { region: 'Stockholm' },
+                  publication_date: '2026-01-01T10:00:00.000Z',
+                },
+              ],
+            },
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
+    return Promise.reject(new Error(`Unexpected fetch: ${url}`))
+  })
+}
+
 describe('JobSearch', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
@@ -448,5 +556,42 @@ describe('JobSearch', () => {
     expect(
       await screen.findByRole('link', { name: 'Developer Stockholm County' })
     ).toBeInTheDocument()
+  })
+
+  it('keeps non-matching region jobs visible when region input is used', async () => {
+    const user = userEvent.setup()
+    mockFetchWithMixedRegionMatches()
+
+    render(<JobSearch />)
+
+    const searchInput = await screen.findByPlaceholderText(/search by job title/i)
+    const regionInput = screen.getByPlaceholderText(/region \(optional\)/i)
+
+    await user.type(searchInput, 'developer')
+    await user.type(regionInput, 'stockholm')
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
+
+    expect(await screen.findByRole('link', { name: 'Stockholm Match Role' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Remote Role' })).toBeInTheDocument()
+  })
+
+  it('shows all extracted job skills when expanded, including unmatched ones', async () => {
+    const user = userEvent.setup()
+    mockFetchWithSkillMatchedJob()
+
+    render(<JobSearch />)
+
+    await screen.findByText(/1\/1 skills selected/i)
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
+
+    expect(await screen.findByRole('link', { name: 'Backend Developer' })).toBeInTheDocument()
+    expect(await screen.findByText(/1 matched skills/i)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /show job skills/i }))
+
+    const skillContainer = await screen.findByTestId('job-skills-10')
+    expect(within(skillContainer).getByText('Node.js')).toBeInTheDocument()
+    expect(within(skillContainer).getByText('Docker')).toBeInTheDocument()
+    expect(within(skillContainer).getByText('PostgreSQL')).toBeInTheDocument()
   })
 })
