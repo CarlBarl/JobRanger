@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { Heart, MapPin, Briefcase, Loader2, AlertCircle, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { scoreJobRelevance } from '@/lib/scoring'
 import type { AFJobHit } from '@/lib/services/arbetsformedlingen'
 
 interface JobPreviewStepProps {
@@ -17,6 +18,29 @@ function sortByDateDesc(left?: string | null, right?: string | null): number {
   const safeLeft = Number.isNaN(leftDate) ? 0 : leftDate
   const safeRight = Number.isNaN(rightDate) ? 0 : rightDate
   return safeRight - safeLeft
+}
+
+function normalizeRegion(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function matchesRegionFilter(jobRegion: string | null | undefined, selectedRegion: string): boolean {
+  const normalizedSelected = normalizeRegion(selectedRegion)
+  if (!normalizedSelected) return true
+
+  const normalizedJobRegion = normalizeRegion(jobRegion ?? '')
+  if (!normalizedJobRegion) return false
+
+  return (
+    normalizedJobRegion === normalizedSelected ||
+    normalizedJobRegion.includes(normalizedSelected) ||
+    normalizedSelected.includes(normalizedJobRegion)
+  )
 }
 
 const MAX_PREVIEW_JOBS = 8
@@ -40,14 +64,30 @@ export function JobPreviewStep({ skills, onComplete }: JobPreviewStepProps) {
 
   const filteredJobs = useMemo(() => {
     if (!selectedRegion) return jobs
-    return jobs.filter((job) => job.workplace_address?.region === selectedRegion)
+    return jobs.filter((job) => {
+      const address = job.workplace_address
+      const candidates = [
+        address?.region,
+        address?.municipality,
+        address?.city,
+        address?.country,
+      ]
+
+      return candidates.some((value) => matchesRegionFilter(value, selectedRegion))
+    })
   }, [jobs, selectedRegion])
 
   const searchJobs = useCallback(async () => {
     setLoading(true)
     setError(null)
 
-    const searchSkills = skills.slice(0, MAX_SEARCH_SKILLS)
+    const searchSkills = Array.from(
+      new Set(
+        skills
+          .map((skill) => skill.trim())
+          .filter(Boolean)
+      )
+    ).slice(0, MAX_SEARCH_SKILLS)
 
     try {
       const settled = await Promise.allSettled(
@@ -85,15 +125,30 @@ export function JobPreviewStep({ skills, onComplete }: JobPreviewStepProps) {
       }
 
       const sortedJobs = Array.from(merged.values())
+        .map((entry) => ({
+          ...entry,
+          relevance: scoreJobRelevance(
+            {
+              headline: entry.job.headline,
+              description: entry.job.description?.text,
+              occupation: entry.job.occupation?.label,
+            },
+            searchSkills
+          ),
+        }))
         .sort((left, right) => {
-          const matchDelta = right.skills.size - left.skills.size
-          if (matchDelta !== 0) return matchDelta
+          const relevanceDelta = right.relevance.matched - left.relevance.matched
+          if (relevanceDelta !== 0) return relevanceDelta
+
+          const queryCoverageDelta = right.skills.size - left.skills.size
+          if (queryCoverageDelta !== 0) return queryCoverageDelta
+
           return sortByDateDesc(left.job.publication_date, right.job.publication_date)
         })
         .slice(0, MAX_PREVIEW_JOBS)
 
       const matchCounts = Object.fromEntries(
-        sortedJobs.map((entry) => [entry.job.id, entry.skills.size])
+        sortedJobs.map((entry) => [entry.job.id, entry.relevance.matched])
       )
 
       setJobs(sortedJobs.map((entry) => entry.job))
@@ -224,7 +279,7 @@ export function JobPreviewStep({ skills, onComplete }: JobPreviewStepProps) {
                         {job.occupation.label}
                       </span>
                     )}
-                    {(skillMatches[job.id] ?? 0) > 1 && (
+                    {(skillMatches[job.id] ?? 0) > 0 && (
                       <span className="inline-block rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
                         {t('skillMatch', { count: skillMatches[job.id] })}
                       </span>
