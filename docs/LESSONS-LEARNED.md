@@ -20,8 +20,17 @@ The `@prisma/client did not initialize yet` error occurs when the Prisma client 
 ### Jobs Can Disappear
 Saved jobs only store the `afJobId` reference, not full job data. When hydrating saved jobs from the AF API, individual jobs may return 404 if the listing has been removed. Always handle this gracefully with try/catch and filter out failed fetches.
 
+### Partial Saved Job Failures Should Not Block UI
+If one saved job is unavailable (expired/removed) but others are still resolvable, render available saved jobs and show a non-blocking warning. Do not replace the entire saved jobs panel with an error state when partial data is available.
+
 ### API Key is Optional
 The AF JobSearch API works without an API key for basic usage. The key is only needed for higher rate limits.
+
+### Region Filtering Needs Query Augmentation + Client Filter
+AF `/search` integration in this project uses `q`, `limit`, and `offset`; there is no dedicated region parameter in the provider wrapper. To improve region relevance during fetch, append the selected region to the search query on the server side, and still keep exact client-side `workplace_address.region` filtering for correctness.
+
+### Region Input Must Be Available Pre-Search
+If region can only be selected from post-search result metadata, users cannot include region in their first query. Keep a separate top-level region input in the search bar and avoid auto-clearing `selectedRegion` when no regions are loaded yet.
 
 ## Next.js / React
 

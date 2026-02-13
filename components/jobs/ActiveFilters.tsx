@@ -21,8 +21,11 @@ export function ActiveFilters({
 }: ActiveFiltersProps) {
   const t = useTranslations('jobs')
 
-  const showRegion = regions.length > 1
+  const showRegion = regions.length > 1 || selectedRegion.length > 0
   const showRelevance = hasSkills
+  const regionOptions = selectedRegion && !regions.includes(selectedRegion)
+    ? [selectedRegion, ...regions]
+    : regions
 
   if (!showRegion && !showRelevance) return null
 
@@ -40,7 +43,7 @@ export function ActiveFilters({
             className="rounded-md border bg-background px-2.5 py-1 text-xs"
           >
             <option value="">{t('allRegions')}</option>
-            {regions.map((region) => (
+            {regionOptions.map((region) => (
               <option key={region} value={region}>
                 {region}
               </option>

@@ -158,6 +158,7 @@
     "searchPlaceholderUnified": "Search by job title, skill, or keyword...",
     "search": "Search",
     "searching": "Searching...",
+    "regionPlaceholder": "Region (optional)",
     "found": "Found {count} jobs",
     "noResults": "No jobs found. Try a different search term.",
     "enterSearch": "Enter a search term or select skills to find jobs",
@@ -221,6 +222,12 @@
       "saved": "Saved",
       "unsave": "Remove"
     },
+    "pagination": {
+      "showing": "Showing {from}\u2013{to} of {total}",
+      "perPage": "Per page",
+      "previous": "Previous",
+      "next": "Next"
+    },
     "detail": {
       "apply": "Apply",
       "viewListing": "View listing",
@@ -274,6 +281,7 @@
       "locationFilter": "Filter by location",
       "allLocations": "All locations",
       "seeMore": "See more on the Jobs page",
+      "skillMatch": "{count} skill matches",
       "noResults": "No jobs found for these skills yet. Try adjusting your skills or check the Jobs page later.",
       "continue": "Continue"
     },

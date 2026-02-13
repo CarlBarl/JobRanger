@@ -158,6 +158,7 @@
     "searchPlaceholderUnified": "Sök på jobbtitel, kompetens eller nyckelord...",
     "search": "Sök",
     "searching": "Söker...",
+    "regionPlaceholder": "Region (valfritt)",
     "found": "Hittade {count} jobb",
     "noResults": "Inga jobb hittades. Prova ett annat sökord.",
     "enterSearch": "Ange ett sökord eller välj kompetenser för att hitta jobb",
@@ -221,6 +222,12 @@
       "saved": "Sparad",
       "unsave": "Ta bort"
     },
+    "pagination": {
+      "showing": "Visar {from}\u2013{to} av {total}",
+      "perPage": "Per sida",
+      "previous": "F\u00f6reg\u00e5ende",
+      "next": "N\u00e4sta"
+    },
     "detail": {
       "apply": "Ansök",
       "viewListing": "Visa annons",
@@ -274,6 +281,7 @@
       "locationFilter": "Filtrera efter plats",
       "allLocations": "Alla platser",
       "seeMore": "Se fler på Jobb-sidan",
+      "skillMatch": "{count} matchade kompetenser",
       "noResults": "Inga jobb hittades för dessa kompetenser ännu. Prova att justera dina kompetenser eller kolla Jobb-sidan senare.",
       "continue": "Fortsätt"
     },

@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { ChevronDown, ChevronUp, Search } from 'lucide-react'
+import { ChevronDown, ChevronUp, MapPin, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -9,6 +9,8 @@ import { cn } from '@/lib/utils'
 interface SearchBarProps {
   query: string
   onQueryChange: (query: string) => void
+  region: string
+  onRegionChange: (region: string) => void
   onSearch: () => void
   loading: boolean
   selectedSkillCount: number
@@ -20,6 +22,8 @@ interface SearchBarProps {
 export function SearchBar({
   query,
   onQueryChange,
+  region,
+  onRegionChange,
   onSearch,
   loading,
   selectedSkillCount,
@@ -31,7 +35,7 @@ export function SearchBar({
 
   return (
     <div className="space-y-2">
-      <div className="flex gap-2">
+      <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,220px)_auto]">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
           <Input
@@ -49,6 +53,25 @@ export function SearchBar({
             className="pl-9"
           />
         </div>
+
+        <div className="relative">
+          <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
+          <Input
+            id="jobs-region"
+            value={region}
+            onChange={(e) => onRegionChange(e.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                onSearch()
+              }
+            }}
+            placeholder={t('regionPlaceholder')}
+            disabled={loading}
+            className="pl-9"
+          />
+        </div>
+
         <Button
           type="button"
           onClick={onSearch}

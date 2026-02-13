@@ -66,8 +66,27 @@ describe('GET /api/jobs', () => {
 
     expect(mocks.searchJobs).toHaveBeenCalledWith({
       query: 'developer',
+      region: undefined,
       limit: 10,
       offset: 5,
+    })
+  })
+
+  it('passes through region when provided', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
+    mocks.searchJobs.mockResolvedValue({ total: { value: 0 }, hits: [] })
+
+    const req = new NextRequest(
+      'http://localhost/api/jobs?q=developer&region=Stockholm&limit=20'
+    )
+    const res = await GET(req)
+
+    expect(res.status).toBe(200)
+    expect(mocks.searchJobs).toHaveBeenCalledWith({
+      query: 'developer',
+      region: 'Stockholm',
+      limit: 20,
+      offset: undefined,
     })
   })
 })
