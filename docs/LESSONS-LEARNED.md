@@ -32,6 +32,9 @@ AF `/search` integration in this project uses `q`, `limit`, and `offset`; there 
 ### Region Input Must Be Available Pre-Search
 If region can only be selected from post-search result metadata, users cannot include region in their first query. Keep a separate top-level region input in the search bar and avoid auto-clearing `selectedRegion` when no regions are loaded yet.
 
+### Region Matching Should Be Normalized and Tolerant
+Strict equality between typed region input and `workplace_address.region` can hide valid results (`stockholm` vs `Stockholms län`, diacritics/case differences). Normalize both sides (case + diacritics) and allow partial matches when applying client-side region filtering.
+
 ## Next.js / React
 
 ### Hydration Mismatch from Chrome Extensions

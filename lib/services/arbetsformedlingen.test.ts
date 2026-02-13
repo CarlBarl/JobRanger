@@ -82,4 +82,20 @@ describe('arbetsformedlingen client', () => {
 
     await expect(searchJobs({ query: 'x' })).rejects.toThrow(/AF API error/i)
   })
+
+  it('does not duplicate region when query already contains it', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ total: { value: 0 }, hits: [] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })
+    )
+
+    await searchJobs({ query: 'Frontend Stockholm', region: 'stockholm' })
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://jobsearch.api.jobtechdev.se/search?q=Frontend+Stockholm&limit=20&offset=0',
+      expect.any(Object)
+    )
+  })
 })
