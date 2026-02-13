@@ -14,36 +14,125 @@ interface RelevanceScore {
 const DIACRITIC_REGEX = /[\u0300-\u036f]/g
 const SPACE_REGEX = /\s+/g
 export const DEFAULT_JOB_SKILL_CATALOG = [
-  'JavaScript',
-  'TypeScript',
-  'React',
-  'Next.js',
-  'Node.js',
-  'Python',
-  'Java',
-  'C#',
-  'C++',
-  'SQL',
-  'PostgreSQL',
-  'MySQL',
-  'MongoDB',
-  'Docker',
-  'Kubernetes',
-  'AWS',
-  'Azure',
-  'GCP',
-  'Terraform',
-  'Git',
-  'REST',
-  'GraphQL',
-  'HTML',
-  'CSS',
-  'Tailwind',
-  'Linux',
-  'Bash',
-  'CI/CD',
-  'Agile',
-  'Scrum',
+  // --- Programming Languages ---
+  'JavaScript', 'TypeScript', 'Python', 'Java', 'C#', 'C++', 'C',
+  'Go', 'Rust', 'Ruby', 'PHP', 'Swift', 'Kotlin', 'Scala',
+  'R', 'MATLAB', 'Perl',
+
+  // --- Web & Frontend ---
+  'React', 'Next.js', 'Angular', 'Vue', 'Svelte',
+  'HTML', 'CSS', 'Tailwind', 'SASS', 'Bootstrap',
+
+  // --- Backend & Runtime ---
+  'Node.js', '.NET', 'Spring', 'Django', 'Flask', 'Express',
+  'FastAPI', 'Ruby on Rails',
+
+  // --- Databases ---
+  'SQL', 'PostgreSQL', 'MySQL', 'MongoDB', 'Redis',
+  'Elasticsearch', 'Oracle', 'SQLite', 'DynamoDB', 'Cassandra',
+
+  // --- Cloud & DevOps ---
+  'AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes',
+  'Terraform', 'Ansible', 'Jenkins', 'CI/CD',
+  'Linux', 'Bash', 'Git', 'GitHub', 'GitLab',
+
+  // --- Data & AI ---
+  'Machine Learning', 'AI', 'Deep Learning', 'NLP',
+  'TensorFlow', 'PyTorch', 'Pandas', 'NumPy',
+  'Power BI', 'Tableau', 'Data Analysis',
+  'ETL', 'Data Warehouse', 'Spark', 'Hadoop',
+  'Business Intelligence',
+
+  // --- APIs & Architecture ---
+  'REST', 'GraphQL', 'Microservices', 'API',
+  'RabbitMQ', 'Kafka', 'gRPC',
+
+  // --- Mobile ---
+  'React Native', 'Flutter', 'iOS', 'Android',
+
+  // --- Testing ---
+  'Unit Testing', 'Integration Testing', 'Selenium',
+  'Cypress', 'Jest', 'Playwright',
+
+  // --- Design & UX ---
+  'Figma', 'Sketch', 'Adobe XD', 'UX', 'UI',
+  'Photoshop', 'Illustrator', 'InDesign',
+
+  // --- Project & Methodology ---
+  'Agile', 'Scrum', 'Kanban', 'PRINCE2', 'PMP',
+  'ITIL', 'DevOps', 'Lean', 'Six Sigma',
+  'Projektledning', 'Projektstyrning',
+
+  // --- Soft Skills (Swedish) ---
+  'Ledarskap', 'Kommunikation',
+  'Problemlosning', 'Samarbete', 'Initiativformaga',
+  'Flexibilitet', 'Ansvarstagande', 'Organisationsformaga',
+  'Analytisk formaga', 'Kreativitet', 'Forhandling',
+
+  // --- Soft Skills (English) ---
+  'Leadership', 'Communication', 'Problem Solving',
+  'Teamwork', 'Collaboration', 'Critical Thinking',
+  'Time Management', 'Negotiation', 'Presentation',
+
+  // --- Business & Finance ---
+  'Excel', 'SAP', 'ERP', 'CRM', 'Salesforce',
+  'Bokforing', 'Redovisning', 'Ekonomi', 'Budget',
+  'Fakturering', 'Lonehantering', 'Controller',
+  'Revision', 'Accounting', 'Finance', 'Controlling',
+
+  // --- Office & Admin ---
+  'Microsoft Office', 'Word', 'PowerPoint', 'Outlook',
+  'Google Workspace', 'SharePoint', 'Teams',
+  'Administration', 'Upphandling',
+
+  // --- Sales & Marketing ---
+  'Forsaljning', 'Marknadsforing', 'SEO', 'SEM',
+  'Google Ads', 'Social Media', 'Content Marketing',
+  'Kundservice', 'B2B', 'B2C', 'E-handel',
+  'Nykundsbearbetning',
+
+  // --- Healthcare (Swedish) ---
+  'Omvardnad', 'Sjukvard', 'Medicin', 'Journalforing',
+  'Patientsakerhet', 'Rehabilitering', 'Vardplanering',
+  'Ambulanssjukvard', 'Intensivvard', 'Psykiatri',
+  'Farmakologi', 'Hygienrutiner',
+
+  // --- Education (Swedish) ---
+  'Pedagogik', 'Undervisning', 'Didaktik',
+  'Specialpedagogik', 'Forskola', 'Grundskola',
+  'Gymnasium', 'Laroplaner', 'Bedomning',
+
+  // --- Trades & Industry (Swedish) ---
+  'Svetsning', 'CNC', 'CAD', 'CAM', 'SolidWorks',
+  'AutoCAD', 'Elinstallation', 'VVS',
+  'Mekanik', 'Hydraulik', 'Pneumatik',
+  'Ritningslasning', 'Kvalitetskontroll',
+  'ISO 9001', 'Maskinoperator', 'PLC',
+
+  // --- Logistics & Transport ---
+  'Logistik', 'Lagerhantering', 'Inkok',
+  'Supply Chain', 'Fordonskorkort',
+  'B-korkort', 'C-korkort', 'CE-korkort',
+  'Truckkort', 'ADR', 'Spedition',
+
+  // --- Legal & Public Sector ---
+  'Juridik', 'Avtalsratt', 'Arbetsratt',
+  'GDPR', 'Compliance', 'Offentlig upphandling',
+  'Forvaltningsratt', 'Myndighetsutovning',
+
+  // --- Construction ---
+  'Byggledning', 'Projektering', 'BIM',
+  'Betong', 'Trakonstruktion', 'Installationssamordning',
+  'Bygglov', 'Arbetsmiljo',
+
+  // --- Security & Networking ---
+  'Cybersecurity', 'Network', 'Firewall',
+  'Penetration Testing', 'SIEM', 'SOC',
+  'ISO 27001', 'CCNA', 'TCP/IP',
+
+  // --- Languages ---
+  'Svenska', 'Engelska', 'Tyska', 'Franska', 'Spanska',
+  'Arabiska', 'Mandarin',
 ] as const
 
 function normalize(value: string): string {
