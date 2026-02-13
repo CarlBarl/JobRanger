@@ -101,4 +101,29 @@ describe('extractJobSkills', () => {
     expect(skills).toEqual(expect.arrayContaining(['React', 'CSS']))
     expect(skills).not.toContain('Playwright')
   })
+
+  it('uses custom catalog when provided', () => {
+    const customCatalog = ['Svetsning', 'Projektledning']
+    const skills = extractJobSkills(
+      {
+        headline: 'Svetsare',
+        description: 'Vi soker en erfaren med svetsning och projektledning',
+        occupation: 'Svetsare',
+      },
+      customCatalog
+    )
+
+    expect(skills).toEqual(expect.arrayContaining(['Svetsning', 'Projektledning']))
+    expect(skills).not.toContain('JavaScript')
+  })
+
+  it('falls back to default catalog when no catalog provided', () => {
+    const skills = extractJobSkills({
+      headline: 'Backend Developer',
+      description: 'Build services with Node.js and Docker',
+      occupation: 'Developer',
+    })
+
+    expect(skills).toEqual(expect.arrayContaining(['Node.js', 'Docker']))
+  })
 })

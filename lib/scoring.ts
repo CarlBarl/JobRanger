@@ -13,7 +13,7 @@ interface RelevanceScore {
 
 const DIACRITIC_REGEX = /[\u0300-\u036f]/g
 const SPACE_REGEX = /\s+/g
-const DEFAULT_JOB_SKILL_CATALOG = [
+export const DEFAULT_JOB_SKILL_CATALOG = [
   'JavaScript',
   'TypeScript',
   'React',
@@ -130,12 +130,13 @@ function dedupeSkills(skills: readonly string[]): string[] {
 }
 
 export function extractJobSkills(
-  job: JobTextFields
+  job: JobTextFields,
+  catalog?: readonly string[]
 ): string[] {
   const text = buildJobText(job)
   if (!text) return []
 
-  const candidates = dedupeSkills(DEFAULT_JOB_SKILL_CATALOG)
+  const candidates = dedupeSkills(catalog ?? DEFAULT_JOB_SKILL_CATALOG)
 
   return candidates.filter((skill) => hasSkillMatch(text, skill))
 }
