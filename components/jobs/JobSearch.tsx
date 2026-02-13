@@ -139,6 +139,7 @@ export function JobSearch() {
   const [skillsPanelOpen, setSkillsPanelOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(20)
+  const [skillCatalog, setSkillCatalog] = useState<string[] | null>(null)
 
   const selectedSkillSet = useMemo(() => getUniqueSkills(selectedSkills), [selectedSkills])
   const allSkillSet = useMemo(() => getUniqueSkills(skills), [skills])
@@ -321,6 +322,38 @@ export function JobSearch() {
       active = false
     }
   }, [fetchJobById, t])
+
+  // Load skill catalog for job skill extraction
+  useEffect(() => {
+    let active = true
+
+    const loadCatalog = async () => {
+      try {
+        const res = await fetch('/api/skills/catalog')
+        const json: unknown = await res.json()
+
+        if (
+          active &&
+          json &&
+          typeof json === 'object' &&
+          'success' in json &&
+          (json as { success: boolean }).success &&
+          'data' in json &&
+          Array.isArray((json as { data: unknown }).data)
+        ) {
+          setSkillCatalog((json as { data: string[] }).data)
+        }
+      } catch {
+        // Silent failure — extractJobSkills uses default catalog
+      }
+    }
+
+    void loadCatalog()
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   const handleToggleSave = useCallback(async (afJobId: string) => {
     const wasSaved = savedJobIds.has(afJobId)
@@ -609,14 +642,17 @@ export function JobSearch() {
     return Object.fromEntries(
       jobs.map((job) => [
         job.id,
-        extractJobSkills({
-          headline: job.headline,
-          description: job.description?.text,
-          occupation: job.occupation?.label,
-        }),
+        extractJobSkills(
+          {
+            headline: job.headline,
+            description: job.description?.text,
+            occupation: job.occupation?.label,
+          },
+          skillCatalog?.length ? skillCatalog : undefined
+        ),
       ])
     )
-  }, [jobs])
+  }, [jobs, skillCatalog])
 
   const matchedSkillsByJob = useMemo(() => {
     const selectedKeys = new Set(selectedSkillSet.map((skill) => skill.trim().toLowerCase()))

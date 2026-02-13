@@ -25,6 +25,15 @@ function mockFetchWithSkills(skills: string[]) {
       )
     }
 
+    if (url.startsWith('/api/skills/catalog')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({ success: true, data: [] }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
     if (url.startsWith('/api/jobs/save')) {
       return Promise.resolve(
         new Response(JSON.stringify({ success: true, data: [] }), {
@@ -64,6 +73,15 @@ function mockFetchWithPartialUnavailableSavedJobs() {
               },
             ],
           }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
+    if (url.startsWith('/api/skills/catalog')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({ success: true, data: [] }),
           { status: 200, headers: { 'content-type': 'application/json' } }
         )
       )
@@ -147,6 +165,15 @@ function mockFetchWithRegionalSearchResults() {
       )
     }
 
+    if (url.startsWith('/api/skills/catalog')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({ success: true, data: [] }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
     if (url === '/api/jobs/save') {
       return Promise.resolve(
         new Response(JSON.stringify({ success: true, data: [] }), {
@@ -216,6 +243,15 @@ function mockFetchWithCountyRegionNaming() {
       )
     }
 
+    if (url.startsWith('/api/skills/catalog')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({ success: true, data: [] }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
     if (url === '/api/jobs/save') {
       return Promise.resolve(
         new Response(JSON.stringify({ success: true, data: [] }), {
@@ -261,6 +297,15 @@ function mockFetchWithMixedRegionMatches() {
             success: true,
             data: [{ id: 'doc-1', type: 'cv', skills: [] }],
           }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
+    if (url.startsWith('/api/skills/catalog')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({ success: true, data: [] }),
           { status: 200, headers: { 'content-type': 'application/json' } }
         )
       )
@@ -322,6 +367,15 @@ function mockFetchWithSkillMatchedJob() {
       )
     }
 
+    if (url.startsWith('/api/skills/catalog')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({ success: true, data: [] }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
     if (url === '/api/jobs/save') {
       return Promise.resolve(
         new Response(JSON.stringify({ success: true, data: [] }), {
@@ -344,6 +398,70 @@ function mockFetchWithSkillMatchedJob() {
                   occupation: { label: 'Developer' },
                   description: { text: 'Build APIs with node js, docker and postgresql' },
                   workplace_address: { region: 'Stockholm' },
+                  publication_date: '2026-01-01T10:00:00.000Z',
+                },
+              ],
+            },
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
+    return Promise.reject(new Error(`Unexpected fetch: ${url}`))
+  })
+}
+
+function mockFetchWithCatalogAndJob() {
+  return vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+    const url = typeof input === 'string' ? input : input.toString()
+
+    if (url === '/api/documents') {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: [{ id: 'doc-1', type: 'cv', skills: ['Svetsning'] }],
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
+    if (url.startsWith('/api/skills/catalog')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: ['Svetsning', 'Projektledning', 'CNC'],
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
+    if (url === '/api/jobs/save') {
+      return Promise.resolve(
+        new Response(JSON.stringify({ success: true, data: [] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      )
+    }
+
+    if (url.startsWith('/api/jobs')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              hits: [
+                {
+                  id: '20',
+                  headline: 'CNC-operat\u00f6r',
+                  occupation: { label: 'Maskinoperat\u00f6r' },
+                  description: { text: 'Vi s\u00f6ker CNC-operat\u00f6r med erfarenhet av svetsning och projektledning' },
+                  workplace_address: { region: 'G\u00f6teborg' },
                   publication_date: '2026-01-01T10:00:00.000Z',
                 },
               ],
@@ -593,5 +711,24 @@ describe('JobSearch', () => {
     expect(within(skillContainer).getByText('Node.js')).toBeInTheDocument()
     expect(within(skillContainer).getByText('Docker')).toBeInTheDocument()
     expect(within(skillContainer).getByText('PostgreSQL')).toBeInTheDocument()
+  })
+
+  it('uses fetched catalog for job skill extraction', async () => {
+    const user = userEvent.setup()
+    mockFetchWithCatalogAndJob()
+
+    render(<JobSearch />)
+
+    await screen.findByText(/1\/1 skills selected/i)
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
+
+    expect(await screen.findByRole('link', { name: 'CNC-operat\u00f6r' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /show job skills/i }))
+
+    const skillContainer = await screen.findByTestId('job-skills-20')
+    expect(within(skillContainer).getByText('Svetsning')).toBeInTheDocument()
+    expect(within(skillContainer).getByText('Projektledning')).toBeInTheDocument()
+    expect(within(skillContainer).getByText('CNC')).toBeInTheDocument()
   })
 })
