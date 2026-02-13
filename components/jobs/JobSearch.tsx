@@ -471,6 +471,14 @@ export function JobSearch() {
     const relevanceSkills = selectedSkillSet.length > 0 ? selectedSkillSet : allSkillSet
     if (!relevanceEnabled || relevanceSkills.length === 0) return filtered
 
+    const getMatchCountForSort = (job: ScoredJob): number => {
+      const skillSearchMatches = searchSkillMatches[job.id]
+      if (typeof skillSearchMatches === 'number' && skillSearchMatches > 0) {
+        return skillSearchMatches
+      }
+      return job.relevance?.matched ?? 0
+    }
+
     return [...filtered]
       .map((job) => ({
         ...job,
@@ -483,8 +491,12 @@ export function JobSearch() {
           relevanceSkills
         ),
       }))
-      .sort((a, b) => (b.relevance?.score ?? 0) - (a.relevance?.score ?? 0))
-  }, [allSkillSet, jobs, relevanceEnabled, selectedRegion, selectedSkillSet])
+      .sort((a, b) => {
+        const matchDelta = getMatchCountForSort(b) - getMatchCountForSort(a)
+        if (matchDelta !== 0) return matchDelta
+        return sortByDateDesc(a.publication_date, b.publication_date)
+      })
+  }, [allSkillSet, jobs, relevanceEnabled, searchSkillMatches, selectedRegion, selectedSkillSet])
 
   // Compact chip summary of selected skills (shown below search bar)
   const selectedChipSummary = useMemo(() => {
