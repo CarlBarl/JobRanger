@@ -76,6 +76,29 @@ function textRelevanceBonus(job: AFJobHit, queryLower: string): number {
   return bonus
 }
 
+function normalizeRegion(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function matchesRegionFilter(jobRegion: string | null | undefined, selectedRegion: string): boolean {
+  const normalizedSelected = normalizeRegion(selectedRegion)
+  if (!normalizedSelected) return true
+
+  const normalizedJobRegion = normalizeRegion(jobRegion ?? '')
+  if (!normalizedJobRegion) return false
+
+  return (
+    normalizedJobRegion === normalizedSelected ||
+    normalizedJobRegion.includes(normalizedSelected) ||
+    normalizedSelected.includes(normalizedJobRegion)
+  )
+}
+
 const MAX_VISIBLE_CHIPS = 5
 
 export function JobSearch() {
@@ -102,13 +125,6 @@ export function JobSearch() {
 
   const selectedSkillSet = useMemo(() => getUniqueSkills(selectedSkills), [selectedSkills])
   const allSkillSet = useMemo(() => getUniqueSkills(skills), [skills])
-
-  const availableRegions = useMemo(() => {
-    const regions = jobs
-      .map((job) => job.workplace_address?.region)
-      .filter((r): r is string => !!r && r.trim().length > 0)
-    return Array.from(new Set(regions)).sort()
-  }, [jobs])
 
   const fetchJobsByQuery = useCallback(
     async (
@@ -499,9 +515,9 @@ export function JobSearch() {
     const queryLower = query.trim().toLowerCase()
     const relevanceSkills = selectedSkillSet.length > 0 ? selectedSkillSet : allSkillSet
     const shouldApplyRelevance = relevanceEnabled && relevanceSkills.length > 0
-    const filtered = selectedRegion
-      ? jobs.filter((job) => job.workplace_address?.region === selectedRegion)
-      : jobs
+    const filtered = jobs.filter((job) =>
+      matchesRegionFilter(job.workplace_address?.region, selectedRegion)
+    )
 
     const withRelevance: ScoredJob[] = shouldApplyRelevance
       ? filtered.map((job) => ({
@@ -645,9 +661,6 @@ export function JobSearch() {
 
           {hasSearched && (
             <ActiveFilters
-              regions={availableRegions}
-              selectedRegion={selectedRegion}
-              onRegionChange={setSelectedRegion}
               relevanceEnabled={relevanceEnabled}
               onRelevanceChange={setRelevanceEnabled}
               hasSkills={skills.length > 0}

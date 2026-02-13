@@ -58,7 +58,22 @@ function buildSearchQuery(query: string, region?: string): string {
   const trimmedQuery = query.trim()
   const trimmedRegion = region?.trim()
   if (!trimmedRegion) return trimmedQuery
-  return `${trimmedQuery} ${trimmedRegion}`.trim()
+  if (!trimmedQuery) return trimmedRegion
+
+  const normalizedQuery = trimmedQuery
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+  const normalizedRegion = trimmedRegion
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+
+  if (normalizedQuery.includes(normalizedRegion)) {
+    return trimmedQuery
+  }
+
+  return `${trimmedQuery} ${trimmedRegion}`
 }
 
 function getApiKeyHeader(): Record<string, string> {

@@ -200,6 +200,56 @@ function mockFetchWithRegionalSearchResults() {
   })
 }
 
+function mockFetchWithCountyRegionNaming() {
+  return vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+    const url = typeof input === 'string' ? input : input.toString()
+
+    if (url === '/api/documents') {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: [{ id: 'doc-1', type: 'cv', skills: [] }],
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
+    if (url === '/api/jobs/save') {
+      return Promise.resolve(
+        new Response(JSON.stringify({ success: true, data: [] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      )
+    }
+
+    if (url.startsWith('/api/jobs')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              hits: [
+                {
+                  id: '1',
+                  headline: 'Developer Stockholm County',
+                  workplace_address: { region: 'Stockholms län' },
+                  publication_date: '2026-01-01T10:00:00.000Z',
+                },
+              ],
+            },
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
+    return Promise.reject(new Error(`Unexpected fetch: ${url}`))
+  })
+}
+
 describe('JobSearch', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
@@ -354,7 +404,7 @@ describe('JobSearch', () => {
       ).toBe(true)
     })
 
-    expect(await screen.findByLabelText(/filter by region/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText(/filter by region/i)).not.toBeInTheDocument()
   })
 
   it('allows region-only search on first search', async () => {
@@ -380,5 +430,23 @@ describe('JobSearch', () => {
         )
       ).toBe(true)
     })
+  })
+
+  it('matches region filter when user input is lowercase and result uses county naming', async () => {
+    const user = userEvent.setup()
+    mockFetchWithCountyRegionNaming()
+
+    render(<JobSearch />)
+
+    const searchInput = await screen.findByPlaceholderText(/search by job title/i)
+    const regionInput = screen.getByPlaceholderText(/region \(optional\)/i)
+
+    await user.type(searchInput, 'developer')
+    await user.type(regionInput, 'stockholm')
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
+
+    expect(
+      await screen.findByRole('link', { name: 'Developer Stockholm County' })
+    ).toBeInTheDocument()
   })
 })
