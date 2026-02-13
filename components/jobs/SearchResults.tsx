@@ -172,38 +172,40 @@ export function SearchResults({
                   onToggleSave={onToggleSave}
                 />
 
-                {hasExtractedSkills ? (
-                  <div className="mt-2 space-y-2 px-1">
-                    <button
-                      type="button"
-                      onClick={() => toggleMatchedSkills(job.id)}
-                      className="text-[11px] font-medium text-primary hover:underline"
-                    >
-                      {isExpanded ? t('hideJobSkills') : t('showJobSkills')}
-                    </button>
+                <div className="mt-2 space-y-2 px-1">
+                  <button
+                    type="button"
+                    onClick={() => toggleMatchedSkills(job.id)}
+                    className="text-[11px] font-medium text-primary hover:underline"
+                  >
+                    {isExpanded ? t('hideJobSkills') : t('showJobSkills')}
+                  </button>
 
-                    {isExpanded ? (
+                  {isExpanded ? (
+                    hasExtractedSkills ? (
                       <div className="flex flex-wrap gap-1.5" data-testid={`job-skills-${job.id}`}>
                         {extractedSkills.map((skill) => {
                           const isMatched = matchedSkillSet.has(skill.toLowerCase())
 
                           return (
-                          <span
-                            key={`${job.id}-${skill}`}
-                            className={
-                              isMatched
-                                ? 'inline-flex items-center rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary'
-                                : 'inline-flex items-center rounded-md border border-border/60 bg-secondary/80 px-2 py-0.5 text-[11px] font-medium text-muted-foreground'
-                            }
-                          >
-                            {skill}
-                          </span>
+                            <span
+                              key={`${job.id}-${skill}`}
+                              className={
+                                isMatched
+                                  ? 'inline-flex items-center rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary'
+                                  : 'inline-flex items-center rounded-md border border-border/60 bg-secondary/80 px-2 py-0.5 text-[11px] font-medium text-muted-foreground'
+                              }
+                            >
+                              {skill}
+                            </span>
                           )
                         })}
                       </div>
-                    ) : null}
-                  </div>
-                ) : null}
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground">{t('noJobSkills')}</p>
+                    )
+                  ) : null}
+                </div>
               </div>
             )
           })}

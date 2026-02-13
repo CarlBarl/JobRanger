@@ -184,6 +184,7 @@
     "skillSearchBadge": "{count} matched skills",
     "showJobSkills": "Show job skills",
     "hideJobSkills": "Hide job skills",
+    "noJobSkills": "No skills found for this job",
     "showMatchedSkills": "Show matched skills",
     "hideMatchedSkills": "Hide matched skills",
     "skillSearchPartialFailure": "Some skill searches failed ({count}). Showing partial results.",

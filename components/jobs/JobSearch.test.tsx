@@ -476,6 +476,66 @@ function mockFetchWithCatalogAndJob() {
   })
 }
 
+function mockFetchWithNoSkillJob() {
+  return vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+    const url = typeof input === 'string' ? input : input.toString()
+
+    if (url === '/api/documents') {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: [{ id: 'doc-1', type: 'cv', skills: [] }],
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
+    if (url.startsWith('/api/skills/catalog')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({ success: true, data: [] }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
+    if (url === '/api/jobs/save') {
+      return Promise.resolve(
+        new Response(JSON.stringify({ success: true, data: [] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      )
+    }
+
+    if (url.startsWith('/api/jobs')) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              hits: [
+                {
+                  id: '30',
+                  headline: 'Truck Driver',
+                  description: { text: 'Drive trucks across Sweden' },
+                  workplace_address: { region: 'Stockholm' },
+                  publication_date: '2026-01-01T10:00:00.000Z',
+                },
+              ],
+            },
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    }
+
+    return Promise.reject(new Error(`Unexpected fetch: ${url}`))
+  })
+}
+
 describe('JobSearch', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
@@ -730,5 +790,26 @@ describe('JobSearch', () => {
     expect(within(skillContainer).getByText('Svetsning')).toBeInTheDocument()
     expect(within(skillContainer).getByText('Projektledning')).toBeInTheDocument()
     expect(within(skillContainer).getByText('CNC')).toBeInTheDocument()
+  })
+
+  it('shows empty state message when job has no extracted skills', async () => {
+    const user = userEvent.setup()
+    mockFetchWithNoSkillJob()
+
+    render(<JobSearch />)
+
+    const searchInput = await screen.findByPlaceholderText(/search by job title/i)
+    await user.type(searchInput, 'truck driver')
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
+
+    expect(await screen.findByRole('link', { name: 'Truck Driver' })).toBeInTheDocument()
+
+    // Button should be visible even with no skills
+    const showButton = screen.getByRole('button', { name: /show job skills/i })
+    expect(showButton).toBeInTheDocument()
+
+    await user.click(showButton)
+
+    expect(screen.getByText(/no skills found for this job/i)).toBeInTheDocument()
   })
 })
