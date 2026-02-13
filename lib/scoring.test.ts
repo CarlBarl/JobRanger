@@ -126,4 +126,26 @@ describe('extractJobSkills', () => {
 
     expect(skills).toEqual(expect.arrayContaining(['Node.js', 'Docker']))
   })
+
+  it('extracts Swedish soft skills from default catalog', () => {
+    const skills = extractJobSkills({
+      headline: 'Projektledare',
+      description: 'Vi soker en projektledare med erfarenhet av projektledning, ledarskap och kommunikation',
+      occupation: 'Projektledare',
+    })
+
+    expect(skills).toEqual(
+      expect.arrayContaining(['Projektledning', 'Ledarskap', 'Kommunikation'])
+    )
+  })
+
+  it('extracts healthcare skills from default catalog', () => {
+    const skills = extractJobSkills({
+      headline: 'Sjukskoterska',
+      description: 'Erfarenhet av omvardnad och journalforing kravs',
+      occupation: 'Sjukskoterska',
+    })
+
+    expect(skills.length).toBeGreaterThan(0)
+  })
 })
