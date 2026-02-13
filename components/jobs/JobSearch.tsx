@@ -8,7 +8,7 @@ import { SkillSelector } from '@/components/jobs/SkillSelector'
 import { ActiveFilters } from '@/components/jobs/ActiveFilters'
 import { SearchResults } from '@/components/jobs/SearchResults'
 import { SavedJobsPanel } from '@/components/jobs/SavedJobsPanel'
-import { scoreJobRelevance } from '@/lib/scoring'
+import { extractJobSkills, scoreJobRelevance } from '@/lib/scoring'
 import { cn } from '@/lib/utils'
 import type { AFJobHit } from '@/lib/services/arbetsformedlingen'
 
@@ -22,7 +22,9 @@ type SavedJobRecord = {
   afJobId?: string
 }
 
-type ScoredJob = AFJobHit & { relevance?: { matched: number; total: number; score: number } }
+type ScoredJob = AFJobHit & {
+  relevance?: { matched: number; total: number; score: number; matchedSkills: string[] }
+}
 
 function isApiEnvelope(value: unknown): value is ApiEnvelope {
   return (
@@ -97,6 +99,21 @@ function matchesRegionFilter(jobRegion: string | null | undefined, selectedRegio
     normalizedJobRegion.includes(normalizedSelected) ||
     normalizedSelected.includes(normalizedJobRegion)
   )
+}
+
+function matchesLocationHint(job: AFJobHit, selectedRegion: string): boolean {
+  const selected = selectedRegion.trim()
+  if (!selected) return false
+
+  const address = job.workplace_address
+  const candidates = [
+    address?.region,
+    address?.municipality,
+    address?.city,
+    address?.country,
+  ]
+
+  return candidates.some((value) => matchesRegionFilter(value, selected))
 }
 
 const MAX_VISIBLE_CHIPS = 5
@@ -413,25 +430,42 @@ export function JobSearch() {
 
         const queryLower = textQuery.toLowerCase()
 
-        const mergedJobs = Array.from(mergedResults.values())
-          .sort((left, right) => {
-            if (textQuery) {
-              const leftScore = left.skills.size * 3 + textRelevanceBonus(left.job, queryLower)
-              const rightScore = right.skills.size * 3 + textRelevanceBonus(right.job, queryLower)
-              if (rightScore !== leftScore) return rightScore - leftScore
-            } else {
-              const matchesDelta = right.skills.size - left.skills.size
-              if (matchesDelta !== 0) return matchesDelta
-            }
-            return sortByDateDesc(
-              left.job.publication_date,
-              right.job.publication_date
+        const rankedResults = Array.from(mergedResults.values())
+          .map((entry) => {
+            const relevance = scoreJobRelevance(
+              {
+                headline: entry.job.headline,
+                description: entry.job.description?.text,
+                occupation: entry.job.occupation?.label,
+              },
+              normalizedSkills
             )
+
+            return {
+              ...entry,
+              relevance,
+            }
           })
-          .map((entry) => entry.job)
+          .sort((left, right) => {
+            const localMatchDelta = right.relevance.matched - left.relevance.matched
+            if (localMatchDelta !== 0) return localMatchDelta
+
+            const queryCoverageDelta = right.skills.size - left.skills.size
+            if (queryCoverageDelta !== 0) return queryCoverageDelta
+
+            if (textQuery) {
+              const leftScore = textRelevanceBonus(left.job, queryLower)
+              const rightScore = textRelevanceBonus(right.job, queryLower)
+              if (rightScore !== leftScore) return rightScore - leftScore
+            }
+
+            return sortByDateDesc(left.job.publication_date, right.job.publication_date)
+          })
+
+        const mergedJobs = rankedResults.map((entry) => entry.job)
 
         const matchCounts = Object.fromEntries(
-          Array.from(mergedResults.entries()).map(([jobId, value]) => [jobId, value.skills.size])
+          rankedResults.map((entry) => [entry.job.id, entry.relevance.matched])
         )
 
         setJobs(mergedJobs)
@@ -515,12 +549,8 @@ export function JobSearch() {
     const queryLower = query.trim().toLowerCase()
     const relevanceSkills = selectedSkillSet.length > 0 ? selectedSkillSet : allSkillSet
     const shouldApplyRelevance = relevanceEnabled && relevanceSkills.length > 0
-    const filtered = jobs.filter((job) =>
-      matchesRegionFilter(job.workplace_address?.region, selectedRegion)
-    )
-
     const withRelevance: ScoredJob[] = shouldApplyRelevance
-      ? filtered.map((job) => ({
+      ? jobs.map((job) => ({
           ...job,
           relevance: scoreJobRelevance(
             {
@@ -531,7 +561,7 @@ export function JobSearch() {
             relevanceSkills
           ),
         }))
-      : filtered
+      : jobs
 
     const getSearchSkillMatchCount = (job: ScoredJob): number => {
       const skillSearchMatches = searchSkillMatches[job.id]
@@ -554,6 +584,11 @@ export function JobSearch() {
           getRelevanceMatchCount(b) - getRelevanceMatchCount(a)
         if (relevanceMatchDelta !== 0) return relevanceMatchDelta
 
+        const locationHintDelta =
+          Number(matchesLocationHint(b, selectedRegion)) -
+          Number(matchesLocationHint(a, selectedRegion))
+        if (locationHintDelta !== 0) return locationHintDelta
+
         const textMatchDelta =
           textRelevanceBonus(b, queryLower) - textRelevanceBonus(a, queryLower)
         if (textMatchDelta !== 0) return textMatchDelta
@@ -569,6 +604,30 @@ export function JobSearch() {
     selectedRegion,
     selectedSkillSet,
   ])
+
+  const extractedSkillsByJob = useMemo(() => {
+    return Object.fromEntries(
+      jobs.map((job) => [
+        job.id,
+        extractJobSkills({
+          headline: job.headline,
+          description: job.description?.text,
+          occupation: job.occupation?.label,
+        }),
+      ])
+    )
+  }, [jobs])
+
+  const matchedSkillsByJob = useMemo(() => {
+    const selectedKeys = new Set(selectedSkillSet.map((skill) => skill.trim().toLowerCase()))
+
+    return Object.fromEntries(
+      Object.entries(extractedSkillsByJob).map(([jobId, extractedSkills]) => [
+        jobId,
+        extractedSkills.filter((skill) => selectedKeys.has(skill.trim().toLowerCase())),
+      ])
+    )
+  }, [extractedSkillsByJob, selectedSkillSet])
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -672,6 +731,8 @@ export function JobSearch() {
             hasSearched={hasSearched}
             loading={loading}
             searchSkillMatches={searchSkillMatches}
+            jobSkillsByJob={extractedSkillsByJob}
+            matchedSkillsByJob={matchedSkillsByJob}
             savedJobIds={savedJobIds}
             onToggleSave={handleToggleSave}
             error={error}
