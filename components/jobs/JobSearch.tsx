@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SearchBar } from '@/components/jobs/SearchBar'
 import { SkillSelector } from '@/components/jobs/SkillSelector'
-import { ActiveFilters } from '@/components/jobs/ActiveFilters'
 import { SearchResults } from '@/components/jobs/SearchResults'
 import { SavedJobsPanel } from '@/components/jobs/SavedJobsPanel'
 import { extractJobSkills, scoreJobRelevance } from '@/lib/scoring'
@@ -532,19 +531,20 @@ export function JobSearch() {
       return
     }
 
-    // If skills are selected, do per-skill parallel search (text narrows results)
-    if (hasSelectedSkills) {
-      void runSkillsSearch(selectedSkillSet, trimmedQuery, trimmedRegion)
+    // Skills selected WITHOUT text query → per-skill parallel search (skill discovery)
+    if (hasSelectedSkills && !hasQuery) {
+      void runSkillsSearch(selectedSkillSet, '', trimmedRegion)
       return
     }
 
-    // Text-only search
+    // Text search (with or without skills)
     const queryForFetch = hasQuery ? trimmedQuery : trimmedRegion
 
     setLoading(true)
     setHasSearched(true)
     setError(null)
     setSearchSkillMatches({})
+    setRelevanceEnabled(hasQuery && hasSelectedSkills)
     setCurrentPage(1)
 
     void fetchJobsByQuery(queryForFetch, { region: trimmedRegion })
@@ -580,7 +580,7 @@ export function JobSearch() {
 
   const scoredJobs: ScoredJob[] = useMemo(() => {
     const queryLower = query.trim().toLowerCase()
-    const relevanceSkills = selectedSkillSet.length > 0 ? selectedSkillSet : allSkillSet
+    const relevanceSkills = selectedSkillSet
     const shouldApplyRelevance = relevanceEnabled && relevanceSkills.length > 0
     const withRelevance: ScoredJob[] = shouldApplyRelevance
       ? jobs.map((job) => ({
@@ -629,7 +629,6 @@ export function JobSearch() {
         return sortByDateDesc(a.publication_date, b.publication_date)
       })
   }, [
-    allSkillSet,
     jobs,
     query,
     relevanceEnabled,
@@ -753,14 +752,6 @@ export function JobSearch() {
             skillsLoading={skillsLoading}
             skillsError={skillsError}
           />
-
-          {hasSearched && (
-            <ActiveFilters
-              relevanceEnabled={relevanceEnabled}
-              onRelevanceChange={setRelevanceEnabled}
-              hasSkills={skills.length > 0}
-            />
-          )}
 
           <SearchResults
             jobs={paginatedJobs}

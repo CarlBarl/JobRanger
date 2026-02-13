@@ -578,6 +578,35 @@ describe('JobSearch', () => {
     })
   })
 
+  it('uses single text search when both text query and skills are provided', async () => {
+    const user = userEvent.setup()
+    const fetchMock = mockFetchWithSkills(['React', 'TypeScript'])
+
+    render(<JobSearch />)
+
+    await screen.findByText(/2\/2 skills selected/i)
+
+    const searchInput = screen.getByPlaceholderText(/search by job title/i)
+    await user.type(searchInput, 'ai automation')
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
+
+    await waitFor(() => {
+      const jobUrls = fetchMock.mock.calls
+        .map(([input]) => (typeof input === 'string' ? input : input.toString()))
+        .filter((u) => u.startsWith('/api/jobs?'))
+
+      expect(jobUrls).toHaveLength(1)
+
+      const queryValues = jobUrls
+        .map((url) => new URL(url, 'http://localhost').searchParams.get('q'))
+        .filter((value): value is string => Boolean(value))
+
+      expect(queryValues).toEqual(['ai automation'])
+      expect(queryValues).not.toContain('React ai automation')
+      expect(queryValues).not.toContain('TypeScript ai automation')
+    })
+  })
+
   it('shows selected skill chips as compact summary', async () => {
     mockFetchWithSkills(['React', 'TypeScript', 'Node'])
 
