@@ -43,6 +43,9 @@ Per-job "skills found" UI should be derived from listing text using a shared ext
 ### Hydration Mismatch from Chrome Extensions
 Browser extensions (e.g., Claude in Chrome) can modify the DOM, causing Next.js hydration warnings ("1 Issue" in dev overlay). This is not a code bug and can be safely ignored.
 
+### Route Handlers Cannot Export Test Helpers
+Next.js App Router route files (for example `app/api/**/route.ts`) may only export supported route-handler symbols (`GET`, `POST`, etc.). Exporting test helpers from a route file can fail build-time type generation under `.next/types/...` with `Type ... does not satisfy the constraint '{ [x: string]: never; }'`.
+
 ### Server Components by Default
 Use Server Components for data fetching (dashboard page, header). Only add `'use client'` when the component needs interactivity (state, event handlers, effects).
 
