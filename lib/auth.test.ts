@@ -21,6 +21,7 @@ describe('getOrCreateUser', () => {
       id: 'auth-id-123',
       email: 'test@example.com',
       name: null,
+      onboardingCompleted: false,
       createdAt: new Date(),
     }
 

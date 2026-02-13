@@ -49,8 +49,16 @@ export type AFJobAd = {
 
 export type SearchJobsOptions = {
   query: string
+  region?: string
   limit?: number
   offset?: number
+}
+
+function buildSearchQuery(query: string, region?: string): string {
+  const trimmedQuery = query.trim()
+  const trimmedRegion = region?.trim()
+  if (!trimmedRegion) return trimmedQuery
+  return `${trimmedQuery} ${trimmedRegion}`.trim()
 }
 
 function getApiKeyHeader(): Record<string, string> {
@@ -60,7 +68,7 @@ function getApiKeyHeader(): Record<string, string> {
 
 export async function searchJobs(options: SearchJobsOptions): Promise<AFSearchResponse> {
   const params = new URLSearchParams()
-  params.set('q', options.query)
+  params.set('q', buildSearchQuery(options.query, options.region))
   params.set('limit', String(options.limit ?? 20))
   params.set('offset', String(options.offset ?? 0))
 

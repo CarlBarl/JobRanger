@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
 import { SignOutButton } from '@/components/auth/SignOutButton'
+import { NavLinks } from '@/components/dashboard/NavLinks'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 
@@ -21,24 +22,7 @@ export async function DashboardHeader() {
           {t('appName')}
         </Link>
         <nav className="flex items-center gap-0.5">
-          <Link
-            href="/dashboard"
-            className="link-underline rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground"
-          >
-            {t('navDashboard')}
-          </Link>
-          <Link
-            href="/jobs"
-            className="link-underline rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground"
-          >
-            {t('navJobs')}
-          </Link>
-          <Link
-            href="/letters"
-            className="link-underline rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground"
-          >
-            {t('navLetters')}
-          </Link>
+          <NavLinks />
           <div className="mx-2 hidden h-3.5 w-px bg-border/60 sm:block" />
           <LanguageSwitcher />
           {user?.email ? (

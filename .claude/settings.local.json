@@ -67,7 +67,15 @@
       "Bash(git merge:*)",
       "Bash(wmic process where \"name=''node.exe''\" get processid,commandline)",
       "Bash(wmic process:*)",
-      "Bash(npx next build:*)"
+      "Bash(npx next build:*)",
+      "WebFetch(domain:jobsearch.api.jobtechdev.se)",
+      "WebFetch(domain:taxonomy.api.jobtechdev.se)",
+      "Bash(npx shadcn@latest add pagination:*)",
+      "Bash(npx shadcn@latest add select --yes)",
+      "Bash(netstat:*)",
+      "Bash(cmd /c \"taskkill /PID 36576 /F /T\")",
+      "Bash(cmd /c \"taskkill /IM node.exe /F\")",
+      "Bash(cmd /c \"netstat -ano | findstr :3001 | findstr LISTENING\")"
     ]
   }
 }

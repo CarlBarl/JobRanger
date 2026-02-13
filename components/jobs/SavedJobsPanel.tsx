@@ -18,6 +18,7 @@ export function SavedJobsPanel({
   onToggleSave,
 }: SavedJobsPanelProps) {
   const t = useTranslations('jobs')
+  const hasSavedJobs = savedJobs.length > 0
 
   if (loading) {
     return (
@@ -27,11 +28,11 @@ export function SavedJobsPanel({
     )
   }
 
-  if (error) {
+  if (error && !hasSavedJobs) {
     return <p className="py-4 text-sm text-destructive">{error}</p>
   }
 
-  if (savedJobs.length === 0) {
+  if (!hasSavedJobs) {
     return (
       <p className="py-8 text-center text-xs text-muted-foreground">
         {t('savedJobsEmpty')}
@@ -40,15 +41,20 @@ export function SavedJobsPanel({
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {savedJobs.map((job) => (
-        <JobCard
-          key={`saved-${job.id}`}
-          job={job}
-          isSaved
-          onToggleSave={onToggleSave}
-        />
-      ))}
+    <div className="space-y-3">
+      {error ? (
+        <p className="text-xs text-destructive">{error}</p>
+      ) : null}
+      <div className="grid gap-4 md:grid-cols-2">
+        {savedJobs.map((job) => (
+          <JobCard
+            key={`saved-${job.id}`}
+            job={job}
+            isSaved
+            onToggleSave={onToggleSave}
+          />
+        ))}
+      </div>
     </div>
   )
 }

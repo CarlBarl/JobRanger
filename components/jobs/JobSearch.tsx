@@ -67,6 +67,15 @@ function sortByDateDesc(left?: string | null, right?: string | null): number {
   return safeRight - safeLeft
 }
 
+function textRelevanceBonus(job: AFJobHit, queryLower: string): number {
+  if (!queryLower) return 0
+  let bonus = 0
+  if (job.headline?.toLowerCase().includes(queryLower)) bonus += 3
+  if (job.employer?.name?.toLowerCase().includes(queryLower)) bonus += 2
+  if (job.description?.text?.toLowerCase().includes(queryLower)) bonus += 1
+  return bonus
+}
+
 const MAX_VISIBLE_CHIPS = 5
 
 export function JobSearch() {
@@ -88,6 +97,8 @@ export function JobSearch() {
   const [selectedRegion, setSelectedRegion] = useState<string>('')
   const [searchSkillMatches, setSearchSkillMatches] = useState<Record<string, number>>({})
   const [skillsPanelOpen, setSkillsPanelOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(20)
 
   const selectedSkillSet = useMemo(() => getUniqueSkills(selectedSkills), [selectedSkills])
   const allSkillSet = useMemo(() => getUniqueSkills(skills), [skills])
@@ -100,8 +111,18 @@ export function JobSearch() {
   }, [jobs])
 
   const fetchJobsByQuery = useCallback(
-    async (queryText: string): Promise<AFJobHit[]> => {
-      const res = await fetch(`/api/jobs?q=${encodeURIComponent(queryText)}`)
+    async (
+      queryText: string,
+      options?: { limit?: number; region?: string }
+    ): Promise<AFJobHit[]> => {
+      const params = new URLSearchParams()
+      params.set('q', queryText)
+      params.set('limit', String(options?.limit ?? 100))
+      if (options?.region?.trim()) {
+        params.set('region', options.region.trim())
+      }
+
+      const res = await fetch(`/api/jobs?${params.toString()}`)
       const json: unknown = await res.json()
 
       if (!isApiEnvelope(json)) {
@@ -324,7 +345,7 @@ export function JobSearch() {
   }, [jobs, savedJobIds, savedJobs, t])
 
   const runSkillsSearch = useCallback(
-    async (skillsToSearch: string[]) => {
+    async (skillsToSearch: string[], textQuery = '', region = '') => {
       const normalizedSkills = getUniqueSkills(skillsToSearch)
       if (normalizedSkills.length === 0) {
         setError(t('errorSelectSkill'))
@@ -334,13 +355,16 @@ export function JobSearch() {
       setLoading(true)
       setHasSearched(true)
       setError(null)
-      setSelectedRegion('')
+      setCurrentPage(1)
 
       try {
         const settled = await Promise.allSettled(
           normalizedSkills.map(async (skill) => ({
             skill,
-            hits: await fetchJobsByQuery(skill),
+            hits: await fetchJobsByQuery(
+              textQuery ? `${skill} ${textQuery}` : skill,
+              { region }
+            ),
           }))
         )
 
@@ -371,10 +395,18 @@ export function JobSearch() {
           }
         }
 
+        const queryLower = textQuery.toLowerCase()
+
         const mergedJobs = Array.from(mergedResults.values())
           .sort((left, right) => {
-            const matchesDelta = right.skills.size - left.skills.size
-            if (matchesDelta !== 0) return matchesDelta
+            if (textQuery) {
+              const leftScore = left.skills.size * 3 + textRelevanceBonus(left.job, queryLower)
+              const rightScore = right.skills.size * 3 + textRelevanceBonus(right.job, queryLower)
+              if (rightScore !== leftScore) return rightScore - leftScore
+            } else {
+              const matchesDelta = right.skills.size - left.skills.size
+              if (matchesDelta !== 0) return matchesDelta
+            }
             return sortByDateDesc(
               left.job.publication_date,
               right.job.publication_date
@@ -407,28 +439,32 @@ export function JobSearch() {
   // Unified search: uses skills if selected, text query as fallback/addition
   const handleUnifiedSearch = useCallback(() => {
     const trimmedQuery = query.trim()
+    const trimmedRegion = selectedRegion.trim()
     const hasQuery = trimmedQuery.length > 0
+    const hasRegion = trimmedRegion.length > 0
     const hasSelectedSkills = selectedSkillSet.length > 0
 
-    if (!hasQuery && !hasSelectedSkills) {
+    if (!hasQuery && !hasSelectedSkills && !hasRegion) {
       setError(t('errorNoSearchTerm'))
       return
     }
 
-    // If skills are selected, do per-skill parallel search
+    // If skills are selected, do per-skill parallel search (text narrows results)
     if (hasSelectedSkills) {
-      void runSkillsSearch(selectedSkillSet)
+      void runSkillsSearch(selectedSkillSet, trimmedQuery, trimmedRegion)
       return
     }
 
     // Text-only search
+    const queryForFetch = hasQuery ? trimmedQuery : trimmedRegion
+
     setLoading(true)
     setHasSearched(true)
     setError(null)
-    setSelectedRegion('')
     setSearchSkillMatches({})
+    setCurrentPage(1)
 
-    void fetchJobsByQuery(trimmedQuery)
+    void fetchJobsByQuery(queryForFetch, { region: trimmedRegion })
       .then((results) => setJobs(results))
       .catch((searchError) => {
         const message =
@@ -437,7 +473,7 @@ export function JobSearch() {
         setError(message)
       })
       .finally(() => setLoading(false))
-  }, [fetchJobsByQuery, query, runSkillsSearch, selectedSkillSet, t])
+  }, [fetchJobsByQuery, query, runSkillsSearch, selectedRegion, selectedSkillSet, t])
 
   const toggleSkill = useCallback((skill: string) => {
     setSelectedSkills((current) =>
@@ -460,43 +496,79 @@ export function JobSearch() {
   }, [skills])
 
   const scoredJobs: ScoredJob[] = useMemo(() => {
-    let filtered = jobs
-
-    if (selectedRegion) {
-      filtered = filtered.filter(
-        (job) => job.workplace_address?.region === selectedRegion
-      )
-    }
-
+    const queryLower = query.trim().toLowerCase()
     const relevanceSkills = selectedSkillSet.length > 0 ? selectedSkillSet : allSkillSet
-    if (!relevanceEnabled || relevanceSkills.length === 0) return filtered
+    const shouldApplyRelevance = relevanceEnabled && relevanceSkills.length > 0
+    const filtered = selectedRegion
+      ? jobs.filter((job) => job.workplace_address?.region === selectedRegion)
+      : jobs
 
-    const getMatchCountForSort = (job: ScoredJob): number => {
+    const withRelevance: ScoredJob[] = shouldApplyRelevance
+      ? filtered.map((job) => ({
+          ...job,
+          relevance: scoreJobRelevance(
+            {
+              headline: job.headline,
+              description: job.description?.text,
+              occupation: job.occupation?.label,
+            },
+            relevanceSkills
+          ),
+        }))
+      : filtered
+
+    const getSearchSkillMatchCount = (job: ScoredJob): number => {
       const skillSearchMatches = searchSkillMatches[job.id]
       if (typeof skillSearchMatches === 'number' && skillSearchMatches > 0) {
         return skillSearchMatches
       }
-      return job.relevance?.matched ?? 0
+      return 0
     }
 
-    return [...filtered]
-      .map((job) => ({
-        ...job,
-        relevance: scoreJobRelevance(
-          {
-            headline: job.headline,
-            description: job.description?.text,
-            occupation: job.occupation?.label,
-          },
-          relevanceSkills
-        ),
-      }))
+    const getRelevanceMatchCount = (job: ScoredJob): number =>
+      shouldApplyRelevance ? job.relevance?.matched ?? 0 : 0
+
+    return [...withRelevance]
       .sort((a, b) => {
-        const matchDelta = getMatchCountForSort(b) - getMatchCountForSort(a)
-        if (matchDelta !== 0) return matchDelta
+        const skillMatchDelta =
+          getSearchSkillMatchCount(b) - getSearchSkillMatchCount(a)
+        if (skillMatchDelta !== 0) return skillMatchDelta
+
+        const relevanceMatchDelta =
+          getRelevanceMatchCount(b) - getRelevanceMatchCount(a)
+        if (relevanceMatchDelta !== 0) return relevanceMatchDelta
+
+        const textMatchDelta =
+          textRelevanceBonus(b, queryLower) - textRelevanceBonus(a, queryLower)
+        if (textMatchDelta !== 0) return textMatchDelta
+
         return sortByDateDesc(a.publication_date, b.publication_date)
       })
-  }, [allSkillSet, jobs, relevanceEnabled, searchSkillMatches, selectedRegion, selectedSkillSet])
+  }, [
+    allSkillSet,
+    jobs,
+    query,
+    relevanceEnabled,
+    searchSkillMatches,
+    selectedRegion,
+    selectedSkillSet,
+  ])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [itemsPerPage, relevanceEnabled, selectedRegion, selectedSkillSet])
+
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(scoredJobs.length / itemsPerPage))
+    setCurrentPage((prev) => Math.min(prev, maxPage))
+  }, [scoredJobs.length, itemsPerPage])
+
+  const totalPages = Math.max(1, Math.ceil(scoredJobs.length / itemsPerPage))
+  const paginatedJobs = scoredJobs.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  )
 
   // Compact chip summary of selected skills (shown below search bar)
   const selectedChipSummary = useMemo(() => {
@@ -522,6 +594,8 @@ export function JobSearch() {
           <SearchBar
             query={query}
             onQueryChange={setQuery}
+            region={selectedRegion}
+            onRegionChange={setSelectedRegion}
             onSearch={handleUnifiedSearch}
             loading={loading}
             selectedSkillCount={selectedSkillSet.length}
@@ -581,13 +655,21 @@ export function JobSearch() {
           )}
 
           <SearchResults
-            jobs={scoredJobs}
+            jobs={paginatedJobs}
             hasSearched={hasSearched}
             loading={loading}
             searchSkillMatches={searchSkillMatches}
             savedJobIds={savedJobIds}
             onToggleSave={handleToggleSave}
             error={error}
+            pagination={{
+              currentPage,
+              totalPages,
+              totalItems: scoredJobs.length,
+              itemsPerPage,
+              onPageChange: setCurrentPage,
+              onItemsPerPageChange: setItemsPerPage,
+            }}
           />
         </TabsContent>
 

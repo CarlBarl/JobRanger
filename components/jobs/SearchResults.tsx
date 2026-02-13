@@ -1,10 +1,35 @@
 'use client'
 
+import { useCallback, useRef } from 'react'
 import { useTranslations } from 'next-intl'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { JobCard } from '@/components/jobs/JobCard'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+} from '@/components/ui/pagination'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import type { AFJobHit } from '@/lib/services/arbetsformedlingen'
 
 type ScoredJob = AFJobHit & { relevance?: { matched: number; total: number; score: number } }
+
+interface PaginationProps {
+  currentPage: number
+  totalPages: number
+  totalItems: number
+  itemsPerPage: number
+  onPageChange: (page: number) => void
+  onItemsPerPageChange: (size: number) => void
+}
 
 interface SearchResultsProps {
   jobs: ScoredJob[]
@@ -14,6 +39,33 @@ interface SearchResultsProps {
   savedJobIds: Set<string>
   onToggleSave: (afJobId: string) => void
   error: string | null
+  pagination?: PaginationProps
+}
+
+function getPageNumbers(currentPage: number, totalPages: number): (number | 'ellipsis')[] {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1)
+  }
+
+  const pages: (number | 'ellipsis')[] = [1]
+
+  if (currentPage > 3) {
+    pages.push('ellipsis')
+  }
+
+  const start = Math.max(2, currentPage - 1)
+  const end = Math.min(totalPages - 1, currentPage + 1)
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i)
+  }
+
+  if (currentPage < totalPages - 2) {
+    pages.push('ellipsis')
+  }
+
+  pages.push(totalPages)
+  return pages
 }
 
 export function SearchResults({
@@ -24,16 +76,40 @@ export function SearchResults({
   savedJobIds,
   onToggleSave,
   error,
+  pagination,
 }: SearchResultsProps) {
   const t = useTranslations('jobs')
+  const resultsRef = useRef<HTMLDivElement>(null)
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      if (!pagination) return
+      const boundedPage = Math.max(1, Math.min(page, pagination.totalPages))
+      if (boundedPage === pagination.currentPage) return
+      pagination.onPageChange(boundedPage)
+      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    },
+    [pagination]
+  )
+
+  const from = pagination
+    ? pagination.totalItems === 0
+      ? 0
+      : (pagination.currentPage - 1) * pagination.itemsPerPage + 1
+    : 1
+  const to = pagination
+    ? Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)
+    : jobs.length
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" ref={resultsRef}>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       {hasSearched ? (
         <p className="text-xs text-muted-foreground">
-          {t('found', { count: jobs.length })}
+          {pagination && pagination.totalPages > 1
+            ? t('pagination.showing', { from, to, total: pagination.totalItems })
+            : t('found', { count: pagination?.totalItems ?? jobs.length })}
         </p>
       ) : (
         <p className="text-xs text-muted-foreground">{t('enterSearch')}</p>
@@ -67,6 +143,79 @@ export function SearchResults({
               />
             </div>
           ))}
+        </div>
+      ) : null}
+
+      {pagination && pagination.totalPages > 1 ? (
+        <div className="flex flex-col items-center gap-3 pt-2 sm:flex-row sm:justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {t('pagination.perPage')}
+            </span>
+            <Select
+              value={String(pagination.itemsPerPage)}
+              onValueChange={(value) => pagination.onItemsPerPageChange(Number(value))}
+            >
+              <SelectTrigger className="h-8 w-[70px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationLink
+                  aria-label={t('pagination.previous')}
+                  className={pagination.currentPage <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  aria-disabled={pagination.currentPage <= 1}
+                  tabIndex={pagination.currentPage <= 1 ? -1 : undefined}
+                  size="default"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t('pagination.previous')}</span>
+                </PaginationLink>
+              </PaginationItem>
+
+              {getPageNumbers(pagination.currentPage, pagination.totalPages).map((page, idx) =>
+                page === 'ellipsis' ? (
+                  <PaginationItem key={`ellipsis-${idx}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                ) : (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      isActive={page === pagination.currentPage}
+                      onClick={() => handlePageChange(page)}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              )}
+
+              <PaginationItem>
+                <PaginationLink
+                  aria-label={t('pagination.next')}
+                  className={pagination.currentPage >= pagination.totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  aria-disabled={pagination.currentPage >= pagination.totalPages}
+                  tabIndex={pagination.currentPage >= pagination.totalPages ? -1 : undefined}
+                  size="default"
+                >
+                  <span className="hidden sm:inline">{t('pagination.next')}</span>
+                  <ChevronRight className="h-4 w-4" />
+                </PaginationLink>
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       ) : null}
     </div>

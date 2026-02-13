@@ -6,6 +6,7 @@ import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 const JobsSearchQuerySchema = z.object({
   q: z.string().min(1),
+  region: z.string().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
   offset: z.coerce.number().int().min(0).optional(),
 })
@@ -34,6 +35,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const parsed = JobsSearchQuerySchema.safeParse({
     q: searchParams.get('q') ?? '',
+    region: searchParams.get('region')?.trim() || undefined,
     limit: searchParams.get('limit') ?? undefined,
     offset: searchParams.get('offset') ?? undefined,
   })
@@ -50,6 +52,7 @@ export async function GET(request: NextRequest) {
 
   const data = await searchJobs({
     query: parsed.data.q,
+    region: parsed.data.region,
     limit: parsed.data.limit,
     offset: parsed.data.offset,
   })
