@@ -184,6 +184,7 @@
     "skillSearchBadge": "{count} matchade kompetenser",
     "showJobSkills": "Visa jobbets kompetenser",
     "hideJobSkills": "Dolj jobbets kompetenser",
+    "noJobSkills": "Inga kompetenser hittades for detta jobb",
     "showMatchedSkills": "Visa matchade kompetenser",
     "hideMatchedSkills": "Dolj matchade kompetenser",
     "skillSearchPartialFailure": "Vissa kompetenssökningar misslyckades ({count}). Visar delresultat.",
