@@ -773,6 +773,32 @@ describe('JobSearch', () => {
     expect(within(skillContainer).getByText('PostgreSQL')).toBeInTheDocument()
   })
 
+  it('highlights matched skills differently from unmatched skills', async () => {
+    const user = userEvent.setup()
+    mockFetchWithSkillMatchedJob()
+
+    render(<JobSearch />)
+
+    await screen.findByText(/1\/1 skills selected/i)
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
+
+    expect(await screen.findByRole('link', { name: 'Backend Developer' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /show job skills/i }))
+
+    const skillContainer = await screen.findByTestId('job-skills-10')
+    const nodeChip = within(skillContainer).getByText('Node.js')
+    const dockerChip = within(skillContainer).getByText('Docker')
+
+    // Node.js is a CV skill → matched → primary styling
+    expect(nodeChip.className).toContain('bg-primary/10')
+    expect(nodeChip.className).toContain('text-primary')
+
+    // Docker is NOT a CV skill → unmatched → secondary styling
+    expect(dockerChip.className).toContain('bg-secondary/80')
+    expect(dockerChip.className).toContain('text-muted-foreground')
+  })
+
   it('uses fetched catalog for job skill extraction', async () => {
     const user = userEvent.setup()
     mockFetchWithCatalogAndJob()
