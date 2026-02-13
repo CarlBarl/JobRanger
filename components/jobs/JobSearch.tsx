@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { JobCard } from '@/components/jobs/JobCard'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { SearchBar } from '@/components/jobs/SearchBar'
+import { SkillSelector } from '@/components/jobs/SkillSelector'
+import { ActiveFilters } from '@/components/jobs/ActiveFilters'
+import { SearchResults } from '@/components/jobs/SearchResults'
+import { SavedJobsPanel } from '@/components/jobs/SavedJobsPanel'
 import { scoreJobRelevance } from '@/lib/scoring'
+import { cn } from '@/lib/utils'
 import type { AFJobHit } from '@/lib/services/arbetsformedlingen'
 
 type ApiError = { code?: string; message?: string }
@@ -64,6 +67,8 @@ function sortByDateDesc(left?: string | null, right?: string | null): number {
   return safeRight - safeLeft
 }
 
+const MAX_VISIBLE_CHIPS = 5
+
 export function JobSearch() {
   const t = useTranslations('jobs')
   const [query, setQuery] = useState('')
@@ -82,19 +87,10 @@ export function JobSearch() {
   const [relevanceEnabled, setRelevanceEnabled] = useState(false)
   const [selectedRegion, setSelectedRegion] = useState<string>('')
   const [searchSkillMatches, setSearchSkillMatches] = useState<Record<string, number>>({})
+  const [skillsPanelOpen, setSkillsPanelOpen] = useState(false)
 
   const selectedSkillSet = useMemo(() => getUniqueSkills(selectedSkills), [selectedSkills])
   const allSkillSet = useMemo(() => getUniqueSkills(skills), [skills])
-
-  const skillQuery = useMemo(
-    () => selectedSkillSet.filter(Boolean).join(' OR ').trim(),
-    [selectedSkillSet]
-  )
-
-  const allSkillsQuery = useMemo(
-    () => allSkillSet.filter(Boolean).join(' OR ').trim(),
-    [allSkillSet]
-  )
 
   const availableRegions = useMemo(() => {
     const regions = jobs
@@ -132,6 +128,7 @@ export function JobSearch() {
     return getJob(json.data)
   }, [])
 
+  // Load skills from user's CV
   useEffect(() => {
     let active = true
 
@@ -201,6 +198,7 @@ export function JobSearch() {
     }
   }, [t])
 
+  // Load saved jobs
   useEffect(() => {
     let active = true
 
@@ -325,34 +323,6 @@ export function JobSearch() {
     }
   }, [jobs, savedJobIds, savedJobs, t])
 
-  const runSearch = useCallback(
-    async (overrideQuery?: string) => {
-      const q = (overrideQuery ?? query).trim()
-      if (!q) {
-        setError(t('errorNoSearchTerm'))
-        return
-      }
-
-      setLoading(true)
-      setHasSearched(true)
-      setError(null)
-      setSelectedRegion('')
-      setSearchSkillMatches({})
-
-      try {
-        setJobs(await fetchJobsByQuery(q))
-      } catch (searchError) {
-        const message =
-          searchError instanceof Error ? searchError.message : t('errorSearchFailed')
-        setJobs([])
-        setError(message)
-      } finally {
-        setLoading(false)
-      }
-    },
-    [fetchJobsByQuery, query, t]
-  )
-
   const runSkillsSearch = useCallback(
     async (skillsToSearch: string[]) => {
       const normalizedSkills = getUniqueSkills(skillsToSearch)
@@ -434,9 +404,40 @@ export function JobSearch() {
     [fetchJobsByQuery, t]
   )
 
-  const handleSearch = useCallback(() => {
-    void runSearch()
-  }, [runSearch])
+  // Unified search: uses skills if selected, text query as fallback/addition
+  const handleUnifiedSearch = useCallback(() => {
+    const trimmedQuery = query.trim()
+    const hasQuery = trimmedQuery.length > 0
+    const hasSelectedSkills = selectedSkillSet.length > 0
+
+    if (!hasQuery && !hasSelectedSkills) {
+      setError(t('errorNoSearchTerm'))
+      return
+    }
+
+    // If skills are selected, do per-skill parallel search
+    if (hasSelectedSkills) {
+      void runSkillsSearch(selectedSkillSet)
+      return
+    }
+
+    // Text-only search
+    setLoading(true)
+    setHasSearched(true)
+    setError(null)
+    setSelectedRegion('')
+    setSearchSkillMatches({})
+
+    void fetchJobsByQuery(trimmedQuery)
+      .then((results) => setJobs(results))
+      .catch((searchError) => {
+        const message =
+          searchError instanceof Error ? searchError.message : t('errorSearchFailed')
+        setJobs([])
+        setError(message)
+      })
+      .finally(() => setLoading(false))
+  }, [fetchJobsByQuery, query, runSkillsSearch, selectedSkillSet, t])
 
   const toggleSkill = useCallback((skill: string) => {
     setSelectedSkills((current) =>
@@ -458,28 +459,9 @@ export function JobSearch() {
     setSelectedSkills(skills.slice(0, 5))
   }, [skills])
 
-  const handleSkillSearch = useCallback(() => {
-    if (!skillQuery) {
-      setError(t('errorSelectSkill'))
-      return
-    }
-    setQuery(skillQuery)
-    void runSkillsSearch(selectedSkillSet)
-  }, [runSkillsSearch, selectedSkillSet, skillQuery, t])
-
-  const handleAllSkillsSearch = useCallback(() => {
-    if (!allSkillsQuery) {
-      setError(t('errorNoSkills'))
-      return
-    }
-    setQuery(allSkillsQuery)
-    void runSkillsSearch(allSkillSet)
-  }, [allSkillSet, allSkillsQuery, runSkillsSearch, t])
-
   const scoredJobs: ScoredJob[] = useMemo(() => {
     let filtered = jobs
 
-    // Apply region filter
     if (selectedRegion) {
       filtered = filtered.filter(
         (job) => job.workplace_address?.region === selectedRegion
@@ -504,245 +486,108 @@ export function JobSearch() {
       .sort((a, b) => (b.relevance?.score ?? 0) - (a.relevance?.score ?? 0))
   }, [allSkillSet, jobs, relevanceEnabled, selectedRegion, selectedSkillSet])
 
+  // Compact chip summary of selected skills (shown below search bar)
+  const selectedChipSummary = useMemo(() => {
+    if (selectedSkillSet.length === 0) return null
+    const visible = selectedSkillSet.slice(0, MAX_VISIBLE_CHIPS)
+    const remaining = selectedSkillSet.length - visible.length
+    return { visible, remaining }
+  }, [selectedSkillSet])
+
   return (
     <div className="space-y-4">
-      <div className="space-y-3 rounded-lg border p-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-sm font-medium">{t('searchWithSkillsTitle')}</h2>
-          <p className="text-xs text-muted-foreground">
-            {t('searchWithSkillsDescription')}
-          </p>
-        </div>
+      <Tabs defaultValue="search">
+        <TabsList className="w-full">
+          <TabsTrigger value="search" className="flex-1">
+            {t('tabSearch')}
+          </TabsTrigger>
+          <TabsTrigger value="saved" className="flex-1">
+            {t('tabSaved', { count: savedJobIds.size })}
+          </TabsTrigger>
+        </TabsList>
 
-        {skillsLoading ? (
-          <p className="text-xs text-muted-foreground">{t('loadingSkills')}</p>
-        ) : null}
-
-        {skillsError ? (
-          <p className="text-sm text-destructive">{skillsError}</p>
-        ) : null}
-
-        {skills.length > 0 ? (
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xs text-muted-foreground">
-                {t('selectedSkillsCount', {
-                  selected: selectedSkillSet.length,
-                  total: allSkillSet.length,
-                })}
-              </p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleSelectAllSkills}
-                disabled={loading}
-              >
-                {t('selectAllSkills')}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleSelectTopSkills}
-                disabled={loading || skills.length === 0}
-              >
-                {t('selectTopSkills')}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleClearSkills}
-                disabled={loading || selectedSkills.length === 0}
-              >
-                {t('deselectAllSkills')}
-              </Button>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {skills.map((skill) => (
-                <label
-                  key={skill}
-                  className="flex items-center gap-2 rounded-md border px-2 py-1 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedSkills.includes(skill)}
-                    onChange={() => toggleSkill(skill)}
-                    disabled={loading}
-                  />
-                  <span className="break-all">{skill}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        ) : skillsLoading ? null : (
-          <p className="text-xs text-muted-foreground">
-            {t('noSkillsFound')}
-          </p>
-        )}
-
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button
-            type="button"
-            onClick={handleSkillSearch}
-            disabled={loading || skills.length === 0}
-            className="w-full sm:w-auto"
-          >
-            {t('searchWithSelectedSkills')}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleAllSkillsSearch}
-            disabled={loading || skills.length === 0}
-            className="w-full sm:w-auto"
-          >
-            {t('searchWithAllSkills')}
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-        <div className="flex-1 space-y-2">
-          <Label htmlFor="jobs-q">{t('search')}</Label>
-          <Input
-            id="jobs-q"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault()
-                handleSearch()
-              }
-            }}
-            placeholder={t('searchPlaceholder')}
-            disabled={loading}
+        <TabsContent value="search" className="space-y-3">
+          <SearchBar
+            query={query}
+            onQueryChange={setQuery}
+            onSearch={handleUnifiedSearch}
+            loading={loading}
+            selectedSkillCount={selectedSkillSet.length}
+            totalSkillCount={allSkillSet.length}
+            skillsPanelOpen={skillsPanelOpen}
+            onToggleSkillsPanel={() => setSkillsPanelOpen((prev) => !prev)}
           />
-        </div>
-        <Button
-          type="button"
-          onClick={handleSearch}
-          disabled={loading}
-          className="w-full sm:w-auto"
-        >
-          {loading ? t('searching') : t('search')}
-        </Button>
-      </div>
 
-      {skills.length > 0 && (
-        <div className="flex flex-col gap-3 rounded-lg border border-dashed p-3 sm:flex-row sm:items-center">
-          <label className="flex cursor-pointer items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={relevanceEnabled}
-              onChange={(e) => setRelevanceEnabled(e.target.checked)}
-              className="rounded"
-            />
-            <span>{t('relevanceToggle')}</span>
-          </label>
-        </div>
-      )}
-
-      <div className="space-y-2 rounded-lg border p-4">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-sm font-medium">{t('savedJobsTitle')}</h2>
-            <p className="text-xs text-muted-foreground">{t('savedJobsDescription')}</p>
-          </div>
-          <span className="text-xs text-muted-foreground">
-            {t('savedJobsCount', { count: savedJobIds.size })}
-          </span>
-        </div>
-
-        {savedJobsLoading ? (
-          <p className="text-xs text-muted-foreground">{t('savedJobsLoading')}</p>
-        ) : null}
-
-        {savedJobsError ? (
-          <p className="text-sm text-destructive">{savedJobsError}</p>
-        ) : null}
-
-        {!savedJobsLoading && savedJobs.length === 0 ? (
-          <p className="text-xs text-muted-foreground">{t('savedJobsEmpty')}</p>
-        ) : null}
-
-        {savedJobs.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {savedJobs.map((job) => (
-              <JobCard
-                key={`saved-${job.id}`}
-                job={job}
-                isSaved
-                onToggleSave={handleToggleSave}
-              />
-            ))}
-          </div>
-        ) : null}
-      </div>
-
-      {availableRegions.length > 1 && (
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <label htmlFor="region-filter" className="text-sm font-medium">
-            {t('regionFilter')}:
-          </label>
-          <select
-            id="region-filter"
-            value={selectedRegion}
-            onChange={(e) => setSelectedRegion(e.target.value)}
-            className="w-full rounded-md border bg-background px-3 py-1.5 text-sm sm:w-auto"
-          >
-            <option value="">{t('allRegions')}</option>
-            {availableRegions.map((region) => (
-              <option key={region} value={region}>
-                {region}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-      {hasSearched ? (
-        <p className="text-xs text-muted-foreground">
-          {t('found', { count: scoredJobs.length })}
-        </p>
-      ) : (
-        <p className="text-xs text-muted-foreground">{t('enterSearch')}</p>
-      )}
-
-      {hasSearched && !loading && scoredJobs.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t('noResults')}</p>
-      ) : null}
-
-      {scoredJobs.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {scoredJobs.map((job) => (
-            <div key={job.id} className="relative">
-              {searchSkillMatches[job.id] ? (
-                <span className="absolute top-2 right-2 z-10 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                  {t('skillSearchBadge', { count: searchSkillMatches[job.id] })}
+          {/* Compact selected skill chips (always visible when skills are selected) */}
+          {selectedChipSummary && !skillsPanelOpen && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {selectedChipSummary.visible.map((skill) => (
+                <span
+                  key={skill}
+                  className={cn(
+                    'inline-flex items-center rounded-md px-2 py-0.5',
+                    'border border-primary/30 bg-primary/10 text-[11px] font-medium text-primary'
+                  )}
+                >
+                  {skill}
                 </span>
-              ) : null}
-              {job.relevance && job.relevance.matched > 0 && !searchSkillMatches[job.id] ? (
-                <span className="absolute top-2 right-2 z-10 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                  {t('relevanceBadge', {
-                    matched: job.relevance.matched,
-                    total: job.relevance.total,
-                  })}
-                </span>
-              ) : null}
-              <JobCard
-                job={job}
-                isSaved={savedJobIds.has(job.id)}
-                onToggleSave={handleToggleSave}
-              />
+              ))}
+              {selectedChipSummary.remaining > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSkillsPanelOpen(true)}
+                  className="text-[11px] font-medium text-muted-foreground hover:text-foreground"
+                >
+                  {t('moreSkills', { count: selectedChipSummary.remaining })}
+                </button>
+              )}
             </div>
-          ))}
-        </div>
-      ) : null}
+          )}
+
+          <SkillSelector
+            skills={skills}
+            selectedSkills={selectedSkills}
+            onToggleSkill={toggleSkill}
+            onSelectAll={handleSelectAllSkills}
+            onSelectTop={handleSelectTopSkills}
+            onClearAll={handleClearSkills}
+            loading={loading}
+            isOpen={skillsPanelOpen}
+            skillsLoading={skillsLoading}
+            skillsError={skillsError}
+          />
+
+          {hasSearched && (
+            <ActiveFilters
+              regions={availableRegions}
+              selectedRegion={selectedRegion}
+              onRegionChange={setSelectedRegion}
+              relevanceEnabled={relevanceEnabled}
+              onRelevanceChange={setRelevanceEnabled}
+              hasSkills={skills.length > 0}
+            />
+          )}
+
+          <SearchResults
+            jobs={scoredJobs}
+            hasSearched={hasSearched}
+            loading={loading}
+            searchSkillMatches={searchSkillMatches}
+            savedJobIds={savedJobIds}
+            onToggleSave={handleToggleSave}
+            error={error}
+          />
+        </TabsContent>
+
+        <TabsContent value="saved">
+          <SavedJobsPanel
+            savedJobs={savedJobs}
+            loading={savedJobsLoading}
+            error={savedJobsError}
+            onToggleSave={handleToggleSave}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
