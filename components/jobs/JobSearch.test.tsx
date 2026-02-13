@@ -1,7 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import userEvent from '@testing-library/user-event'
-import { render as rtlRender } from '@testing-library/react'
-import { NextIntlClientProvider } from 'next-intl'
 import { render, screen, waitFor } from '@/lib/test-utils'
 import { JobSearch } from './JobSearch'
 
@@ -49,76 +47,37 @@ function mockFetchWithSkills(skills: string[]) {
   })
 }
 
-describe('JobSearch skill search', () => {
+describe('JobSearch', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
   })
 
-  it('renders localized labels', async () => {
-    const messages = {
-      jobs: {
-        searchWithSkillsTitle: 'Search with skill tags',
-        searchWithSkillsDescription: 'Pick skills from your CV',
-        loadingSkills: 'Loading skills...',
-        skillsErrorUnexpected: 'Unexpected skills response',
-        skillsErrorFailed: 'Skills failed',
-        noSkillsFound: 'No skills found',
-        searchWithSelectedSkills: 'Search selected',
-        searchWithAllSkills: 'Search all skills',
-        selectedSkillsCount: '{selected} selected of {total} skills',
-        selectAllSkills: 'Select all',
-        selectTopSkills: 'Top 5',
-        deselectAllSkills: 'Deselect all',
-        skillSearchBadge: '{count} matched skills',
-        skillSearchPartialFailure: 'Partial skill failure',
-        searchPlaceholder: 'Search jobs',
-        search: 'Find',
-        searching: 'Finding...',
-        errorNoSearchTerm: 'Enter a search term',
-        errorSelectSkill: 'Select at least one skill',
-        errorNoSkills: 'No skills to search',
-        errorUnexpectedResponse: 'Unexpected response',
-        errorSearchFailed: 'Search failed',
-        relevanceToggle: 'Skill matching',
-        found: 'Found {count} jobs',
-        noResults: 'No jobs found',
-        enterSearch: 'Enter search',
-        savedJobsTitle: 'Saved jobs',
-        savedJobsDescription: 'Saved job list',
-        savedJobsCount: '{count} saved',
-        savedJobsLoading: 'Loading saved jobs',
-        savedJobsEmpty: 'No saved jobs',
-        savedJobsLoadFailed: 'Saved jobs failed',
-        savedJobsSomeUnavailable: 'Some saved jobs unavailable',
-      },
-    }
-
+  it('renders tabs and search button', async () => {
     mockFetchWithSkills(['React'])
 
-    rtlRender(
-      <NextIntlClientProvider locale="en" messages={messages}>
-        <JobSearch />
-      </NextIntlClientProvider>
-    )
+    render(<JobSearch />)
 
-    expect(
-      await screen.findByText('Search with skill tags')
-    ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Find' })).toBeInTheDocument()
+    expect(await screen.findByRole('tab', { name: /search results/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /saved/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument()
   })
 
-  it('searches using selected skills', async () => {
+  it('searches using selected skills via unified search', async () => {
     const user = userEvent.setup()
     const fetchMock = mockFetchWithSkills(['React', 'TypeScript', 'Node'])
 
     render(<JobSearch />)
 
-    const nodeCheckbox = await screen.findByLabelText('Node')
-    await user.click(nodeCheckbox)
+    // Wait for skills to load, then open skills panel
+    const skillsToggle = await screen.findByText(/3\/3 skills selected/i)
+    await user.click(skillsToggle)
 
-    await user.click(
-      screen.getByRole('button', { name: /search with selected skills/i })
-    )
+    // Deselect Node by clicking the chip
+    const nodeChip = screen.getByRole('button', { name: 'Node' })
+    await user.click(nodeChip)
+
+    // Click unified Search button
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
 
     await waitFor(() => {
       const calledUrls = fetchMock.mock.calls.map(([input]) =>
@@ -126,31 +85,76 @@ describe('JobSearch skill search', () => {
       )
       expect(calledUrls).toContain('/api/jobs?q=React')
       expect(calledUrls).toContain('/api/jobs?q=TypeScript')
-      expect(calledUrls).not.toContain('/api/jobs?q=React%20TypeScript')
+      expect(calledUrls).not.toContain('/api/jobs?q=Node')
     })
   })
 
-  it('searches using all skills even when some are deselected', async () => {
-    const user = userEvent.setup()
-    const fetchMock = mockFetchWithSkills(['React', 'TypeScript', 'Node'])
+  it('shows selected skill chips as compact summary', async () => {
+    mockFetchWithSkills(['React', 'TypeScript', 'Node'])
 
     render(<JobSearch />)
 
-    const nodeCheckbox = await screen.findByLabelText('Node')
-    await user.click(nodeCheckbox)
+    // Wait for skills to load - chips should be visible as summary
+    await waitFor(() => {
+      expect(screen.getByText('React')).toBeInTheDocument()
+      expect(screen.getByText('TypeScript')).toBeInTheDocument()
+      expect(screen.getByText('Node')).toBeInTheDocument()
+    })
+  })
 
-    await user.click(
-      screen.getByRole('button', { name: /search with all skills/i })
-    )
+  it('shows "+N more" when many skills are selected', async () => {
+    mockFetchWithSkills([
+      'React', 'TypeScript', 'Node', 'CSS', 'Docker',
+      'Python', 'Go', 'Rust',
+    ])
+
+    render(<JobSearch />)
+
+    await waitFor(() => {
+      expect(screen.getByText('+3 more')).toBeInTheDocument()
+    })
+  })
+
+  it('switches to saved jobs tab', async () => {
+    const user = userEvent.setup()
+    mockFetchWithSkills([])
+
+    render(<JobSearch />)
+
+    const savedTab = await screen.findByRole('tab', { name: /saved/i })
+    await user.click(savedTab)
+
+    expect(await screen.findByText(/no saved jobs yet/i)).toBeInTheDocument()
+  })
+
+  it('performs text-only search when no skills are selected', async () => {
+    const user = userEvent.setup()
+    const fetchMock = mockFetchWithSkills([])
+
+    render(<JobSearch />)
+
+    const searchInput = await screen.findByPlaceholderText(/search by job title/i)
+    await user.type(searchInput, 'developer')
+
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
 
     await waitFor(() => {
       const calledUrls = fetchMock.mock.calls.map(([input]) =>
         typeof input === 'string' ? input : input.toString()
       )
-      expect(calledUrls).toContain('/api/jobs?q=React')
-      expect(calledUrls).toContain('/api/jobs?q=TypeScript')
-      expect(calledUrls).toContain('/api/jobs?q=Node')
-      expect(calledUrls).not.toContain('/api/jobs?q=React%20TypeScript%20Node')
+      expect(calledUrls).toContain('/api/jobs?q=developer')
     })
+  })
+
+  it('shows error when searching with no query and no skills', async () => {
+    const user = userEvent.setup()
+    mockFetchWithSkills([])
+
+    render(<JobSearch />)
+
+    await screen.findByPlaceholderText(/search by job title/i)
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
+
+    expect(await screen.findByText(/please enter a search term or select skills/i)).toBeInTheDocument()
   })
 })
