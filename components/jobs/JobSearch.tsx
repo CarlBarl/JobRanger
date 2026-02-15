@@ -27,6 +27,92 @@ type ScoredJob = AFJobHit & {
   relevanceSkillsKey?: string
 }
 
+type JobsSearchTab = 'search' | 'saved'
+
+type PersistedJobsSearchState = {
+  v: 1
+  tab: JobsSearchTab
+  query: string
+  region: string
+  skills: string[]
+  selectedSkills: string[]
+  skillsPanelOpen: boolean
+  hasSearched: boolean
+  jobs: ScoredJob[]
+  searchSkillMatches: Record<string, number>
+  error: string | null
+  currentPage: number
+  itemsPerPage: number
+}
+
+const JOBS_SEARCH_STATE_KEY = 'jobranger:jobsSearchState:v1'
+const JOBS_SEARCH_STATE_DEBOUNCE_MS = 250
+const JOBS_SEARCH_STATE_MAX_CHARS = 1_500_000
+
+function asString(value: unknown, fallback = ''): string {
+  return typeof value === 'string' ? value : fallback
+}
+
+function asBoolean(value: unknown, fallback: boolean): boolean {
+  return typeof value === 'boolean' ? value : fallback
+}
+
+function asNumber(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback
+}
+
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value.filter((item): item is string => typeof item === 'string')
+}
+
+function asTab(value: unknown): JobsSearchTab {
+  return value === 'saved' ? 'saved' : 'search'
+}
+
+function asSearchSkillMatches(value: unknown): Record<string, number> {
+  if (!value || typeof value !== 'object') return {}
+  const entries = Object.entries(value as Record<string, unknown>).filter(
+    (entry): entry is [string, number] => typeof entry[1] === 'number'
+  )
+  return Object.fromEntries(entries)
+}
+
+function asJobs(value: unknown): ScoredJob[] {
+  if (!Array.isArray(value)) return []
+  return value.filter(
+    (candidate): candidate is ScoredJob =>
+      !!candidate &&
+      typeof candidate === 'object' &&
+      typeof (candidate as { id?: unknown }).id === 'string'
+  )
+}
+
+function reconcileSelectedSkills(selected: string[], available: string[]): string[] {
+  if (selected.length === 0 || available.length === 0) return []
+  const availableByKey = new Map(
+    available.map((skill) => [skill.trim().toLowerCase(), skill] as const)
+  )
+  const reconciled = selected
+    .map((skill) => availableByKey.get(skill.trim().toLowerCase()) ?? null)
+    .filter((skill): skill is string => typeof skill === 'string')
+  return getUniqueSkills(reconciled)
+}
+
+function persistJobsSearchState(payload: PersistedJobsSearchState) {
+  try {
+    const serialized = JSON.stringify(payload)
+    if (serialized.length > JOBS_SEARCH_STATE_MAX_CHARS) {
+      const compact = JSON.stringify({ ...payload, jobs: [] })
+      sessionStorage.setItem(JOBS_SEARCH_STATE_KEY, compact)
+      return
+    }
+    sessionStorage.setItem(JOBS_SEARCH_STATE_KEY, serialized)
+  } catch {
+    // Ignore persistence errors
+  }
+}
+
 function isApiEnvelope(value: unknown): value is ApiEnvelope {
   return (
     !!value &&
@@ -137,6 +223,7 @@ const STREAM_FLUSH_DELAY_MS = 150
 
 export function JobSearch() {
   const t = useTranslations('jobs')
+  const [activeTab, setActiveTab] = useState<JobsSearchTab>('search')
   const [query, setQuery] = useState('')
   const [jobs, setJobs] = useState<ScoredJob[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -160,6 +247,10 @@ export function JobSearch() {
   const [pendingQueries, setPendingQueries] = useState(0)
   const [failedQueries, setFailedQueries] = useState(0)
   const [totalFound, setTotalFound] = useState(0)
+  const restoringRef = useRef(true)
+  const persistenceEnabledRef = useRef(false)
+  const restoredStateRef = useRef(false)
+  const latestPersistedStateRef = useRef<PersistedJobsSearchState | null>(null)
   const searchRunIdRef = useRef(0)
   const abortControllerRef = useRef<AbortController | null>(null)
   const jobsMapRef = useRef(new Map<string, ScoredJob>())
@@ -168,6 +259,112 @@ export function JobSearch() {
 
   const selectedSkillSet = useMemo(() => getUniqueSkills(selectedSkills), [selectedSkills])
   const allSkillSet = useMemo(() => getUniqueSkills(skills), [skills])
+
+  useEffect(() => {
+    let didRestore = false
+
+    try {
+      const raw = sessionStorage.getItem(JOBS_SEARCH_STATE_KEY)
+      if (raw) {
+        const parsed: unknown = JSON.parse(raw)
+        if (parsed && typeof parsed === 'object' && (parsed as { v?: unknown }).v === 1) {
+          const persisted = parsed as Partial<PersistedJobsSearchState>
+          const hasMeaningfulState =
+            persisted.tab === 'saved' ||
+            typeof persisted.query === 'string' ||
+            typeof persisted.region === 'string' ||
+            Array.isArray(persisted.selectedSkills) ||
+            Array.isArray(persisted.jobs)
+
+          if (hasMeaningfulState) {
+            didRestore = true
+            setActiveTab(asTab(persisted.tab))
+            setQuery(asString(persisted.query))
+            setSelectedRegion(asString(persisted.region))
+            setSkills(asStringArray(persisted.skills))
+            setSelectedSkills(asStringArray(persisted.selectedSkills))
+            setSkillsPanelOpen(asBoolean(persisted.skillsPanelOpen, false))
+            setHasSearched(asBoolean(persisted.hasSearched, false))
+            setJobs(asJobs(persisted.jobs))
+            setSearchSkillMatches(asSearchSkillMatches(persisted.searchSkillMatches))
+            setError(typeof persisted.error === 'string' ? persisted.error : null)
+            setCurrentPage(asNumber(persisted.currentPage, 1))
+            setItemsPerPage(asNumber(persisted.itemsPerPage, 20))
+          }
+        }
+      }
+    } catch {
+      // Ignore persistence errors
+    }
+
+    restoredStateRef.current = didRestore
+    const timer = setTimeout(() => {
+      restoringRef.current = false
+      persistenceEnabledRef.current = true
+    }, 0)
+
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [])
+
+  useEffect(() => {
+    const payload: PersistedJobsSearchState = {
+      v: 1,
+      tab: activeTab,
+      query,
+      region: selectedRegion,
+      skills,
+      selectedSkills,
+      skillsPanelOpen,
+      hasSearched,
+      jobs,
+      searchSkillMatches,
+      error,
+      currentPage,
+      itemsPerPage,
+    }
+    latestPersistedStateRef.current = payload
+
+    if (!persistenceEnabledRef.current) return
+
+    const timer = setTimeout(() => {
+      persistJobsSearchState(payload)
+    }, JOBS_SEARCH_STATE_DEBOUNCE_MS)
+
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [
+    activeTab,
+    currentPage,
+    error,
+    hasSearched,
+    itemsPerPage,
+    jobs,
+    query,
+    searchSkillMatches,
+    selectedRegion,
+    selectedSkills,
+    skills,
+    skillsPanelOpen,
+  ])
+
+  useEffect(() => {
+    return () => {
+      if (restoringRef.current) return
+      const payload = latestPersistedStateRef.current
+      if (!payload) return
+      const isMeaningful =
+        payload.tab === 'saved' ||
+        payload.hasSearched ||
+        payload.jobs.length > 0 ||
+        payload.query.trim().length > 0 ||
+        payload.region.trim().length > 0
+      if (!isMeaningful) return
+      persistJobsSearchState(payload)
+    }
+  }, [])
 
   useEffect(() => {
     if (jobMatchedQuerySkillsRef.current.size === 0) return
@@ -278,18 +475,22 @@ export function JobSearch() {
 
         if (!isApiEnvelope(json)) {
           if (active) {
-            setSkills([])
-            setSelectedSkills([])
-            setSkillsError(t('skillsErrorUnexpected'))
+            if (!restoredStateRef.current) {
+              setSkills([])
+              setSelectedSkills([])
+              setSkillsError(t('skillsErrorUnexpected'))
+            }
           }
           return
         }
 
         if (!json.success) {
           if (active) {
-            setSkills([])
-            setSelectedSkills([])
-            setSkillsError(json.error?.message ?? t('skillsErrorFailed'))
+            if (!restoredStateRef.current) {
+              setSkills([])
+              setSelectedSkills([])
+              setSkillsError(json.error?.message ?? t('skillsErrorFailed'))
+            }
           }
           return
         }
@@ -312,13 +513,18 @@ export function JobSearch() {
 
         if (active) {
           setSkills(normalizedSkills)
-          setSelectedSkills(normalizedSkills)
+          setSelectedSkills((current) => {
+            if (!restoredStateRef.current) return normalizedSkills
+            return reconcileSelectedSkills(current, normalizedSkills)
+          })
         }
       } catch {
         if (active) {
-          setSkills([])
-          setSelectedSkills([])
-          setSkillsError(t('skillsErrorFailed'))
+          if (!restoredStateRef.current) {
+            setSkills([])
+            setSelectedSkills([])
+            setSkillsError(t('skillsErrorFailed'))
+          }
         }
       } finally {
         if (active) {
@@ -777,6 +983,7 @@ export function JobSearch() {
 
   // Reset to page 1 when filters change
   useEffect(() => {
+    if (restoringRef.current) return
     setCurrentPage(1)
   }, [itemsPerPage, selectedRegion, selectedSkillSet])
 
@@ -811,7 +1018,7 @@ export function JobSearch() {
 
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="search">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(asTab(value))}>
         <TabsList className="w-full">
           <TabsTrigger value="search" className="flex-1">
             {t('tabSearch')}
