@@ -1,10 +1,12 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
+import { DashboardGuideController } from '@/components/dashboard/guide/DashboardGuideController'
 import { DashboardStatsSection } from '@/components/dashboard/DashboardStatsSection'
 import { DashboardDocumentsSection } from '@/components/dashboard/DashboardDocumentsSection'
 import { DashboardSkillsSection } from '@/components/dashboard/DashboardSkillsSection'
 import { DashboardRecentJobsSection } from '@/components/dashboard/DashboardRecentJobsSection'
+import { LetterGuidanceSettings } from '@/components/dashboard/LetterGuidanceSettings'
 import { StatsSkeleton, DocumentsSkeleton, SkillsSkeleton, RecentJobsSkeleton } from '@/components/dashboard/skeletons'
 import { createClient } from '@/lib/supabase/server'
 import { getOrCreateUser } from '@/lib/auth'
@@ -30,9 +32,16 @@ export default async function DashboardPage() {
     redirect('/onboarding')
   }
 
+  const dashboardGuideState = {
+    dashboardGuidePromptedAt: user.dashboardGuidePromptedAt?.toISOString() ?? null,
+    dashboardGuideCompletedAt: user.dashboardGuideCompletedAt?.toISOString() ?? null,
+    dashboardGuideDismissedAt: user.dashboardGuideDismissedAt?.toISOString() ?? null,
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader />
+      <DashboardGuideController initialState={dashboardGuideState} />
       <main className="container mx-auto space-y-5 px-4 py-6 sm:px-6 sm:py-8">
         <Suspense fallback={<StatsSkeleton />}>
           <DashboardStatsSection
@@ -45,6 +54,8 @@ export default async function DashboardPage() {
         <Suspense fallback={<DocumentsSkeleton />}>
           <DashboardDocumentsSection userId={user.id} />
         </Suspense>
+
+        <LetterGuidanceSettings initialValue={user.letterGuidanceDefault ?? null} />
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
           <Suspense fallback={<SkillsSkeleton />}>

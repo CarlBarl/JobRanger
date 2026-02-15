@@ -14,6 +14,12 @@ model User {
   email     String   @unique
   name                String?
   onboardingCompleted Boolean  @default(false)
+  dashboardGuidePromptedAt  DateTime?
+  dashboardGuideCompletedAt DateTime?
+  dashboardGuideDismissedAt DateTime?
+  onboardingGuideResetAt    DateTime?
+  onboardingGuideLastCompletedAt DateTime?
+  letterGuidanceDefault     String?  @db.Text
   createdAt           DateTime @default(now())
 
   documents        Document[]
@@ -70,6 +76,7 @@ model GeneratedLetter {
   savedJob   SavedJob? @relation(fields: [savedJobId], references: [id], onDelete: SetNull)
   afJobId    String
   jobTitle   String?
+  guidanceUsed String?  @db.Text
   content    String    @db.Text
   createdAt  DateTime  @default(now())
 

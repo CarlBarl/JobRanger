@@ -159,6 +159,162 @@
       "removeSkill": "Remove {skill}",
       "saving": "Saving...",
       "count": "{count, plural, =0 {No skills} =1 {1 skill} other {# skills}}"
+    },
+    "letterGuidance": {
+      "title": "Default guidance for generated letters",
+      "description": "Add reusable pointers for how your personal letters should sound. You can still override this per job.",
+      "placeholder": "Example: Keep the tone concise and practical, mention teamwork and warehouse safety.",
+      "hint": "This default is applied to future generated letters unless you override it on a job listing.",
+      "remaining": "{count} characters left",
+      "save": "Save guidance",
+      "saving": "Saving...",
+      "saved": "Saved",
+      "saveFailed": "Could not save guidance"
+    },
+    "guide": {
+      "prompt": {
+        "title": "Welcome to your dashboard!",
+        "description": "Here you can manage documents, skills, saved jobs, and generated letters. Want a detailed walkthrough?",
+        "accept": "Yes, show guide",
+        "dismiss": "No, thanks"
+      },
+      "replay": {
+        "button": "Guides",
+        "sectionTitle": "Guides",
+        "dashboard": "Show full guide again",
+        "onboarding": "Replay onboarding"
+      },
+      "tour": {
+        "controls": {
+          "step": "Step {current} of {total}",
+          "previous": "Previous",
+          "next": "Next",
+          "continueJobs": "Continue on Jobs",
+          "continueListing": "Continue on listing",
+          "finish": "Done",
+          "skip": "Skip"
+        },
+        "dashboard": {
+          "steps": {
+            "nav": {
+              "title": "Top navigation overview",
+              "description": "This top bar is your main navigation between Dashboard, Jobs, and Letters."
+            },
+            "navJobs": {
+              "title": "Jobs button",
+              "description": "Use this button when you want to search new listings or open your saved jobs tab."
+            },
+            "navLetters": {
+              "title": "Brev / Letters button",
+              "description": "This takes you to generated letters so you can review and reuse them."
+            },
+            "language": {
+              "title": "Language switcher",
+              "description": "Switch between Swedish and English at any time from this control."
+            },
+            "documents": {
+              "title": "Documents section",
+              "description": "Your CV and personal letter live here. Open cards to review and edit content."
+            },
+            "uploadNew": {
+              "title": "Upload new file button",
+              "description": "Use \"Upload New\" to replace your current document with a newer version."
+            },
+            "editDocument": {
+              "title": "Edit document flow",
+              "description": "Click a document card, then choose Edit in the dialog to update parsed text before matching."
+            },
+            "skills": {
+              "title": "Skills editor",
+              "description": "These skills drive matching quality across searches and ranking."
+            },
+            "skillsAdd": {
+              "title": "Add skills",
+              "description": "Click \"Add skill\", type a skill, and press Enter to include it."
+            },
+            "skillsRemove": {
+              "title": "Remove skills",
+              "description": "Hover a skill chip and click the X button to remove it."
+            },
+            "savedJobs": {
+              "title": "Saved jobs panel",
+              "description": "If you have saved jobs, they appear here with quick access back to listings."
+            },
+            "helpButton": {
+              "title": "Guide controls",
+              "description": "Use this question mark anytime to replay this guide or restart onboarding."
+            },
+            "goToJobs": {
+              "title": "Go to Jobs via top navigation",
+              "description": "Now click the Jobs button in the top bar. We will continue the walkthrough there."
+            }
+          }
+        },
+        "jobs": {
+          "steps": {
+            "navJobs": {
+              "title": "Jobs page confirmed",
+              "description": "Great. You are now on Jobs where all searching and saving happens."
+            },
+            "searchBar": {
+              "title": "How to search",
+              "description": "Type keywords, role names, tools, or industries. Add a region if you want location hints."
+            },
+            "keywordTips": {
+              "title": "Keyword input tips",
+              "description": "Use short focused terms first, then refine. Example: \"lager\", \"truck\", \"administration\"."
+            },
+            "skillsMode": {
+              "title": "Skills-only search mode",
+              "description": "If you keep keyword empty and use selected skills, search runs per skill to broaden discovery."
+            },
+            "keywordRanking": {
+              "title": "Keyword + skill ranking",
+              "description": "When you search with keywords, results are still sorted using skill matching signals where possible."
+            },
+            "savedTab": {
+              "title": "Sparade / Saved tab",
+              "description": "Open this tab to find jobs you saved earlier and return to them quickly."
+            },
+            "savedList": {
+              "title": "Saved jobs access",
+              "description": "If you have saved jobs, they appear here and can be opened or removed."
+            },
+            "openListing": {
+              "title": "Open a listing",
+              "description": "Open any job card to view full details. We will continue the guide on that listing page."
+            }
+          }
+        },
+        "detail": {
+          "steps": {
+            "actions": {
+              "title": "Listing action area",
+              "description": "From here you can save this job and generate a personalized letter."
+            },
+            "guidance": {
+              "title": "Custom generation pointers",
+              "description": "Write your own prompt pointers here (tone, focus, examples) before generating."
+            },
+            "generate": {
+              "title": "Generate personalized letter",
+              "description": "Click this to generate a tailored letter using your CV, optional personal letter, and your custom pointers."
+            },
+            "letters": {
+              "title": "Brev button",
+              "description": "Use the Brev/Letters button in top nav to review generated letters."
+            },
+            "language": {
+              "title": "Language switch reminder",
+              "description": "You can switch interface language anytime while keeping your data intact."
+            },
+            "replay": {
+              "title": "Guide completed",
+              "description": "You can replay this guide or redo onboarding anytime from the question mark button."
+            }
+          }
+        }
+      }
     }
   },
   "jobs": {
@@ -234,7 +390,10 @@
       "uploadCvFirst": "Upload a CV first",
       "failedToGenerate": "Failed to generate letter",
       "generateSuccess": "Letter generated!",
-      "viewLetters": "View your letters"
+      "viewLetters": "View your letters",
+      "guidanceLabel": "Optional pointers for this letter",
+      "guidancePlaceholder": "Example: Keep the tone concise, mention customer handling and forklift safety.",
+      "guidanceHelp": "These pointers apply to this generation request."
     },
     "card": {
       "published": "Published",
@@ -299,29 +458,40 @@
       "greeting": "Hi! I'm your job search companion. Let's get you set up — it only takes a few minutes.",
       "namePrompt": "What should I call you?",
       "namePlaceholder": "Your name",
+      "saving": "Saving...",
       "continue": "Continue"
     },
     "documents": {
+      "guide": "Upload your CV so I can extract your skills and match you to relevant jobs. Personal letter is optional.",
       "cvPrompt": "Upload your CV and I'll analyze it to find jobs that match your experience.",
       "letterPrompt": "If you have a personal letter, I can use it as a reference for your writing style. This is optional.",
       "tip": "You can replace these anytime from your dashboard.",
       "cvRequired": "Required",
       "letterOptional": "Optional",
       "cvTitle": "Your CV",
+      "cvUploaded": "CV uploaded successfully",
+      "replayChoiceGuide": "Use your existing CV or upload a new one for this onboarding replay.",
+      "replayUseExisting": "Use existing CV",
+      "replayUploadNew": "Upload new CV",
+      "cvUsingExisting": "Using your existing CV",
+      "replaySwitchToUpload": "Upload a new CV instead",
       "letterTitle": "Personal Letter",
+      "letterUploaded": "Personal letter uploaded",
       "continue": "Continue"
     },
     "skills": {
       "reading": "Reading your CV...",
       "extracting": "Extracting your key skills...",
       "found": "I found these skills in your CV. On the Jobs page, you'll search using these — so make sure they look right.",
-      "tip": "You can always edit your skills from the dashboard later. The more accurate they are, the better your job matches.",
+      "guide": "These skills power your job matching. Tweak them now so your searches and highlights feel accurate.",
+      "tip": "Tip: If you update your CV later, regenerate skills from the dashboard. You can always edit skills manually too.",
       "continue": "Continue"
     },
     "jobs": {
       "searching": "Let me search for jobs matching your skills.",
       "results": "Save jobs you like — you can generate personalized cover letters for them later.",
-      "tip": "This is just a preview. The full Jobs page has advanced search, filters, and all your saved jobs.",
+      "guide": "This is the same Jobs search you'll use later. Try searching with your skills, add a keyword if you want, and save a few jobs to your shortlist.",
+      "tip": "Tip: Use the Saved tab to revisit your shortlist and generate letters later.",
       "locationFilter": "Filter by location",
       "allLocations": "All locations",
       "seeMore": "See more on the Jobs page",
@@ -332,6 +502,13 @@
     "completion": {
       "message": "You're all set! Here's what you can do now:",
       "tip": "Come back anytime to update your CV, manage skills, or generate new letters.",
+      "tipsTitle": "Next tips",
+      "tips": {
+        "editCv": "Edit or replace your CV anytime from the dashboard.",
+        "regenerateSkills": "After you update your CV, regenerate skills from the dashboard for better matching.",
+        "saveJobs": "Save jobs to build a shortlist you can return to.",
+        "generateLetters": "Generate tailored cover letters from your saved jobs when you're ready."
+      },
       "welcomeName": "Welcome, {name}",
       "cvUploaded": "CV uploaded",
       "skillsFound": "{count} skills found",

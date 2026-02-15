@@ -86,6 +86,9 @@ Row Level Security policies must be applied manually via SQL after `prisma db pu
 ### Translation Keys Namespaced by Feature
 Dashboard keys use `dashboard.*` namespace. Nested keys like `dashboard.skills.title` keep translations organized. Both `sv.json` and `en.json` must stay in sync.
 
+### PowerShell UTF-8 Mojibake
+On Windows PowerShell, `Get-Content` can display UTF-8 characters incorrectly (e.g. `—` showing as `â€”`, `ä` as `Ã¤`). When inspecting/editing `messages/*.json`, use `Get-Content -Encoding UTF8` to avoid garbled strings.
+
 ### Server vs Client Translations
 - Server Components: `getTranslations()` from `next-intl/server`
 - Client Components: `useTranslations()` hook from `next-intl`
@@ -100,3 +103,19 @@ In multi-system account deletion (Auth + DB + Storage), do not return success if
 
 ### Admin Routes Gated by DEBUG_EMAIL
 The `/admin` page and `/api/admin/*` routes are restricted to the email in `DEBUG_EMAIL` env var. Same pattern as the debug chat on the dashboard. Non-admin users get redirected to `/dashboard` (page) or receive a 403 (API). The admin delete endpoint reuses the same 3-step deletion logic as `/api/account/delete` (Auth → Storage → Prisma cascade).
+
+## Tooling
+
+### ESLint v9 Script Mismatch
+Current `npm run lint` uses CLI flags (`--no-config-lookup`, `--parser-options`) that fail with the installed ESLint v9 CLI mode. In this repository, treat `npm run test` and `npx next build --webpack` as the reliable validation path until the lint script is modernized.
+
+### Prisma Generate Can Fail While `next dev` Runs (Windows)
+If `npx prisma generate` fails with `EPERM ... query_engine-windows.dll.node`, a local Node process (commonly `npm run dev`) is locking the Prisma engine binary. Stop the dev server (and its child `next` processes), then rerun `npx prisma generate`.
+
+## Refactoring Patterns
+
+### Keep Route Handlers Thin with Local `_lib` Modules
+For complex route handlers (for example `app/api/upload/route.ts`), split responsibilities into route-local modules under `app/api/<route>/_lib/` (validation, parser integration, logging, response builders). Keep the route file focused on request orchestration so behavior can be tested without maintaining a single oversized file.
+
+### Keep Interactive UI Files Focused on Composition
+When client components grow large, extract stateful hooks + presentational blocks into feature folders (`components/jobs/search`, `components/jobs/results`, `components/dashboard/guide`, `components/auth/signin`, `components/letters`). This keeps the top-level component as composition logic and preserves behavior while improving readability and testability.

@@ -18,6 +18,9 @@ describe('JobActions', () => {
           failedToLoadDocuments: 'Could not load docs',
           uploadCvFirst: 'Upload CV first',
           failedToGenerate: 'Could not generate',
+          guidanceLabel: 'Guidance',
+          guidancePlaceholder: 'Write guidance',
+          guidanceHelp: 'Optional tips',
         },
       },
     }

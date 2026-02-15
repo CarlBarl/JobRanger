@@ -13,9 +13,11 @@ export async function DashboardSkillsSection({ userId }: DashboardSkillsSectionP
   const skills = (cvDocument.skills as string[] | null) ?? []
 
   return (
-    <SkillsEditor
-      skills={skills}
-      documentId={cvDocument.id}
-    />
+    <div data-guide-id="dashboard-skills">
+      <SkillsEditor
+        skills={skills}
+        documentId={cvDocument.id}
+      />
+    </div>
   )
 }

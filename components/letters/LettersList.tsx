@@ -1,63 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
-import { Briefcase, ChevronDown, ChevronUp, Copy, ExternalLink, FileText, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
-
-export type LetterListItem = {
-  id: string
-  afJobId: string
-  jobTitle: string | null
-  content: string
-  createdAt: string
-  savedJob?: {
-    headline: string | null
-    employer: string | null
-    location: string | null
-    deadline: string | null
-    webpageUrl: string | null
-  } | null
-}
-
-function buildExcerpt(value: string, maxChars = 380): { excerpt: string; isTruncated: boolean } {
-  const text = value.trim()
-  if (text.length <= maxChars) return { excerpt: text, isTruncated: false }
-
-  const hardLimit = Math.max(0, maxChars - 3)
-  const slice = text.slice(0, hardLimit)
-  const lastBreak = Math.max(slice.lastIndexOf('\n\n'), slice.lastIndexOf('\n'), slice.lastIndexOf(' '))
-  const cutoff = lastBreak > Math.floor(hardLimit * 0.6) ? lastBreak : hardLimit
-  return { excerpt: `${slice.slice(0, cutoff).trimEnd()}...`, isTruncated: true }
-}
-
-async function copyTextToClipboard(value: string) {
-  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(value)
-    return
-  }
-
-  if (typeof document === 'undefined') {
-    throw new Error('Clipboard unavailable')
-  }
-
-  const textarea = document.createElement('textarea')
-  textarea.value = value
-  textarea.setAttribute('readonly', 'true')
-  textarea.style.position = 'absolute'
-  textarea.style.left = '-9999px'
-  document.body.appendChild(textarea)
-  textarea.select()
-  const ok = document.execCommand('copy')
-  document.body.removeChild(textarea)
-  if (!ok) {
-    throw new Error('Copy failed')
-  }
-}
+import { FileText } from 'lucide-react'
+import { CopyToast } from './CopyToast'
+import { LetterCard, type LetterCardLabels } from './LetterCard'
+import type { LetterListItem } from './types'
+import { buildExcerpt, copyTextToClipboard } from './utils'
 
 export function LettersList({ initialLetters }: { initialLetters: LetterListItem[] }) {
   const t = useTranslations('letters')
@@ -74,12 +24,28 @@ export function LettersList({ initialLetters }: { initialLetters: LetterListItem
     setLetters(initialLetters)
   }, [initialLetters])
 
-  const dateFormatter = useMemo(() => {
-    return new Intl.DateTimeFormat(locale, {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    })
-  }, [locale])
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }),
+    [locale]
+  )
+
+  const labels: LetterCardLabels = useMemo(
+    () => ({
+      copy: t('copy'),
+      copied: t('copied'),
+      delete: t('delete'),
+      deleting: t('deleting'),
+      showLess: t('showLess'),
+      showMore: t('showMore'),
+      viewJob: t('viewJob'),
+      viewListing: t('viewListing'),
+    }),
+    [t]
+  )
 
   const resolveTitle = useCallback(
     (letter: LetterListItem) =>
@@ -132,9 +98,7 @@ export function LettersList({ initialLetters }: { initialLetters: LetterListItem
 
       try {
         const res = await fetch(`/api/letters/${letter.id}`, { method: 'DELETE' })
-        if (!res.ok) {
-          throw new Error('Delete failed')
-        }
+        if (!res.ok) throw new Error('Delete failed')
         router.refresh()
       } catch {
         const pending = pendingDeleteRef.current
@@ -158,21 +122,7 @@ export function LettersList({ initialLetters }: { initialLetters: LetterListItem
 
   return (
     <div className="space-y-8">
-      {/* Copy toast */}
-      {copiedId ? (
-        <div
-          key={copiedId}
-          className="fixed inset-x-0 bottom-6 z-50 flex justify-center pointer-events-none animate-fade-up"
-        >
-          <div className="pointer-events-auto inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-2.5 shadow-lg">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0 text-primary">
-              <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.25" />
-              <path d="M5 8.5L7 10.5L11 6" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="text-sm font-medium">{t('copiedToast')}</span>
-          </div>
-        </div>
-      ) : null}
+      <CopyToast copiedId={copiedId} label={t('copiedToast')} />
 
       <div className="animate-fade-up">
         <p className="mb-1 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
@@ -205,113 +155,23 @@ export function LettersList({ initialLetters }: { initialLetters: LetterListItem
             const hasExternalLink = Boolean(letter.savedJob?.webpageUrl?.trim())
 
             return (
-              <Card
+              <LetterCard
                 key={letter.id}
-                className="group overflow-hidden transition-shadow hover:shadow-md"
-                data-testid={`letter-${letter.id}`}
-              >
-                <CardHeader className="border-b bg-muted/30 pb-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="break-words text-base font-semibold tracking-tight">
-                        <Link href={`/jobs/${letter.afJobId}`} className="hover:underline">
-                          {title}
-                        </Link>
-                      </CardTitle>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                        {metaLine ? <span className="truncate">{metaLine}</span> : null}
-                        <span className="font-mono tabular-nums">{createdLabel}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      <Button asChild variant="ghost" size="sm" className="h-8 px-2">
-                        <Link href={`/jobs/${letter.afJobId}`} aria-label={t('viewJob')}>
-                          <Briefcase className="h-4 w-4" />
-                          <span className="hidden sm:inline">{t('viewJob')}</span>
-                        </Link>
-                      </Button>
-
-                      {hasExternalLink ? (
-                        <Button asChild variant="ghost" size="sm" className="h-8 px-2">
-                          <a
-                            href={letter.savedJob?.webpageUrl ?? undefined}
-                            target="_blank"
-                            rel="noreferrer"
-                            aria-label={t('viewListing')}
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            <span className="hidden sm:inline">{t('viewListing')}</span>
-                          </a>
-                        </Button>
-                      ) : null}
-
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 px-2"
-                        onClick={() => handleCopy(letter)}
-                        disabled={Boolean(deletingId)}
-                        aria-label={copiedId === letter.id ? t('copied') : t('copy')}
-                      >
-                        <Copy className="h-4 w-4" />
-                        <span className="hidden sm:inline">
-                          {copiedId === letter.id ? t('copied') : t('copy')}
-                        </span>
-                      </Button>
-
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className={cn('h-8 px-2 text-destructive hover:text-destructive', deletingId === letter.id && 'opacity-60')}
-                        onClick={() => handleDelete(letter)}
-                        disabled={Boolean(deletingId)}
-                        aria-label={deletingId === letter.id ? t('deleting') : t('delete')}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="hidden sm:inline">
-                          {deletingId === letter.id ? t('deleting') : t('delete')}
-                        </span>
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="pt-4">
-                  {isExpanded ? (
-                    <div className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
-                      {letter.content}
-                    </div>
-                  ) : (
-                    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
-                      {excerpt}
-                    </p>
-                  )}
-
-                  {isTruncated ? (
-                    <button
-                      type="button"
-                      onClick={() => handleToggleExpanded(letter.id)}
-                      className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary hover:underline"
-                      aria-label={isExpanded ? t('showLess') : t('showMore')}
-                    >
-                      {isExpanded ? (
-                        <>
-                          <ChevronUp className="h-3.5 w-3.5" />
-                          {t('showLess')}
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown className="h-3.5 w-3.5" />
-                          {t('showMore')}
-                        </>
-                      )}
-                    </button>
-                  ) : null}
-                </CardContent>
-              </Card>
+                copiedId={copiedId}
+                createdLabel={createdLabel}
+                deletingId={deletingId}
+                excerpt={excerpt}
+                hasExternalLink={hasExternalLink}
+                isExpanded={isExpanded}
+                isTruncated={isTruncated}
+                labels={labels}
+                letter={letter}
+                metaLine={metaLine}
+                onCopy={handleCopy}
+                onDelete={handleDelete}
+                onToggleExpanded={handleToggleExpanded}
+                title={title}
+              />
             )
           })}
         </div>
@@ -319,3 +179,5 @@ export function LettersList({ initialLetters }: { initialLetters: LetterListItem
     </div>
   )
 }
+
+export type { LetterListItem } from './types'

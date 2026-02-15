@@ -63,7 +63,7 @@ export function WelcomeStep({ initialName, onComplete }: WelcomeStepProps) {
         disabled={!canContinue || saving}
         className="h-11 rounded-xl bg-amber-600 px-8 text-[14px] font-medium text-white transition-all duration-200 hover:bg-amber-500 disabled:opacity-30 disabled:cursor-not-allowed"
       >
-        {saving ? '...' : t('continue')}
+        {saving ? t('saving') : t('continue')}
       </button>
     </div>
   )

@@ -50,7 +50,7 @@ export function SkillSelector({
   if (!isOpen) return null
 
   return (
-    <div className="space-y-3 rounded-lg border border-dashed p-3">
+    <div className="space-y-3 rounded-lg border border-dashed p-3" data-guide-id="jobs-skill-selector">
       <div className="flex flex-wrap items-center gap-1.5">
         <Button
           type="button"

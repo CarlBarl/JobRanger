@@ -25,13 +25,20 @@ function getDocuments(data: unknown): DocumentRecord[] {
   return data as DocumentRecord[]
 }
 
-export function JobActions({ afJobId }: { afJobId: string }) {
+export function JobActions({
+  afJobId,
+  defaultGuidance,
+}: {
+  afJobId: string
+  defaultGuidance?: string | null
+}) {
   const t = useTranslations('jobs')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [generated, setGenerated] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [guidanceOverride, setGuidanceOverride] = useState(defaultGuidance ?? '')
 
   const handleSave = useCallback(async () => {
     setSaving(true)
@@ -85,7 +92,11 @@ export function JobActions({ afJobId }: { afJobId: string }) {
       const genRes = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ afJobId, documentId: cv.id }),
+        body: JSON.stringify({
+          afJobId,
+          documentId: cv.id,
+          guidanceOverride: guidanceOverride.trim() || undefined,
+        }),
       })
       const genJson: unknown = await genRes.json()
       if (!isEnvelope(genJson)) {
@@ -107,6 +118,22 @@ export function JobActions({ afJobId }: { afJobId: string }) {
 
   return (
     <div className="flex flex-col gap-2">
+      <div className="rounded-md border bg-muted/20 p-3" data-guide-id="jobs-detail-guidance-input">
+        <label className="mb-1 block text-xs font-medium text-muted-foreground">
+          {t('actions.guidanceLabel')}
+        </label>
+        <textarea
+          value={guidanceOverride}
+          onChange={(event) => setGuidanceOverride(event.target.value)}
+          placeholder={t('actions.guidancePlaceholder')}
+          rows={4}
+          className="w-full resize-y rounded-md border bg-background px-3 py-2 text-[13px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring/30"
+        />
+        <p className="mt-1 text-[11px] text-muted-foreground/80">
+          {t('actions.guidanceHelp')}
+        </p>
+      </div>
+
       <Button
         type="button"
         variant="outline"
@@ -149,6 +176,7 @@ export function JobActions({ afJobId }: { afJobId: string }) {
           variant="secondary"
           onClick={handleGenerate}
           disabled={generating}
+          data-guide-id="jobs-detail-generate-button"
           className="w-full justify-center gap-2"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">

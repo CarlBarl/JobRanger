@@ -17,7 +17,10 @@ export async function DashboardStatsSection({ userId, userName, userEmail }: Das
   ])
 
   return (
-    <div className="rounded-2xl border border-primary/[0.08] bg-gradient-to-br from-primary/[0.03] to-transparent p-4 sm:p-6">
+    <div
+      className="rounded-2xl border border-primary/[0.08] bg-gradient-to-br from-primary/[0.03] to-transparent p-4 sm:p-6"
+      data-guide-id="dashboard-stats"
+    >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-lg font-semibold tracking-[-0.02em] text-foreground sm:text-xl">
@@ -27,7 +30,7 @@ export async function DashboardStatsSection({ userId, userName, userEmail }: Das
             <p className="mt-0.5 text-[13px] text-muted-foreground/60">{userEmail}</p>
           )}
         </div>
-        <div className="flex gap-2 sm:gap-3">
+        <div className="flex gap-2 sm:gap-3" data-guide-id="dashboard-quick-actions">
           <Link
             href="/jobs"
             className="group flex flex-1 items-center gap-2.5 rounded-xl border border-border/50 bg-card/80 px-3 py-2 transition-all duration-200 hover:border-border hover:shadow-sm sm:flex-none sm:px-4 sm:py-2.5"

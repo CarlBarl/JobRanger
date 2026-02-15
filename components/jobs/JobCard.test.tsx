@@ -52,8 +52,10 @@ describe('JobCard', () => {
     expect(screen.getByText('2026-02-03')).toBeInTheDocument()
     expect(screen.getByText(/2026-02-28/)).toBeInTheDocument()
     expect(screen.getByAltText('ACME logo')).toBeInTheDocument()
+
+    const listingLinks = screen.getAllByRole('link', { name: /see listing/i })
     expect(
-      screen.getByRole('link', { name: /see listing/i })
-    ).toHaveAttribute('href', 'https://example.com/jobs/123')
+      listingLinks.some((link) => link.getAttribute('href') === 'https://example.com/jobs/123')
+    ).toBe(true)
   })
 })
