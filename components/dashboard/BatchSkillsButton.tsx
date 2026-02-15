@@ -28,7 +28,7 @@ export function BatchSkillsButton({
       disabled={loading || disabled}
       aria-label={t('dashboard.regenerateAllSkills')}
       aria-busy={loading}
-      className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-medium text-muted-foreground/60 transition-all duration-200 hover:text-muted-foreground hover:bg-secondary/60 disabled:opacity-40 disabled:cursor-not-allowed"
+      className="inline-flex items-center gap-1.5 rounded-md border border-primary/20 bg-primary/[0.06] px-3 py-1.5 text-[12px] font-medium text-primary transition-all duration-200 hover:bg-primary/[0.10] disabled:cursor-not-allowed disabled:opacity-40"
     >
       <RefreshCw
         className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`}

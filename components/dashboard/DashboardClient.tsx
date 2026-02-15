@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight, FileText, PenLine } from 'lucide-react'
 import { DocumentPreviewDialog } from './DocumentPreviewDialog'
 import { UploadDialog } from './UploadDialog'
 import { BatchSkillsButton } from './BatchSkillsButton'
@@ -99,10 +99,10 @@ export function DashboardClient({
         setBatchResults(data.data)
         setBatchModalOpen(true)
       } else {
-        console.error('Batch skills regeneration failed:', data.error)
+        console.error('Batch skills update failed:', data.error)
       }
     } catch (error) {
-      console.error('Batch skills regeneration error:', error)
+      console.error('Batch skills update error:', error)
     } finally {
       setBatchLoading(false)
     }
@@ -122,9 +122,12 @@ export function DashboardClient({
             className="card-elevated cursor-pointer rounded-xl border bg-card p-5"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-[13px] font-medium text-foreground/70">
-                {t('yourCV')}
-              </h2>
+              <div className="flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5 text-primary/50" />
+                <h2 className="text-[13px] font-medium text-foreground/70">
+                  {t('yourCV')}
+                </h2>
+              </div>
               <span className="text-[11px] tabular-nums text-muted-foreground/50">
                 {formatDateTime(cvDocument.createdAt)}
               </span>
@@ -155,9 +158,12 @@ export function DashboardClient({
         ) : (
           <div className="card-elevated rounded-xl border bg-card p-5">
             <div className="flex items-center justify-between">
-              <h2 className="text-[13px] font-medium text-foreground/70">
-                {t('yourCV')}
-              </h2>
+              <div className="flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5 text-primary/50" />
+                <h2 className="text-[13px] font-medium text-foreground/70">
+                  {t('yourCV')}
+                </h2>
+              </div>
             </div>
             <div className="mt-3.5 space-y-3">
               <p className="text-[13px] leading-relaxed text-muted-foreground/70">{t('noCV')}</p>
@@ -177,9 +183,12 @@ export function DashboardClient({
             className="card-elevated cursor-pointer rounded-xl border bg-card p-5"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-[13px] font-medium text-foreground/70">
-                {t('yourPersonalLetter')}
-              </h2>
+              <div className="flex items-center gap-1.5">
+                <PenLine className="h-3.5 w-3.5 text-chart-3/50" />
+                <h2 className="text-[13px] font-medium text-foreground/70">
+                  {t('yourPersonalLetter')}
+                </h2>
+              </div>
               <span className="text-[11px] tabular-nums text-muted-foreground/50">
                 {formatDateTime(personalLetter.createdAt)}
               </span>
@@ -210,9 +219,12 @@ export function DashboardClient({
         ) : (
           <div className="card-elevated rounded-xl border bg-card p-5">
             <div className="flex items-center justify-between">
-              <h2 className="text-[13px] font-medium text-foreground/70">
-                {t('yourPersonalLetter')}
-              </h2>
+              <div className="flex items-center gap-1.5">
+                <PenLine className="h-3.5 w-3.5 text-chart-3/50" />
+                <h2 className="text-[13px] font-medium text-foreground/70">
+                  {t('yourPersonalLetter')}
+                </h2>
+              </div>
             </div>
             <div className="mt-3.5 space-y-3">
               <p className="text-[13px] leading-relaxed text-muted-foreground/70">{t('noPersonalLetter')}</p>
