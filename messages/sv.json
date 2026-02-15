@@ -17,21 +17,22 @@
     "metaDescription": "En AI-driven jobbtjänst för svenska jobbsökare. Ladda upp ett CV, sök jobb och generera personliga brev."
   },
   "landing": {
-    "hero": "Hitta Ditt Drömjobb i Sverige",
-    "subtitle": "Ladda upp ditt CV och personliga brev, hitta matchande jobb från Arbetsförmedlingen och generera anpassade personliga brev med AI.",
-    "getStarted": "Kom igång",
+    "hero": "Automatisera ditt jobbletande",
+    "subtitle": "Ladda upp ditt CV. Vi extraherar dina kompetenser, matchar dig med jobb fr\u00e5n Arbetsf\u00f6rmedlingen och genererar anpassade personliga brev.",
+    "getStarted": "Kom ig\u00e5ng",
+    "howItWorks": "S\u00e5 funkar det",
     "features": {
       "upload": {
-        "title": "Ladda upp dokument",
-        "description": "Vi extraherar dina kompetenser automatiskt med AI"
+        "title": "Ladda upp ditt CV",
+        "description": "AI l\u00e4ser ditt CV och extraherar dina kompetenser s\u00e5 du slipper skriva in dem manuellt."
       },
       "search": {
-        "title": "Sök jobb",
-        "description": "Hitta relevanta jobb från Arbetsförmedlingen"
+        "title": "Hitta matchande jobb",
+        "description": "S\u00f6k i Arbetsf\u00f6rmedlingens hela jobbdatabas, filtrerat och rankat efter dina kompetenser."
       },
       "generate": {
-        "title": "Generera brev",
-        "description": "AI skapar anpassade personliga brev för varje jobb"
+        "title": "Generera personliga brev",
+        "description": "F\u00e5 ett anpassat personligt brev f\u00f6r varje jobb, baserat p\u00e5 ditt CV och jobbannonsen."
       }
     }
   },

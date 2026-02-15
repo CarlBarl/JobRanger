@@ -17,21 +17,22 @@
     "metaDescription": "An AI-powered job matching platform for Swedish job seekers. Upload a CV, search jobs, and generate cover letters."
   },
   "landing": {
-    "hero": "Find Your Dream Job in Sweden",
-    "subtitle": "Upload your CV and personal letter, discover matching jobs from Arbetsförmedlingen, and generate personalized cover letters with AI.",
+    "hero": "Automate your job search",
+    "subtitle": "Upload your CV. We extract your skills, match you with jobs from Arbetsf\u00f6rmedlingen, and generate tailored cover letters.",
     "getStarted": "Get Started",
+    "howItWorks": "How it works",
     "features": {
       "upload": {
-        "title": "Upload Documents",
-        "description": "We extract your skills automatically using AI"
+        "title": "Upload your CV",
+        "description": "AI reads your CV and extracts your skills so you don\u2019t have to enter them manually."
       },
       "search": {
-        "title": "Search Jobs",
-        "description": "Find relevant jobs from Arbetsförmedlingen"
+        "title": "Find matching jobs",
+        "description": "Search Arbetsf\u00f6rmedlingen\u2019s full job database, filtered and ranked by your skills."
       },
       "generate": {
-        "title": "Generate Letters",
-        "description": "AI creates personalized cover letters for each job"
+        "title": "Generate cover letters",
+        "description": "Get a personalized cover letter for each job, based on your CV and the job listing."
       }
     }
   },

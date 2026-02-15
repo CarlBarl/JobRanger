@@ -207,6 +207,15 @@
   background-size: 24px 24px;
 }
 
+/* ─── Hero subtle glow ─── */
+.hero-glow {
+  background: radial-gradient(
+    ellipse 60% 50% at 50% 45%,
+    hsl(var(--primary) / 0.04) 0%,
+    transparent 70%
+  );
+}
+
 /* ─── Nav link press feedback ─── */
 .nav-link {
   -webkit-tap-highlight-color: transparent;
@@ -260,4 +269,5 @@
   .skeleton {
     animation: none;
   }
+
 }
