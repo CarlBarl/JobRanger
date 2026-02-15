@@ -16,6 +16,7 @@
 ## Vercel + Prisma deploy pitfalls
 - Git-connected Vercel deploys run `npm run build` in Vercel (Turbopack) and can restore build cache, so type errors may differ from local sandbox builds.
 - After Prisma schema field changes, ensure Vercel build regenerates Prisma client types (for example via `prisma generate` in build/prebuild) to avoid stale-client TS errors like missing model properties.
+- Runtime DB schema must also be applied after Prisma model changes. If app pages/routes fail with Prisma `P2022` (missing column, e.g. `User.<field>`), run `npx prisma db push` (or deploy migrations) against the active database before re-testing.
 - For failed Vercel builds, use `npx vercel inspect <deployment-url> --logs` to get the exact failing file/line quickly.
 
 ## Lessons Learned
