@@ -43,6 +43,7 @@ interface SearchResultsProps {
   savedJobIds: Set<string>
   onToggleSave: (afJobId: string) => void
   error: string | null
+  paginationLocked?: boolean
   pagination?: PaginationProps
 }
 
@@ -82,6 +83,7 @@ export function SearchResults({
   savedJobIds,
   onToggleSave,
   error,
+  paginationLocked = false,
   pagination,
 }: SearchResultsProps) {
   const t = useTranslations('jobs')
@@ -90,13 +92,13 @@ export function SearchResults({
 
   const handlePageChange = useCallback(
     (page: number) => {
-      if (!pagination) return
+      if (!pagination || paginationLocked) return
       const boundedPage = Math.max(1, Math.min(page, pagination.totalPages))
       if (boundedPage === pagination.currentPage) return
       pagination.onPageChange(boundedPage)
       resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     },
-    [pagination]
+    [pagination, paginationLocked]
   )
 
   useEffect(() => {
@@ -123,6 +125,10 @@ export function SearchResults({
   const to = pagination
     ? Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)
     : jobs.length
+  const previousDisabled = Boolean(paginationLocked || (pagination && pagination.currentPage <= 1))
+  const nextDisabled = Boolean(
+    paginationLocked || (pagination && pagination.currentPage >= pagination.totalPages)
+  )
 
   return (
     <div className="space-y-3" ref={resultsRef}>
@@ -213,16 +219,24 @@ export function SearchResults({
       ) : null}
 
       {pagination && pagination.totalPages > 1 ? (
-        <div className="flex flex-col items-center gap-3 pt-2 sm:flex-row sm:justify-between">
+        <div
+          className="flex flex-col items-center gap-3 pt-2 sm:flex-row sm:justify-between"
+          data-testid="search-results-pagination"
+          data-locked={paginationLocked ? 'true' : 'false'}
+        >
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">
               {t('pagination.perPage')}
             </span>
             <Select
               value={String(pagination.itemsPerPage)}
-              onValueChange={(value) => pagination.onItemsPerPageChange(Number(value))}
+              disabled={paginationLocked}
+              onValueChange={(value) => {
+                if (paginationLocked) return
+                pagination.onItemsPerPageChange(Number(value))
+              }}
             >
-              <SelectTrigger className="h-8 w-[70px]">
+              <SelectTrigger className="h-8 w-[70px] data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -238,10 +252,10 @@ export function SearchResults({
               <PaginationItem>
                 <PaginationLink
                   aria-label={t('pagination.previous')}
-                  className={pagination.currentPage <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  className={previousDisabled ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                   onClick={() => handlePageChange(pagination.currentPage - 1)}
-                  aria-disabled={pagination.currentPage <= 1}
-                  tabIndex={pagination.currentPage <= 1 ? -1 : undefined}
+                  aria-disabled={previousDisabled}
+                  tabIndex={previousDisabled ? -1 : undefined}
                   size="default"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -259,7 +273,9 @@ export function SearchResults({
                     <PaginationLink
                       isActive={page === pagination.currentPage}
                       onClick={() => handlePageChange(page)}
-                      className="cursor-pointer"
+                      className={paginationLocked ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      aria-disabled={paginationLocked}
+                      tabIndex={paginationLocked ? -1 : undefined}
                     >
                       {page}
                     </PaginationLink>
@@ -270,10 +286,10 @@ export function SearchResults({
               <PaginationItem>
                 <PaginationLink
                   aria-label={t('pagination.next')}
-                  className={pagination.currentPage >= pagination.totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  className={nextDisabled ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                   onClick={() => handlePageChange(pagination.currentPage + 1)}
-                  aria-disabled={pagination.currentPage >= pagination.totalPages}
-                  tabIndex={pagination.currentPage >= pagination.totalPages ? -1 : undefined}
+                  aria-disabled={nextDisabled}
+                  tabIndex={nextDisabled ? -1 : undefined}
                   size="default"
                 >
                   <span className="hidden sm:inline">{t('pagination.next')}</span>
