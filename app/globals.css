@@ -253,6 +253,31 @@ html {
   border-radius: var(--radius);
 }
 
+/* ─── Guide spotlight glow ─── */
+@keyframes spotlight-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 9999px rgba(2, 6, 23, 0.62),
+      0 0 0 2px rgba(251, 191, 36, 0.6),
+      0 0 16px 4px rgba(251, 191, 36, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 0 9999px rgba(2, 6, 23, 0.62),
+      0 0 0 2px rgba(251, 191, 36, 0.8),
+      0 0 24px 8px rgba(251, 191, 36, 0.25);
+  }
+}
+
+.guide-spotlight {
+  animation: spotlight-pulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  transition:
+    top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    left 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* ─── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
   .animate-signin-shake,
@@ -266,6 +291,13 @@ html {
     transform: none;
   }
 
+  .guide-spotlight {
+    animation: none;
+    box-shadow:
+      0 0 0 9999px rgba(2, 6, 23, 0.62),
+      0 0 0 2px rgba(251, 191, 36, 0.7);
+  }
+
   .nav-link:active {
     transform: none;
   }
@@ -273,5 +305,4 @@ html {
   .skeleton {
     animation: none;
   }
-
 }

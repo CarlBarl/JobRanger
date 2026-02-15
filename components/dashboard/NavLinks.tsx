@@ -6,9 +6,9 @@ import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
-  { href: '/dashboard', labelKey: 'navDashboard' },
-  { href: '/jobs', labelKey: 'navJobs' },
-  { href: '/letters', labelKey: 'navLetters' },
+  { href: '/dashboard', labelKey: 'navDashboard', guideId: 'top-nav-dashboard' },
+  { href: '/jobs', labelKey: 'navJobs', guideId: 'top-nav-jobs' },
+  { href: '/letters', labelKey: 'navLetters', guideId: 'top-nav-letters' },
 ] as const
 
 export function NavLinks() {
@@ -17,7 +17,7 @@ export function NavLinks() {
 
   return (
     <>
-      {NAV_ITEMS.map(({ href, labelKey }) => {
+      {NAV_ITEMS.map(({ href, labelKey, guideId }) => {
         const isActive =
           href === '/dashboard'
             ? pathname === '/dashboard'
@@ -27,6 +27,7 @@ export function NavLinks() {
           <Link
             key={href}
             href={href}
+            data-guide-id={guideId}
             className={cn(
               'nav-link relative rounded-md px-1.5 py-1.5 sm:px-3 text-[13px] font-medium transition-all duration-150',
               isActive

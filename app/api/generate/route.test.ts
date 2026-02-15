@@ -116,8 +116,43 @@ describe('POST /api/generate', () => {
       jobDescription: 'desc',
       companyName: 'ACME',
       personalLetterContent: 'personal letter text',
+      userGuidance: undefined,
     })
     expect(mocks.create).toHaveBeenCalled()
+  })
+
+  it('uses guidance override when provided', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
+    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1', letterGuidanceDefault: 'default' })
+    mocks.getJobById.mockResolvedValue({
+      id: '123',
+      headline: 'Dev',
+      employer: { name: 'ACME' },
+      description: { text: 'desc' },
+    })
+    mocks.findFirst
+      .mockResolvedValueOnce({ id: 'doc-1', parsedContent: 'cv text' })
+      .mockResolvedValueOnce(null)
+    mocks.generateCoverLetter.mockResolvedValue('letter')
+    mocks.findUnique.mockResolvedValue(null)
+    mocks.create.mockResolvedValue({ id: 'letter-2', content: 'letter', createdAt: 'now' })
+
+    const req = new NextRequest('http://localhost/api/generate', {
+      method: 'POST',
+      body: JSON.stringify({
+        afJobId: '123',
+        documentId: 'doc-1',
+        guidanceOverride: 'Focus on logistics and shift flexibility',
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    expect(mocks.generateCoverLetter).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userGuidance: 'Focus on logistics and shift flexibility',
+      })
+    )
   })
 })
 

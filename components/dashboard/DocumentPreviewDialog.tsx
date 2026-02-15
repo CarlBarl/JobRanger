@@ -184,6 +184,7 @@ export function DocumentPreviewDialog({
                       variant="outline"
                       size="sm"
                       onClick={() => setUploadDialogOpen(true)}
+                      data-guide-id="dashboard-document-upload-button"
                       className="gap-2"
                     >
                       <Upload className="h-4 w-4" />
@@ -192,6 +193,7 @@ export function DocumentPreviewDialog({
                     <Button
                       size="sm"
                       onClick={() => setIsEditing(true)}
+                      data-guide-id="dashboard-document-edit-button"
                       className="gap-2"
                     >
                       <Pencil className="h-4 w-4" />

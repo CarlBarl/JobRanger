@@ -34,12 +34,13 @@ export function SearchBar({
   const t = useTranslations('jobs')
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" data-guide-id="jobs-search-bar">
       <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,220px)_auto]">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
           <Input
             id="jobs-q"
+            data-guide-id="jobs-search-keywords"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             onKeyDown={(event) => {
@@ -58,6 +59,7 @@ export function SearchBar({
           <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
           <Input
             id="jobs-region"
+            data-guide-id="jobs-search-region"
             value={region}
             onChange={(e) => onRegionChange(e.target.value)}
             onKeyDown={(event) => {
@@ -76,6 +78,7 @@ export function SearchBar({
           type="button"
           onClick={onSearch}
           disabled={loading}
+          data-guide-id="jobs-search-submit"
           className="shrink-0"
         >
           {loading ? t('searching') : t('search')}
@@ -86,6 +89,7 @@ export function SearchBar({
         <button
           type="button"
           onClick={onToggleSkillsPanel}
+          data-guide-id="jobs-skills-toggle"
           className={cn(
             'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium',
             'text-muted-foreground transition-colors hover:text-foreground',

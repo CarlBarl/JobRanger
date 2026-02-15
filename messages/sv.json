@@ -159,6 +159,162 @@
       "removeSkill": "Ta bort {skill}",
       "saving": "Sparar...",
       "count": "{count, plural, =0 {Inga kompetenser} =1 {1 kompetens} other {# kompetenser}}"
+    },
+    "letterGuidance": {
+      "title": "Standardinstruktioner för genererade brev",
+      "description": "Lägg till återanvändbara riktlinjer för hur dina personliga brev ska låta. Du kan fortfarande skriva unika instruktioner per jobb.",
+      "placeholder": "Exempel: Håll tonen kort och konkret, nämn samarbete och säkerhet i lagerarbete.",
+      "hint": "Den här standardtexten används vid framtida genereringar om du inte skriver en jobb-specifik instruktion.",
+      "remaining": "{count} tecken kvar",
+      "save": "Spara instruktioner",
+      "saving": "Sparar...",
+      "saved": "Sparat",
+      "saveFailed": "Kunde inte spara instruktionerna"
+    },
+    "guide": {
+      "prompt": {
+        "title": "Välkommen till din huvudsida!",
+        "description": "Här kan du hantera dokument, kompetenser, sparade jobb och genererade brev. Vill du ha en detaljerad genomgång?",
+        "accept": "Ja, visa guide",
+        "dismiss": "Nej tack"
+      },
+      "replay": {
+        "button": "Guider",
+        "sectionTitle": "Guider",
+        "dashboard": "Visa hela guiden igen",
+        "onboarding": "Starta onboarding igen"
+      },
+      "tour": {
+        "controls": {
+          "step": "Steg {current} av {total}",
+          "previous": "Föregående",
+          "next": "Nästa",
+          "continueJobs": "Fortsätt på Jobb",
+          "continueListing": "Fortsätt på annonsen",
+          "finish": "Klar",
+          "skip": "Hoppa över"
+        },
+        "dashboard": {
+          "steps": {
+            "nav": {
+              "title": "Översikt av toppnavigeringen",
+              "description": "Den här menyn är din huvudnavigering mellan Översikt, Jobb och Brev."
+            },
+            "navJobs": {
+              "title": "Jobb-knappen",
+              "description": "Använd den här knappen när du vill söka nya annonser eller öppna fliken Sparade."
+            },
+            "navLetters": {
+              "title": "Brev-knappen",
+              "description": "Här hittar du dina genererade brev för granskning och återanvändning."
+            },
+            "language": {
+              "title": "Språkväxlare",
+              "description": "Byt mellan svenska och engelska när som helst."
+            },
+            "documents": {
+              "title": "Dokumentsektionen",
+              "description": "Här ligger ditt CV och personliga brev. Öppna korten för att läsa och redigera innehållet."
+            },
+            "uploadNew": {
+              "title": "\"Ladda upp ny\"-knappen",
+              "description": "Använd \"Ladda upp ny\" för att ersätta nuvarande dokument med en uppdaterad fil."
+            },
+            "editDocument": {
+              "title": "Redigera dokument",
+              "description": "Klicka på ett dokumentkort och välj sedan Redigera i dialogen för att justera texten som används i matchning."
+            },
+            "skills": {
+              "title": "Kompetenseditor",
+              "description": "Dina kompetenser påverkar träffsäkerheten i både sök och sortering."
+            },
+            "skillsAdd": {
+              "title": "Lägg till kompetenser",
+              "description": "Klicka \"Lägg till kompetens\", skriv en kompetens och tryck Enter."
+            },
+            "skillsRemove": {
+              "title": "Ta bort kompetenser",
+              "description": "Hovra på en kompetenschip och klicka på X för att ta bort den."
+            },
+            "savedJobs": {
+              "title": "Panelen Sparade jobb",
+              "description": "Om du har sparade jobb visas de här med snabb åtkomst tillbaka till annonserna."
+            },
+            "helpButton": {
+              "title": "Guidekontroller",
+              "description": "Använd frågetecknet när som helst för att visa guiden igen eller starta onboarding på nytt."
+            },
+            "goToJobs": {
+              "title": "Gå till Jobb via toppnavigeringen",
+              "description": "Klicka nu på Jobb-knappen i toppmenyn. Guiden fortsätter där."
+            }
+          }
+        },
+        "jobs": {
+          "steps": {
+            "navJobs": {
+              "title": "Jobb-sidan bekräftad",
+              "description": "Bra. Du är nu på Jobb där all sökning och sparning sker."
+            },
+            "searchBar": {
+              "title": "Så söker du",
+              "description": "Skriv nyckelord, roller, verktyg eller branscher. Lägg till region om du vill styra plats."
+            },
+            "keywordTips": {
+              "title": "Tips för nyckelord",
+              "description": "Börja med korta tydliga ord och förfina sedan. Exempel: \"lager\", \"truck\", \"administration\"."
+            },
+            "skillsMode": {
+              "title": "Sökning med enbart kompetenser",
+              "description": "Om nyckelordsfältet är tomt och kompetenser är valda körs sökning per kompetens för bredare upptäckt."
+            },
+            "keywordRanking": {
+              "title": "Nyckelord + kompetenssortering",
+              "description": "När du söker med nyckelord sorteras resultat fortfarande med hjälp av kompetensmatchning där det går."
+            },
+            "savedTab": {
+              "title": "Fliken Sparade",
+              "description": "Öppna fliken Sparade för att hitta jobb du tidigare markerat."
+            },
+            "savedList": {
+              "title": "Åtkomst till sparade jobb",
+              "description": "Om du har sparade jobb visas de här och kan öppnas eller tas bort."
+            },
+            "openListing": {
+              "title": "Öppna en annons",
+              "description": "Öppna valfritt jobbkort för full detaljvy. Guiden fortsätter på annonssidan."
+            }
+          }
+        },
+        "detail": {
+          "steps": {
+            "actions": {
+              "title": "Åtgärdsytan i annonsen",
+              "description": "Här kan du spara jobbet och generera ett personligt brev."
+            },
+            "guidance": {
+              "title": "Egna instruktioner för generering",
+              "description": "Skriv egna riktlinjer här (ton, fokus, exempel) innan du genererar brevet."
+            },
+            "generate": {
+              "title": "Generera personligt brev",
+              "description": "Klicka här för att skapa ett anpassat brev med ditt CV, eventuellt personligt brev och dina instruktioner."
+            },
+            "letters": {
+              "title": "Brev-knappen",
+              "description": "Använd Brev i toppnavigeringen för att granska dina genererade brev."
+            },
+            "language": {
+              "title": "Påminnelse om språkväxling",
+              "description": "Du kan byta språk när som helst utan att påverka dina data."
+            },
+            "replay": {
+              "title": "Guiden är klar",
+              "description": "Du kan visa den här guiden igen eller starta onboarding på nytt via frågetecknet."
+            }
+          }
+        }
+      }
     }
   },
   "jobs": {
@@ -234,7 +390,10 @@
       "uploadCvFirst": "Ladda upp ett CV först",
       "failedToGenerate": "Kunde inte generera brev",
       "generateSuccess": "Brevet har skapats!",
-      "viewLetters": "Visa dina brev"
+      "viewLetters": "Visa dina brev",
+      "guidanceLabel": "Valfria instruktioner för det här brevet",
+      "guidancePlaceholder": "Exempel: Håll tonen kort, nämn kundkontakt och trucksäkerhet.",
+      "guidanceHelp": "De här instruktionerna används bara i denna generering."
     },
     "card": {
       "published": "Publicerad",
@@ -299,29 +458,40 @@
       "greeting": "Hej! Jag är din jobbsökarkompis. Låt oss komma igång — det tar bara några minuter.",
       "namePrompt": "Vad ska jag kalla dig?",
       "namePlaceholder": "Ditt namn",
+      "saving": "Sparar...",
       "continue": "Fortsätt"
     },
     "documents": {
+      "guide": "Ladda upp ditt CV så att jag kan extrahera dina kompetenser och matcha dig mot relevanta jobb. Personligt brev är valfritt.",
       "cvPrompt": "Ladda upp ditt CV så analyserar jag det för att hitta jobb som matchar din erfarenhet.",
       "letterPrompt": "Om du har ett personligt brev kan jag använda det som referens för din skrivstil. Detta är valfritt.",
       "tip": "Du kan byta ut dessa när som helst från din dashboard.",
       "cvRequired": "Obligatoriskt",
       "letterOptional": "Valfritt",
       "cvTitle": "Ditt CV",
+      "cvUploaded": "CV uppladdat",
+      "replayChoiceGuide": "Använd ditt befintliga CV eller ladda upp ett nytt för den här onboarding-omgången.",
+      "replayUseExisting": "Använd befintligt CV",
+      "replayUploadNew": "Ladda upp nytt CV",
+      "cvUsingExisting": "Använder ditt befintliga CV",
+      "replaySwitchToUpload": "Ladda upp ett nytt CV i stället",
       "letterTitle": "Personligt brev",
+      "letterUploaded": "Personligt brev uppladdat",
       "continue": "Fortsätt"
     },
     "skills": {
       "reading": "Läser ditt CV...",
       "extracting": "Extraherar dina nyckelkompetenser...",
       "found": "Jag hittade dessa kompetenser i ditt CV. På Jobb-sidan söker du med dessa — så se till att de stämmer.",
-      "tip": "Du kan alltid redigera dina kompetenser från dashboarden senare. Ju mer exakta de är, desto bättre jobbmatchningar.",
+      "guide": "Dessa kompetenser styr din jobbmatchning. Justera dem nu så att sökningar och markeringar känns träffsäkra.",
+      "tip": "Tips: Om du uppdaterar ditt CV senare kan du regenerera kompetenser från dashboarden. Du kan alltid redigera dem manuellt också.",
       "continue": "Fortsätt"
     },
     "jobs": {
       "searching": "Låt mig söka efter jobb som matchar dina kompetenser.",
       "results": "Spara jobb du gillar — du kan generera anpassade personliga brev för dem senare.",
-      "tip": "Det här är bara en förhandsvisning. Den fullständiga Jobb-sidan har avancerad sökning, filter och alla dina sparade jobb.",
+      "guide": "Det här är samma jobbsökning du använder senare. Prova att söka med dina kompetenser, lägg till ett nyckelord om du vill och spara några jobb till din shortlist.",
+      "tip": "Tips: Använd fliken Sparade för att återvända till din shortlist och generera brev senare.",
       "locationFilter": "Filtrera efter plats",
       "allLocations": "Alla platser",
       "seeMore": "Se fler på Jobb-sidan",
@@ -332,6 +502,13 @@
     "completion": {
       "message": "Du är redo! Här är vad du kan göra nu:",
       "tip": "Kom tillbaka när som helst för att uppdatera ditt CV, hantera kompetenser eller generera nya brev.",
+      "tipsTitle": "Nästa steg",
+      "tips": {
+        "editCv": "Redigera eller byt ut ditt CV när som helst från dashboarden.",
+        "regenerateSkills": "Efter att du uppdaterat ditt CV, regenerera kompetenser från dashboarden för bättre matchning.",
+        "saveJobs": "Spara jobb för att bygga en shortlist du kan återvända till.",
+        "generateLetters": "Generera skräddarsydda personliga brev från dina sparade jobb när du är redo."
+      },
       "welcomeName": "Välkommen, {name}",
       "cvUploaded": "CV uppladdat",
       "skillsFound": "{count} kompetenser hittade",

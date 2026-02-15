@@ -63,7 +63,7 @@ export function SavedJobsList({ jobs: initialJobs, totalCount: initialCount, cla
   }
 
   return (
-    <div className={cn('card-elevated rounded-xl border bg-card p-5', className)}>
+    <div className={cn('card-elevated rounded-xl border bg-card p-5', className)} data-guide-id="dashboard-recent-jobs">
       <div className="flex items-center justify-between">
         <h2 className="text-[13px] font-medium text-foreground/70">
           {t('recentSavedJobs')}

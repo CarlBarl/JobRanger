@@ -60,10 +60,18 @@ export function CompletionStep({ name, skillsCount, savedJobsCount }: Completion
         )}
       </div>
 
-      {/* Tip */}
-      <p className="text-center text-[12px] text-stone-500 leading-relaxed max-w-xs">
-        {t('tip')}
-      </p>
+      {/* Tips */}
+      <div className="w-full max-w-sm rounded-xl border border-stone-200/60 bg-white p-5 shadow-sm">
+        <p className="text-[12px] font-medium text-stone-700">
+          {t('tipsTitle')}
+        </p>
+        <ul className="mt-3 list-disc space-y-2 pl-4 text-[12px] text-stone-500 leading-relaxed">
+          <li>{t('tips.editCv')}</li>
+          <li>{t('tips.regenerateSkills')}</li>
+          <li>{t('tips.saveJobs')}</li>
+          <li>{t('tips.generateLetters')}</li>
+        </ul>
+      </div>
 
       {/* Action buttons */}
       <div className="flex flex-col gap-3 w-full max-w-xs">

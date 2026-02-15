@@ -73,19 +73,28 @@ After `prisma db push`, apply RLS policies in Supabase SQL Editor:
 app/
   dashboard/              # User dashboard (server + client components)
   jobs/                   # Job search and listings
+    [id]/
+      _components/        # Job detail UI sections
+      _lib/               # Job detail format/render helpers
   letters/                # Generated cover letters
   api/
     upload/               # File upload endpoint
+      _lib/               # Upload validation/parsing/logging helpers
     jobs/                 # Job search + save (proxies AF API)
     generate/             # Cover letter generation
     skills/               # Skills extraction + batch regeneration
 components/
-  dashboard/              # DashboardClient, SkillsEditor, SavedJobsList, etc.
-  jobs/                   # JobSearch, JobCard
-  letters/                # LetterCard, LetterPreview
+  auth/
+    signin/               # Sign-in form panels and API helpers
+  dashboard/              # Dashboard sections, hooks, guides
+    guide/                # Dashboard tour segments and flow state
+  guides/                 # Reusable guided tour overlay primitives
+  jobs/
+    results/              # Search result/pagination subcomponents
+    search/               # Search state/actions/execution hooks
+  letters/                # Letters list/cards + clipboard helpers
   upload/                 # FileUpload, PersonalLetterUpload
   ui/                     # shadcn/ui base components
-  auth/                   # SignOutButton
 lib/
   services/gemini.ts      # Gemini AI client
   services/arbetsformedlingen.ts  # AF JobSearch API client
@@ -107,6 +116,7 @@ npm run lint              # ESLint
 npm run test              # Vitest
 npm run test:watch        # Watch mode
 npm run test:coverage     # Coverage report
+npx next build --webpack  # Build validation used in this repo's sandbox workflow
 ```
 
 ## Data Flow

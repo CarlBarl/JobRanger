@@ -42,7 +42,11 @@ export async function PATCH(request: NextRequest) {
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { onboardingCompleted: true },
+      data: {
+        onboardingCompleted: true,
+        onboardingGuideLastCompletedAt: new Date(),
+        onboardingGuideResetAt: null,
+      },
     })
 
     return NextResponse.json({ success: true })

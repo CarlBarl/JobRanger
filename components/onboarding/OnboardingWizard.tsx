@@ -12,13 +12,15 @@ import { CompletionStep } from './steps/CompletionStep'
 
 interface OnboardingWizardProps {
   userName: string | null
+  isReplay: boolean
+  existingCvDocumentId: string | null
 }
 
 type OrbState = 'idle' | 'thinking' | 'celebrating'
 
 const TOTAL_STEPS = 5
 
-export function OnboardingWizard({ userName }: OnboardingWizardProps) {
+export function OnboardingWizard({ userName, isReplay, existingCvDocumentId }: OnboardingWizardProps) {
   const t = useTranslations('onboarding')
 
   const [step, setStep] = useState(0)
@@ -107,6 +109,8 @@ export function OnboardingWizard({ userName }: OnboardingWizardProps) {
 
           {step === 1 && (
             <DocumentsStep
+              isReplay={isReplay}
+              existingCvDocumentId={existingCvDocumentId}
               onComplete={(docId) => {
                 setCvDocumentId(docId)
                 setOrbState('thinking')
@@ -118,6 +122,7 @@ export function OnboardingWizard({ userName }: OnboardingWizardProps) {
           {step === 2 && (
             <SkillsStep
               documentId={cvDocumentId!}
+              onExtractionDone={() => setOrbState('idle')}
               onComplete={(extractedSkills) => {
                 setSkills(extractedSkills)
                 setOrbState('idle')
@@ -128,7 +133,6 @@ export function OnboardingWizard({ userName }: OnboardingWizardProps) {
 
           {step === 3 && (
             <JobPreviewStep
-              skills={skills}
               onComplete={(count) => {
                 setSavedJobsCount(count)
                 setOrbState('celebrating')

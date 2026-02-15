@@ -12,6 +12,7 @@ import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 const RequestSchema = z.object({
   afJobId: z.string().min(1).regex(/^\d{1,15}$/, 'Invalid job ID format'),
   documentId: z.string().min(1),
+  guidanceOverride: z.string().trim().max(1200).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { afJobId, documentId } = RequestSchema.parse(body)
+    const { afJobId, documentId, guidanceOverride } = RequestSchema.parse(body)
 
     if (!authUser.email) {
       return NextResponse.json(
@@ -86,6 +87,10 @@ export async function POST(request: NextRequest) {
       jobDescription: job.description?.text ?? '',
       cvContent: cvDocument.parsedContent ?? '',
       personalLetterContent: personalLetter?.parsedContent ?? undefined,
+      userGuidance:
+        guidanceOverride && guidanceOverride.trim().length > 0
+          ? guidanceOverride
+          : user.letterGuidanceDefault ?? undefined,
     })
 
     const savedJob = await prisma.savedJob.findUnique({
@@ -108,10 +113,21 @@ export async function POST(request: NextRequest) {
       (model) => model.name === 'GeneratedLetter'
     )
     const supportsJobTitle = generatedLetterModel?.fields.some((field) => field.name === 'jobTitle')
+    const supportsGuidanceUsed = generatedLetterModel?.fields.some(
+      (field) => field.name === 'guidanceUsed'
+    )
 
     if (supportsJobTitle) {
       ;(createData as Prisma.GeneratedLetterUncheckedCreateInput & { jobTitle?: string | null })
         .jobTitle = job.headline ?? null
+    }
+
+    if (supportsGuidanceUsed) {
+      ;(createData as Prisma.GeneratedLetterUncheckedCreateInput & { guidanceUsed?: string | null })
+        .guidanceUsed =
+        (guidanceOverride && guidanceOverride.trim().length > 0
+          ? guidanceOverride
+          : user.letterGuidanceDefault) ?? null
     }
 
     const letter = await prisma.generatedLetter.create({
