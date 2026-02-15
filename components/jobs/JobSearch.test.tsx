@@ -792,7 +792,7 @@ describe('JobSearch', () => {
     await user.click(screen.getByRole('button', { name: /^search$/i }))
 
     expect(await screen.findByRole('link', { name: 'Backend Developer' })).toBeInTheDocument()
-    expect(await screen.findByText(/1 matched skills/i)).toBeInTheDocument()
+    expect(await screen.findByText(/1\/1 skills match/i)).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /show job skills/i }))
 
