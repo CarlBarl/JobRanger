@@ -143,6 +143,13 @@
       "removed": "Removed",
       "noChanges": "No changes detected"
     },
+    "sectionError": {
+      "stats": "Could not load statistics",
+      "documents": "Could not load documents",
+      "skills": "Could not load skills",
+      "recentJobs": "Could not load recent jobs",
+      "retry": "Try again"
+    },
     "skills": {
       "title": "Your Skills",
       "noSkills": "No skills extracted yet. Upload a CV to get started.",
@@ -162,6 +169,13 @@
     "searching": "Searching...",
     "regionPlaceholder": "Region (optional)",
     "found": "Found {count} jobs",
+    "searchStatus": {
+      "searching": "Searching for jobs...",
+      "searchingFound": "Found {count} jobs so far...",
+      "complete": "Found {count} jobs matching your search",
+      "completeWithFailures": "Found {count} jobs ({failed} search failed)",
+      "noResults": "No jobs found matching your search"
+    },
     "noResults": "No jobs found. Try a different search term.",
     "enterSearch": "Enter a search term or select skills to find jobs",
     "backToSearch": "Back to search",

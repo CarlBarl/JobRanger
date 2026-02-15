@@ -143,6 +143,13 @@
       "removed": "Borttagna",
       "noChanges": "Inga ändringar upptäcktes"
     },
+    "sectionError": {
+      "stats": "Kunde inte ladda statistik",
+      "documents": "Kunde inte ladda dokument",
+      "skills": "Kunde inte ladda kompetenser",
+      "recentJobs": "Kunde inte ladda senaste jobb",
+      "retry": "Försök igen"
+    },
     "skills": {
       "title": "Dina kompetenser",
       "noSkills": "Inga kompetenser extraherade än. Ladda upp ett CV för att börja.",
@@ -162,6 +169,13 @@
     "searching": "Söker...",
     "regionPlaceholder": "Region (valfritt)",
     "found": "Hittade {count} jobb",
+    "searchStatus": {
+      "searching": "Söker efter jobb...",
+      "searchingFound": "Hittade {count} jobb hittills...",
+      "complete": "Hittade {count} jobb som matchar din sökning",
+      "completeWithFailures": "Hittade {count} jobb ({failed} sökning misslyckades)",
+      "noResults": "Inga jobb hittades som matchar din sökning"
+    },
     "noResults": "Inga jobb hittades. Prova ett annat sökord.",
     "enterSearch": "Ange ett sökord eller välj kompetenser för att hitta jobb",
     "backToSearch": "Tillbaka till sökning",
