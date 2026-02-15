@@ -31,10 +31,11 @@ describe('getOrCreateUser', () => {
 
     expect(prisma.user.upsert).toHaveBeenCalledWith({
       where: { id: 'auth-id-123' },
-      update: { email: 'test@example.com' },
+      update: { email: 'test@example.com', tier: 'FREE' },
       create: {
         id: 'auth-id-123',
         email: 'test@example.com',
+        tier: 'FREE',
       },
     })
     expect(result).toEqual(mockUser)

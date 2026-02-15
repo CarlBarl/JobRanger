@@ -12,6 +12,7 @@ model User {
   // Use Supabase Auth user id as the primary key.
   id        String   @id
   email     String   @unique
+  tier      UserTier @default(FREE)
   name                String?
   onboardingCompleted Boolean  @default(false)
   dashboardGuidePromptedAt  DateTime?
@@ -25,11 +26,23 @@ model User {
   documents        Document[]
   savedJobs        SavedJob[]
   generatedLetters GeneratedLetter[]
+  usageEvents      UsageEvent[]
+}
+
+enum UserTier {
+  FREE
+  PRO
 }
 
 enum DocumentType {
   cv
   personal_letter
+}
+
+enum UsageEventType {
+  GENERATE_LETTER
+  SKILLS_EXTRACT
+  SKILLS_BATCH
 }
 
 model Document {
@@ -82,5 +95,15 @@ model GeneratedLetter {
 
   @@index([userId])
   @@index([afJobId])
+}
+
+model UsageEvent {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      UsageEventType
+  createdAt DateTime       @default(now())
+
+  @@index([userId, type, createdAt])
 }
 

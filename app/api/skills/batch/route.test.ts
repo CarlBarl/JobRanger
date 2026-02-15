@@ -20,6 +20,10 @@ vi.mock('@/lib/prisma', () => ({
   }
 }))
 
+vi.mock('@/lib/auth', () => ({
+  getOrCreateUser: vi.fn(),
+}))
+
 vi.mock('@/lib/services/gemini', () => ({
   extractSkillsFromCV: vi.fn()
 }))
@@ -28,10 +32,17 @@ vi.mock('@/lib/services/jobtech-enrichments', () => ({
   fetchSkillCatalog: vi.fn(),
 }))
 
+vi.mock('@/lib/security/monthly-quota', () => ({
+  enforceMonthlyQuota: vi.fn(),
+  recordUsageEvent: vi.fn(),
+}))
+
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { getOrCreateUser } from '@/lib/auth'
 import { extractSkillsFromCV } from '@/lib/services/gemini'
 import { fetchSkillCatalog } from '@/lib/services/jobtech-enrichments'
+import { enforceMonthlyQuota, recordUsageEvent } from '@/lib/security/monthly-quota'
 
 describe('POST /api/skills/batch', () => {
   let mockSupabase: any
@@ -51,6 +62,9 @@ describe('POST /api/skills/batch', () => {
     })
 
     ;(fetchSkillCatalog as any).mockResolvedValue(['JavaScript', 'React', 'Python', 'Django'])
+    ;(getOrCreateUser as any).mockResolvedValue({ id: 'user-123', tier: 'FREE' })
+    ;(enforceMonthlyQuota as any).mockResolvedValue(null)
+    ;(recordUsageEvent as any).mockResolvedValue(undefined)
   })
 
   describe('Authentication', () => {
@@ -85,7 +99,7 @@ describe('POST /api/skills/batch', () => {
   describe('No CVs', () => {
     beforeEach(() => {
       mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'user-123' } },
+        data: { user: { id: 'user-123', email: 'u@example.com' } },
         error: null
       })
     })
@@ -113,13 +127,14 @@ describe('POST /api/skills/batch', () => {
           createdAt: 'desc'
         }
       })
+      expect(recordUsageEvent).not.toHaveBeenCalled()
     })
   })
 
   describe('Success', () => {
     beforeEach(() => {
       mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'user-123' } },
+        data: { user: { id: 'user-123', email: 'u@example.com' } },
         error: null
       })
     })
@@ -189,13 +204,14 @@ describe('POST /api/skills/batch', () => {
         where: { id: 'cv-2' },
         data: { skills: ['Python', 'Django'] }
       })
+      expect(recordUsageEvent).toHaveBeenCalledWith('user-123', 'SKILLS_BATCH')
     })
   })
 
   describe('Partial Failures', () => {
     beforeEach(() => {
       mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'user-123' } },
+        data: { user: { id: 'user-123', email: 'u@example.com' } },
         error: null
       })
     })
@@ -248,6 +264,7 @@ describe('POST /api/skills/batch', () => {
         createdAt: '2024-01-02T00:00:00.000Z'
       })
       expect(data.data.skipped).toHaveLength(0)
+      expect(recordUsageEvent).toHaveBeenCalledWith('user-123', 'SKILLS_BATCH')
     })
 
     it('handles database update failures', async () => {
@@ -274,13 +291,14 @@ describe('POST /api/skills/batch', () => {
       expect(data.data.updated).toHaveLength(0)
       expect(data.data.failed).toHaveLength(1)
       expect(data.data.failed[0].error).toBe('Database connection failed')
+      expect(recordUsageEvent).toHaveBeenCalledWith('user-123', 'SKILLS_BATCH')
     })
   })
 
   describe('Skipped Documents', () => {
     beforeEach(() => {
       mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'user-123' } },
+        data: { user: { id: 'user-123', email: 'u@example.com' } },
         error: null
       })
     })
@@ -335,13 +353,14 @@ describe('POST /api/skills/batch', () => {
       })
 
       expect(extractSkillsFromCV).toHaveBeenCalledTimes(1)
+      expect(recordUsageEvent).toHaveBeenCalledWith('user-123', 'SKILLS_BATCH')
     })
   })
 
   describe('Error Handling', () => {
     beforeEach(() => {
       mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'user-123' } },
+        data: { user: { id: 'user-123', email: 'u@example.com' } },
         error: null
       })
     })
@@ -370,5 +389,28 @@ describe('POST /api/skills/batch', () => {
       expect(data.success).toBe(false)
       expect(data.error.code).toBe('INTERNAL_ERROR')
     })
+  })
+
+  it('returns 429 when monthly quota is exceeded', async () => {
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'user-123', email: 'u@example.com' } },
+      error: null
+    })
+    ;(enforceMonthlyQuota as any).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          success: false,
+          error: { code: 'QUOTA_EXCEEDED', message: 'Monthly batch skills quota reached for your plan.' },
+        }),
+        { status: 429, headers: { 'content-type': 'application/json' } }
+      )
+    )
+
+    const response = await POST(mockRequest)
+    const data = await response.json()
+
+    expect(response.status).toBe(429)
+    expect(data.success).toBe(false)
+    expect(data.error.code).toBe('QUOTA_EXCEEDED')
   })
 })

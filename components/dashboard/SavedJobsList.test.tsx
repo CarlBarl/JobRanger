@@ -89,12 +89,12 @@ describe('SavedJobsList', () => {
     expect(screen.getByText(/listing has expired/i)).toBeInTheDocument()
   })
 
-  it('links active jobs to their webpage', () => {
+  it('links active jobs to internal job detail page', () => {
     render(<SavedJobsList jobs={[activeJob]} totalCount={1} />)
 
     const link = screen.getByRole('link')
-    expect(link).toHaveAttribute('href', 'https://af.se/job-1')
-    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('href', '/jobs/job-1')
+    expect(link).not.toHaveAttribute('target')
   })
 
   it('does not link stale jobs', () => {

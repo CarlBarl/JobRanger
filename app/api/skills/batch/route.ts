@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { UsageEventType } from '@prisma/client'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { getOrCreateUser } from '@/lib/auth'
 import { extractSkillsFromCV } from '@/lib/services/gemini'
 import { fetchSkillCatalog } from '@/lib/services/jobtech-enrichments'
 import { buildCatalogIndex, mapSkillsToCatalogWithIndex } from '@/lib/skills/catalog-map'
 import { DEFAULT_JOB_SKILL_CATALOG } from '@/lib/scoring'
 import { enforceCsrfProtection } from '@/lib/security/csrf'
 import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
+import { enforceMonthlyQuota, recordUsageEvent } from '@/lib/security/monthly-quota'
 
 interface BatchResult {
   total: number
@@ -55,6 +58,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (!user.email) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'BAD_REQUEST',
+            message: 'Missing email for authenticated user',
+          },
+        },
+        { status: 400 }
+      )
+    }
+
     const batchLimit = consumeRateLimit('skills-batch-user', user.id, 5, 60 * 60 * 1000)
     if (!batchLimit.allowed) {
       return rateLimitResponse(
@@ -63,10 +79,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const appUser = await getOrCreateUser(user.id, user.email)
+    const monthlyQuotaError = await enforceMonthlyQuota({
+      userId: appUser.id,
+      userTier: appUser.tier,
+      usageType: UsageEventType.SKILLS_BATCH,
+      message: 'Monthly batch skills quota reached for your plan.',
+    })
+    if (monthlyQuotaError) {
+      return monthlyQuotaError
+    }
+
     // Query all user's CV documents
     const cvDocuments = await prisma.document.findMany({
       where: {
-        userId: user.id,
+        userId: appUser.id,
         type: 'cv'
       },
       orderBy: {
@@ -96,6 +123,7 @@ export async function POST(request: NextRequest) {
     const catalogIndex = buildCatalogIndex(catalog)
 
     // Process each CV sequentially
+    let extractionAttempts = 0
     for (const document of cvDocuments) {
       // Skip if no parsed content
       if (!document.parsedContent || document.parsedContent.trim() === '') {
@@ -112,6 +140,7 @@ export async function POST(request: NextRequest) {
         const previousSkills = (document.skills as string[]) || []
 
         // Extract skills using Gemini
+        extractionAttempts += 1
         const extractedSkills = await extractSkillsFromCV(document.parsedContent)
         const { skillsToStore } = mapSkillsToCatalogWithIndex(extractedSkills, catalogIndex)
 
@@ -140,6 +169,17 @@ export async function POST(request: NextRequest) {
           error: error instanceof Error ? error.message : 'Unknown error occurred',
           createdAt: document.createdAt.toISOString()
         })
+      }
+    }
+
+    if (extractionAttempts > 0) {
+      try {
+        await recordUsageEvent(appUser.id, UsageEventType.SKILLS_BATCH)
+      } catch (usageEventError) {
+        console.error(
+          'Failed to record skills batch usage event:',
+          usageEventError instanceof Error ? usageEventError.message : usageEventError
+        )
       }
     }
 

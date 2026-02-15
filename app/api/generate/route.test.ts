@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => ({
   findFirst: vi.fn(),
   findUnique: vi.fn(),
   create: vi.fn(),
+  enforceMonthlyQuota: vi.fn(),
+  recordUsageEvent: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -39,11 +41,18 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
+vi.mock('@/lib/security/monthly-quota', () => ({
+  enforceMonthlyQuota: (...args: unknown[]) => mocks.enforceMonthlyQuota(...args),
+  recordUsageEvent: (...args: unknown[]) => mocks.recordUsageEvent(...args),
+}))
+
 import { POST } from './route'
 
 describe('POST /api/generate', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.enforceMonthlyQuota.mockResolvedValue(null)
+    mocks.recordUsageEvent.mockResolvedValue(undefined)
   })
 
   it('returns 401 when unauthenticated', async () => {
@@ -64,7 +73,7 @@ describe('POST /api/generate', () => {
 
   it('returns 404 when CV document not found', async () => {
     mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
-    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1' })
+    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1', tier: 'FREE' })
     mocks.getJobById.mockResolvedValue({ id: '123', headline: 'Dev', description: { text: 'desc' } })
     mocks.findFirst.mockResolvedValue(null)
 
@@ -83,7 +92,7 @@ describe('POST /api/generate', () => {
 
   it('generates and stores a letter', async () => {
     mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
-    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1' })
+    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1', tier: 'FREE' })
     mocks.getJobById.mockResolvedValue({
       id: '123',
       headline: 'Dev',
@@ -119,11 +128,12 @@ describe('POST /api/generate', () => {
       userGuidance: undefined,
     })
     expect(mocks.create).toHaveBeenCalled()
+    expect(mocks.recordUsageEvent).toHaveBeenCalledWith('u1', 'GENERATE_LETTER')
   })
 
   it('uses guidance override when provided', async () => {
     mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
-    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1', letterGuidanceDefault: 'default' })
+    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1', tier: 'FREE', letterGuidanceDefault: 'default' })
     mocks.getJobById.mockResolvedValue({
       id: '123',
       headline: 'Dev',
@@ -153,6 +163,66 @@ describe('POST /api/generate', () => {
         userGuidance: 'Focus on logistics and shift flexibility',
       })
     )
+  })
+
+  it('allows blank guidance override', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
+    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1', tier: 'FREE', letterGuidanceDefault: null })
+    mocks.getJobById.mockResolvedValue({
+      id: '123',
+      headline: 'Dev',
+      employer: { name: 'ACME' },
+      description: { text: 'desc' },
+    })
+    mocks.findFirst
+      .mockResolvedValueOnce({ id: 'doc-1', parsedContent: 'cv text' })
+      .mockResolvedValueOnce(null)
+    mocks.generateCoverLetter.mockResolvedValue('letter')
+    mocks.findUnique.mockResolvedValue(null)
+    mocks.create.mockResolvedValue({ id: 'letter-3', content: 'letter', createdAt: 'now' })
+
+    const req = new NextRequest('http://localhost/api/generate', {
+      method: 'POST',
+      body: JSON.stringify({
+        afJobId: '123',
+        documentId: 'doc-1',
+        guidanceOverride: '   ',
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    expect(mocks.generateCoverLetter).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userGuidance: undefined,
+      })
+    )
+  })
+
+  it('returns 429 when monthly quota is exceeded', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
+    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1', tier: 'FREE' })
+    mocks.enforceMonthlyQuota.mockResolvedValue(
+      NextResponse.json(
+        {
+          success: false,
+          error: { code: 'QUOTA_EXCEEDED', message: 'Monthly letter generation quota reached for your plan.' },
+        },
+        { status: 429 }
+      )
+    )
+
+    const req = new NextRequest('http://localhost/api/generate', {
+      method: 'POST',
+      body: JSON.stringify({ afJobId: '123', documentId: 'doc-1' }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(429)
+    await expect(res.json()).resolves.toMatchObject({
+      success: false,
+      error: { code: 'QUOTA_EXCEEDED' },
+    })
   })
 })
 

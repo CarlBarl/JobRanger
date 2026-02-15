@@ -41,8 +41,9 @@ export async function generateCoverLetter(
   const safeCompanyName = toPromptSection(input.companyName || 'the company', 500)
   const safeJobDescription = toPromptSection(input.jobDescription, 10000)
   const safeCvContent = toPromptSection(input.cvContent, 15000)
-  const safeUserGuidance = input.userGuidance
-    ? toPromptSection(input.userGuidance, 1200)
+  const trimmedUserGuidance = input.userGuidance?.trim()
+  const safeUserGuidance = trimmedUserGuidance
+    ? toPromptSection(trimmedUserGuidance, 1200)
     : ''
 
 

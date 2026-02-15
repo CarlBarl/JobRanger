@@ -9,6 +9,7 @@ An AI-powered job matching platform for Swedish job seekers. Upload your CV, get
 - **Job Search** - Search Arbetsförmedlingen's job listings, filtered by your profile.
 - **Save Jobs** - Bookmark jobs and see them on your dashboard.
 - **AI Cover Letters** - Generate tailored cover letters for specific job postings.
+- **Tiered AI Quotas** - Monthly AI quotas by user tier (`FREE` vs `PRO`) in addition to hourly anti-abuse limits.
 - **Dashboard** - Overview of your documents, skills, saved jobs, and stats.
 - **i18n** - Swedish and English, switchable in-app.
 
@@ -125,6 +126,14 @@ npx next build --webpack  # Build validation used in this repo's sandbox workflo
 2. **Search**: User skills -> Query AF API -> Display matched jobs
 3. **Save**: User bookmarks job -> Store AF job ID in DB -> Show on dashboard
 4. **Generate**: Selected job + user CV -> Gemini generates personalized cover letter
+
+## AI Quotas
+
+- Quotas are tier-aware and monthly (UTC calendar month), backed by DB usage events.
+- Current defaults:
+  - `FREE`: 1 letter/month, 3 single skill extractions/month, 1 batch extraction/month
+  - `PRO` (`carlelelid@outlook.com`): 200 letters/month, 300 single skill extractions/month, 50 batch extractions/month
+- Existing hourly rate limiting remains active for anti-abuse protection.
 
 ## API Integrations
 

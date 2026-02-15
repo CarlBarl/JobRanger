@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { NextResponse, type NextRequest } from 'next/server'
-import { Prisma } from '@prisma/client'
+import { Prisma, UsageEventType } from '@prisma/client'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
@@ -8,6 +8,7 @@ import { getJobById } from '@/lib/services/arbetsformedlingen'
 import { generateCoverLetter } from '@/lib/services/gemini'
 import { enforceCsrfProtection } from '@/lib/security/csrf'
 import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
+import { enforceMonthlyQuota, recordUsageEvent } from '@/lib/security/monthly-quota'
 
 const RequestSchema = z.object({
   afJobId: z.string().min(1).regex(/^\d{1,15}$/, 'Invalid job ID format'),
@@ -47,6 +48,9 @@ export async function POST(request: NextRequest) {
 
     // Ensure the DB user exists (GeneratedLetter has a FK to User).
     const user = await getOrCreateUser(authUser.id, authUser.email)
+    const guidanceOverrideTrimmed = guidanceOverride?.trim() || undefined
+    const defaultGuidanceTrimmed = user.letterGuidanceDefault?.trim() || undefined
+    const resolvedGuidance = guidanceOverrideTrimmed ?? defaultGuidanceTrimmed
 
     const userLimit = consumeRateLimit('generate-letter-user', user.id, 20, 60 * 60 * 1000)
     if (!userLimit.allowed) {
@@ -54,6 +58,16 @@ export async function POST(request: NextRequest) {
         'Letter generation limit reached. Please try again later.',
         userLimit.retryAfterSeconds
       )
+    }
+
+    const monthlyQuotaError = await enforceMonthlyQuota({
+      userId: user.id,
+      userTier: user.tier,
+      usageType: UsageEventType.GENERATE_LETTER,
+      message: 'Monthly letter generation quota reached for your plan.',
+    })
+    if (monthlyQuotaError) {
+      return monthlyQuotaError
     }
 
     const job = await getJobById(afJobId)
@@ -87,10 +101,7 @@ export async function POST(request: NextRequest) {
       jobDescription: job.description?.text ?? '',
       cvContent: cvDocument.parsedContent ?? '',
       personalLetterContent: personalLetter?.parsedContent ?? undefined,
-      userGuidance:
-        guidanceOverride && guidanceOverride.trim().length > 0
-          ? guidanceOverride
-          : user.letterGuidanceDefault ?? undefined,
+      userGuidance: resolvedGuidance,
     })
 
     const savedJob = await prisma.savedJob.findUnique({
@@ -124,15 +135,21 @@ export async function POST(request: NextRequest) {
 
     if (supportsGuidanceUsed) {
       ;(createData as Prisma.GeneratedLetterUncheckedCreateInput & { guidanceUsed?: string | null })
-        .guidanceUsed =
-        (guidanceOverride && guidanceOverride.trim().length > 0
-          ? guidanceOverride
-          : user.letterGuidanceDefault) ?? null
+        .guidanceUsed = resolvedGuidance ?? null
     }
 
     const letter = await prisma.generatedLetter.create({
       data: createData,
     })
+
+    try {
+      await recordUsageEvent(user.id, UsageEventType.GENERATE_LETTER)
+    } catch (usageEventError) {
+      console.error(
+        'Failed to record generate usage event:',
+        usageEventError instanceof Error ? usageEventError.message : usageEventError
+      )
+    }
 
     return NextResponse.json({
       success: true,
