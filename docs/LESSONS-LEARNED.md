@@ -46,6 +46,8 @@ Browser extensions (e.g., Claude in Chrome) can modify the DOM, causing Next.js 
 ### Route Handlers Cannot Export Test Helpers
 Next.js App Router route files (for example `app/api/**/route.ts`) may only export supported route-handler symbols (`GET`, `POST`, etc.). Exporting test helpers from a route file can fail build-time type generation under `.next/types/...` with `Type ... does not satisfy the constraint '{ [x: string]: never; }'`.
 
+For route handlers that use module-scoped caches, reset state in tests with `vi.resetModules()` + dynamic `import('./route')` in `beforeEach`, instead of exporting test-only reset helpers from the route file.
+
 ### Server Components by Default
 Use Server Components for data fetching (dashboard page, header). Only add `'use client'` when the component needs interactivity (state, event handlers, effects).
 

@@ -9,12 +9,13 @@ vi.mock('@/lib/services/jobtech-enrichments', () => ({
   fetchSkillCatalog: mocks.fetchSkillCatalog,
 }))
 
-import { GET, _resetCacheForTesting } from './route'
-
 describe('GET /api/skills/catalog', () => {
-  beforeEach(() => {
+  let GET: typeof import('./route').GET
+
+  beforeEach(async () => {
     vi.clearAllMocks()
-    _resetCacheForTesting()
+    vi.resetModules()
+    ;({ GET } = await import('./route'))
   })
 
   it('returns skills from AF when available', async () => {

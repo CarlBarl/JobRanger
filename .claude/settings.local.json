@@ -83,7 +83,9 @@
       "mcp__ide__getDiagnostics",
       "Bash(npx next lint:*)",
       "Bash(cmd /c \"taskkill /PID 3268 /F\")",
-      "Bash(cmd /c \"del /f C:\\\\Users\\\\Calle\\\\Dev\\\\JobRanger\\\\.next\\\\dev\\\\lock 2>nul\")"
+      "Bash(cmd /c \"del /f C:\\\\Users\\\\Calle\\\\Dev\\\\JobRanger\\\\.next\\\\dev\\\\lock 2>nul\")",
+      "Bash(cat:*)",
+      "Bash(find:*)"
     ]
   }
 }

@@ -6,11 +6,6 @@ const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 
 let cachedCatalog: { data: string[]; timestamp: number } | null = null
 
-/** @internal Reset cache — exposed only for test isolation */
-export function _resetCacheForTesting() {
-  cachedCatalog = null
-}
-
 export async function GET() {
   const now = Date.now()
 

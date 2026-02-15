@@ -24,6 +24,7 @@ type SavedJobRecord = {
 
 type ScoredJob = AFJobHit & {
   relevance?: { matched: number; total: number; score: number; matchedSkills: string[] }
+  relevanceSkillsKey?: string
 }
 
 function isApiEnvelope(value: unknown): value is ApiEnvelope {
@@ -59,6 +60,14 @@ function getUniqueSkills(values: string[]): string[] {
     }
   }
   return Array.from(unique.values())
+}
+
+function buildSkillsKey(skills: string[]): string {
+  return skills
+    .map((skill) => skill.trim().toLowerCase())
+    .filter(Boolean)
+    .sort()
+    .join('\n')
 }
 
 function isAbortError(error: unknown): boolean {
@@ -141,7 +150,6 @@ export function JobSearch() {
   const [savedJobs, setSavedJobs] = useState<AFJobHit[]>([])
   const [savedJobsLoading, setSavedJobsLoading] = useState(false)
   const [savedJobsError, setSavedJobsError] = useState<string | null>(null)
-  const [relevanceEnabled, setRelevanceEnabled] = useState(false)
   const [selectedRegion, setSelectedRegion] = useState<string>('')
   const [searchSkillMatches, setSearchSkillMatches] = useState<Record<string, number>>({})
   const [skillsPanelOpen, setSkillsPanelOpen] = useState(false)
@@ -160,6 +168,27 @@ export function JobSearch() {
 
   const selectedSkillSet = useMemo(() => getUniqueSkills(selectedSkills), [selectedSkills])
   const allSkillSet = useMemo(() => getUniqueSkills(skills), [skills])
+
+  useEffect(() => {
+    if (jobMatchedQuerySkillsRef.current.size === 0) return
+
+    const selectedKeys = new Set(selectedSkillSet.map((skill) => skill.trim().toLowerCase()))
+    const next = Object.fromEntries(
+      Array.from(jobMatchedQuerySkillsRef.current.entries())
+        .map(([jobId, matchedSkills]) => {
+          let count = 0
+          for (const skillKey of matchedSkills) {
+            if (selectedKeys.has(skillKey)) {
+              count += 1
+            }
+          }
+          return [jobId, count] as const
+        })
+        .filter(([, count]) => count > 0)
+    )
+
+    setSearchSkillMatches(next)
+  }, [selectedSkillSet])
 
   const fetchJobsByQuery = useCallback(
     async (
@@ -496,6 +525,7 @@ export function JobSearch() {
       setSearchSkillMatches({})
 
       let localFailed = 0
+      const relevanceSkillsKey = buildSkillsKey(normalizedSkills)
 
       await Promise.allSettled(
         normalizedSkills.map(async (skill) => {
@@ -524,7 +554,7 @@ export function JobSearch() {
                   },
                   normalizedSkills
                 )
-                const scoredJob: ScoredJob = { ...hit, relevance }
+                const scoredJob: ScoredJob = { ...hit, relevance, relevanceSkillsKey }
                 jobsMapRef.current.set(hit.id, scoredJob)
               }
             }
@@ -598,7 +628,6 @@ export function JobSearch() {
     setHasSearched(true)
     setError(null)
     setSearchSkillMatches({})
-    setRelevanceEnabled(hasQuery && hasSelectedSkills)
     setCurrentPage(1)
     setSearchPhase('searching')
     setTotalFound(0)
@@ -651,23 +680,30 @@ export function JobSearch() {
   const scoredJobs: ScoredJob[] = useMemo(() => {
     const queryLower = query.trim().toLowerCase()
     const relevanceSkills = selectedSkillSet
-    const shouldApplyRelevance = relevanceEnabled && relevanceSkills.length > 0
-    const withRelevance: ScoredJob[] = shouldApplyRelevance
-      ? jobs.map((job) => {
-          if (job.relevance) return job
-          return {
-            ...job,
-            relevance: scoreJobRelevance(
-              {
-                headline: job.headline,
-                description: job.description?.text,
-                occupation: job.occupation?.label,
-              },
-              relevanceSkills
-            ),
-          }
-        })
-      : jobs
+    const hasRelevanceSkills = relevanceSkills.length > 0
+    const relevanceSkillsKey = hasRelevanceSkills ? buildSkillsKey(relevanceSkills) : ''
+
+    const withRelevance: ScoredJob[] = jobs.map((job) => {
+      if (!hasRelevanceSkills) {
+        if (!job.relevance && !job.relevanceSkillsKey) return job
+        return { ...job, relevance: undefined, relevanceSkillsKey: undefined }
+      }
+
+      if (job.relevance && job.relevanceSkillsKey === relevanceSkillsKey) return job
+
+      return {
+        ...job,
+        relevance: scoreJobRelevance(
+          {
+            headline: job.headline,
+            description: job.description?.text,
+            occupation: job.occupation?.label,
+          },
+          relevanceSkills
+        ),
+        relevanceSkillsKey,
+      }
+    })
 
     const getSearchSkillMatchCount = (job: ScoredJob): number => {
       const skillSearchMatches = searchSkillMatches[job.id]
@@ -677,7 +713,8 @@ export function JobSearch() {
       return 0
     }
 
-    const getRelevanceMatchCount = (job: ScoredJob): number => job.relevance?.matched ?? 0
+    const getRelevanceMatchCount = (job: ScoredJob): number =>
+      hasRelevanceSkills ? job.relevance?.matched ?? 0 : 0
 
     return [...withRelevance]
       .sort((a, b) => {
@@ -706,7 +743,6 @@ export function JobSearch() {
   }, [
     jobs,
     query,
-    relevanceEnabled,
     searchSkillMatches,
     selectedRegion,
     selectedSkillSet,
@@ -742,7 +778,7 @@ export function JobSearch() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [itemsPerPage, relevanceEnabled, selectedRegion, selectedSkillSet])
+  }, [itemsPerPage, selectedRegion, selectedSkillSet])
 
   useEffect(() => {
     const maxPage = Math.max(1, Math.ceil(scoredJobs.length / itemsPerPage))
