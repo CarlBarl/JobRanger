@@ -61,6 +61,13 @@ function getUniqueSkills(values: string[]): string[] {
   return Array.from(unique.values())
 }
 
+function isAbortError(error: unknown): boolean {
+  return (
+    (error instanceof DOMException && error.name === 'AbortError') ||
+    (error instanceof Error && error.name === 'AbortError')
+  )
+}
+
 function sortByDateDesc(left?: string | null, right?: string | null): number {
   const leftDate = Date.parse(left ?? '')
   const rightDate = Date.parse(right ?? '')
@@ -117,6 +124,7 @@ function matchesLocationHint(job: AFJobHit, selectedRegion: string): boolean {
 }
 
 const MAX_VISIBLE_CHIPS = 5
+const STREAM_FLUSH_DELAY_MS = 150
 
 export function JobSearch() {
   const t = useTranslations('jobs')
@@ -147,7 +155,8 @@ export function JobSearch() {
   const searchRunIdRef = useRef(0)
   const abortControllerRef = useRef<AbortController | null>(null)
   const jobsMapRef = useRef(new Map<string, ScoredJob>())
-  const flushTimerRef = useRef<number | null>(null)
+  const jobMatchedQuerySkillsRef = useRef(new Map<string, Set<string>>())
+  const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const selectedSkillSet = useMemo(() => getUniqueSkills(selectedSkills), [selectedSkills])
   const allSkillSet = useMemo(() => getUniqueSkills(skills), [skills])
@@ -155,7 +164,7 @@ export function JobSearch() {
   const fetchJobsByQuery = useCallback(
     async (
       queryText: string,
-      options?: { limit?: number; region?: string }
+      options?: { limit?: number; region?: string; signal?: AbortSignal }
     ): Promise<AFJobHit[]> => {
       const params = new URLSearchParams()
       params.set('q', queryText)
@@ -164,7 +173,7 @@ export function JobSearch() {
         params.set('region', options.region.trim())
       }
 
-      const res = await fetch(`/api/jobs?${params.toString()}`)
+      const res = await fetch(`/api/jobs?${params.toString()}`, { signal: options?.signal })
       const json: unknown = await res.json()
 
       if (!isApiEnvelope(json)) {
@@ -181,9 +190,19 @@ export function JobSearch() {
   )
 
   const flushJobsToState = useCallback(() => {
+    const currentSkillMatches = Object.fromEntries(
+      Array.from(jobMatchedQuerySkillsRef.current.entries()).map(([jobId, matchedSkills]) => [
+        jobId,
+        matchedSkills.size,
+      ])
+    )
     const allJobs = Array.from(jobsMapRef.current.values())
-    // Stable sort: score desc -> date desc -> id asc (deterministic tie-breaker)
+    // Stable sort: query skill coverage -> score -> date -> id
     allJobs.sort((a, b) => {
+      const coverageA = currentSkillMatches[a.id] ?? 0
+      const coverageB = currentSkillMatches[b.id] ?? 0
+      if (coverageB !== coverageA) return coverageB - coverageA
+
       const scoreA = a.relevance?.matched ?? 0
       const scoreB = b.relevance?.matched ?? 0
       if (scoreB !== scoreA) return scoreB - scoreA
@@ -193,15 +212,16 @@ export function JobSearch() {
       return a.id.localeCompare(b.id)
     })
     setJobs(allJobs)
+    setSearchSkillMatches(currentSkillMatches)
     setTotalFound(allJobs.length)
   }, [])
 
   const scheduleFlush = useCallback(() => {
     if (flushTimerRef.current !== null) return
-    flushTimerRef.current = requestAnimationFrame(() => {
+    flushTimerRef.current = setTimeout(() => {
       flushTimerRef.current = null
       flushJobsToState()
-    })
+    }, STREAM_FLUSH_DELAY_MS)
   }, [flushJobsToState])
 
   const fetchJobById = useCallback(async (id: string): Promise<AFJobHit | null> => {
@@ -456,8 +476,14 @@ export function JobSearch() {
       abortControllerRef.current = controller
       const runId = ++searchRunIdRef.current
 
+      if (flushTimerRef.current !== null) {
+        clearTimeout(flushTimerRef.current)
+        flushTimerRef.current = null
+      }
+
       // Reset state
       jobsMapRef.current = new Map()
+      jobMatchedQuerySkillsRef.current = new Map()
       setJobs([])
       setSearchPhase('searching')
       setLoading(true)
@@ -476,14 +502,19 @@ export function JobSearch() {
           try {
             const hits = await fetchJobsByQuery(
               textQuery ? `${skill} ${textQuery}` : skill,
-              { region }
+              { region, signal: controller.signal }
             )
 
             // Guard: ignore if stale search
             if (searchRunIdRef.current !== runId) return
 
             // Score and merge into map (score once)
+            const skillKey = skill.toLowerCase()
             for (const hit of hits) {
+              const skillSet = jobMatchedQuerySkillsRef.current.get(hit.id) ?? new Set<string>()
+              skillSet.add(skillKey)
+              jobMatchedQuerySkillsRef.current.set(hit.id, skillSet)
+
               if (!jobsMapRef.current.has(hit.id)) {
                 const relevance = scoreJobRelevance(
                   {
@@ -500,8 +531,9 @@ export function JobSearch() {
 
             // Schedule batched UI update
             scheduleFlush()
-          } catch {
+          } catch (error) {
             if (searchRunIdRef.current !== runId) return
+            if (isAbortError(error)) return
             localFailed++
           } finally {
             if (searchRunIdRef.current === runId) {
@@ -514,7 +546,7 @@ export function JobSearch() {
       // Final flush
       if (searchRunIdRef.current !== runId) return
       if (flushTimerRef.current !== null) {
-        cancelAnimationFrame(flushTimerRef.current)
+        clearTimeout(flushTimerRef.current)
         flushTimerRef.current = null
       }
       flushJobsToState()
@@ -553,6 +585,14 @@ export function JobSearch() {
 
     // Text search (with or without skills)
     const queryForFetch = hasQuery ? trimmedQuery : trimmedRegion
+    abortControllerRef.current?.abort()
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+    const runId = ++searchRunIdRef.current
+    if (flushTimerRef.current !== null) {
+      clearTimeout(flushTimerRef.current)
+      flushTimerRef.current = null
+    }
 
     setLoading(true)
     setHasSearched(true)
@@ -563,14 +603,18 @@ export function JobSearch() {
     setSearchPhase('searching')
     setTotalFound(0)
     setFailedQueries(0)
+    setPendingQueries(0)
+    jobMatchedQuerySkillsRef.current = new Map()
 
-    void fetchJobsByQuery(queryForFetch, { region: trimmedRegion })
+    void fetchJobsByQuery(queryForFetch, { region: trimmedRegion, signal: controller.signal })
       .then((results) => {
+        if (searchRunIdRef.current !== runId) return
         setJobs(results)
         setTotalFound(results.length)
         setSearchPhase('complete')
       })
       .catch((searchError) => {
+        if (searchRunIdRef.current !== runId || isAbortError(searchError)) return
         const message =
           searchError instanceof Error ? searchError.message : t('errorSearchFailed')
         setJobs([])
@@ -578,7 +622,10 @@ export function JobSearch() {
         setTotalFound(0)
         setSearchPhase('complete')
       })
-      .finally(() => setLoading(false))
+      .finally(() => {
+        if (searchRunIdRef.current !== runId) return
+        setLoading(false)
+      })
   }, [fetchJobsByQuery, query, runSkillsSearch, selectedRegion, selectedSkillSet, t])
 
   const toggleSkill = useCallback((skill: string) => {
@@ -630,8 +677,7 @@ export function JobSearch() {
       return 0
     }
 
-    const getRelevanceMatchCount = (job: ScoredJob): number =>
-      shouldApplyRelevance ? job.relevance?.matched ?? 0 : 0
+    const getRelevanceMatchCount = (job: ScoredJob): number => job.relevance?.matched ?? 0
 
     return [...withRelevance]
       .sort((a, b) => {
@@ -652,7 +698,10 @@ export function JobSearch() {
           textRelevanceBonus(b, queryLower) - textRelevanceBonus(a, queryLower)
         if (textMatchDelta !== 0) return textMatchDelta
 
-        return sortByDateDesc(a.publication_date, b.publication_date)
+        const dateDelta = sortByDateDesc(a.publication_date, b.publication_date)
+        if (dateDelta !== 0) return dateDelta
+
+        return a.id.localeCompare(b.id)
       })
   }, [
     jobs,
@@ -704,7 +753,7 @@ export function JobSearch() {
   useEffect(() => {
     return () => {
       if (flushTimerRef.current !== null) {
-        cancelAnimationFrame(flushTimerRef.current)
+        clearTimeout(flushTimerRef.current)
       }
       abortControllerRef.current?.abort()
     }
@@ -792,6 +841,7 @@ export function JobSearch() {
           <SearchStatusBar
             phase={searchPhase}
             totalFound={totalFound}
+            pendingQueries={pendingQueries}
             failedQueries={failedQueries}
           />
 
@@ -805,6 +855,7 @@ export function JobSearch() {
             savedJobIds={savedJobIds}
             onToggleSave={handleToggleSave}
             error={error}
+            paginationLocked={searchPhase === 'searching'}
             pagination={{
               currentPage,
               totalPages,

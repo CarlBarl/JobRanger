@@ -172,6 +172,7 @@
     "searchStatus": {
       "searching": "Söker efter jobb...",
       "searchingFound": "Hittade {count} jobb hittills...",
+      "searchingFoundPending": "Hittade {count} jobb hittills ({pending} sökningar kvar)...",
       "complete": "Hittade {count} jobb som matchar din sökning",
       "completeWithFailures": "Hittade {count} jobb ({failed} sökning misslyckades)",
       "noResults": "Inga jobb hittades som matchar din sökning"

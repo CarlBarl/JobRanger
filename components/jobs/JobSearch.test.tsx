@@ -3,6 +3,13 @@ import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor, within } from '@/lib/test-utils'
 import { JobSearch } from './JobSearch'
 
+function jsonResponse(payload: unknown, status = 200): Response {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'content-type': 'application/json' },
+  })
+}
+
 function mockFetchWithSkills(skills: string[]) {
   return vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
     const url = typeof input === 'string' ? input : input.toString()
@@ -792,7 +799,7 @@ describe('JobSearch', () => {
     await user.click(screen.getByRole('button', { name: /^search$/i }))
 
     expect(await screen.findByRole('link', { name: 'Backend Developer' })).toBeInTheDocument()
-    expect(await screen.findByText(/1\/1 skills match/i)).toBeInTheDocument()
+    expect(await screen.findByText(/1 matched skills/i)).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /show job skills/i }))
 
@@ -866,5 +873,137 @@ describe('JobSearch', () => {
     await user.click(showButton)
 
     expect(screen.getByText(/no skills found for this job/i)).toBeInTheDocument()
+  })
+
+  it('streams results with pagination locked until all skill queries complete', async () => {
+    const user = userEvent.setup()
+    let resolveNode: ((value: Response | PromiseLike<Response>) => void) | null = null
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+      const url = typeof input === 'string' ? input : input.toString()
+
+      if (url === '/api/documents') {
+        return Promise.resolve(
+          jsonResponse({
+            success: true,
+            data: [{ id: 'doc-1', type: 'cv', skills: ['React', 'Node'] }],
+          })
+        )
+      }
+
+      if (url.startsWith('/api/skills/catalog')) {
+        return Promise.resolve(jsonResponse({ success: true, data: [] }))
+      }
+
+      if (url === '/api/jobs/save') {
+        return Promise.resolve(jsonResponse({ success: true, data: [] }))
+      }
+
+      if (url.startsWith('/api/jobs?')) {
+        const query = new URL(url, 'http://localhost').searchParams.get('q') ?? ''
+        if (query === 'React') {
+        const hits = Array.from({ length: 21 }, (_, idx) => ({
+          id: `react-${idx + 1}`,
+          headline: `React Role ${idx + 1}`,
+          publication_date: `2026-01-${String((idx % 28) + 1).padStart(2, '0')}T10:00:00.000Z`,
+          description: { text: 'React TypeScript' },
+          occupation: { label: 'Developer' },
+          workplace_address: { region: 'Stockholm' },
+        }))
+        return Promise.resolve(jsonResponse({ success: true, data: { hits } }))
+        }
+        if (query === 'Node') {
+          return new Promise<Response>((resolve) => {
+            resolveNode = resolve
+          })
+        }
+      }
+
+      return Promise.reject(new Error(`Unexpected fetch: ${url}`))
+    })
+
+    render(<JobSearch />)
+
+    await screen.findByText(/2\/2 skills selected/i)
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
+
+    expect(await screen.findByText(/found 21 jobs so far \(1 searches left\)\.\.\./i)).toBeInTheDocument()
+    expect((await screen.findAllByRole('link', { name: /React Role/i })).length).toBeGreaterThan(0)
+
+    const pagination = await screen.findByTestId('search-results-pagination')
+    expect(pagination).toHaveAttribute('data-locked', 'true')
+    expect(within(pagination).getByText('2')).toHaveAttribute('aria-disabled', 'true')
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- set by mock
+    resolveNode!(
+      jsonResponse({
+        success: true,
+        data: {
+          hits: [
+            {
+              id: 'node-1',
+              headline: 'Node Role 1',
+              publication_date: '2026-01-30T10:00:00.000Z',
+              description: { text: 'Node backend' },
+              occupation: { label: 'Developer' },
+              workplace_address: { region: 'Stockholm' },
+            },
+          ],
+        },
+      })
+    )
+
+    expect(await screen.findByText(/found 22 jobs matching your search/i)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByTestId('search-results-pagination')).toHaveAttribute('data-locked', 'false')
+    })
+  })
+
+  it('aborts in-flight text search on unmount', async () => {
+    const user = userEvent.setup()
+    let requestAborted = false
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
+      const url = typeof input === 'string' ? input : input.toString()
+
+      if (url === '/api/documents') {
+        return Promise.resolve(
+          jsonResponse({
+            success: true,
+            data: [{ id: 'doc-1', type: 'cv', skills: [] }],
+          })
+        )
+      }
+
+      if (url.startsWith('/api/skills/catalog')) {
+        return Promise.resolve(jsonResponse({ success: true, data: [] }))
+      }
+
+      if (url === '/api/jobs/save') {
+        return Promise.resolve(jsonResponse({ success: true, data: [] }))
+      }
+
+      if (url.includes('/api/jobs?q=developer')) {
+        return new Promise<Response>((resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => {
+            requestAborted = true
+            reject(new DOMException('Aborted', 'AbortError'))
+          })
+        })
+      }
+
+      return Promise.reject(new Error(`Unexpected fetch: ${url}`))
+    })
+
+    const view = render(<JobSearch />)
+
+    const searchInput = await screen.findByPlaceholderText(/search by job title/i)
+    await user.type(searchInput, 'developer')
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
+
+    view.unmount()
+    await waitFor(() => {
+      expect(requestAborted).toBe(true)
+    })
   })
 })

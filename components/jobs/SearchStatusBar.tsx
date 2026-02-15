@@ -6,12 +6,14 @@ import { Loader2 } from 'lucide-react'
 interface SearchStatusBarProps {
   phase: 'idle' | 'searching' | 'complete'
   totalFound: number
+  pendingQueries: number
   failedQueries: number
 }
 
 export function SearchStatusBar({
   phase,
   totalFound,
+  pendingQueries,
   failedQueries,
 }: SearchStatusBarProps) {
   const t = useTranslations('jobs.searchStatus')
@@ -22,10 +24,13 @@ export function SearchStatusBar({
 
   let message: string
   if (isSearching) {
-    message =
-      totalFound > 0
-        ? t('searchingFound', { count: totalFound })
-        : t('searching')
+    if (totalFound > 0 && pendingQueries > 0) {
+      message = t('searchingFoundPending', { count: totalFound, pending: pendingQueries })
+    } else if (totalFound > 0) {
+      message = t('searchingFound', { count: totalFound })
+    } else {
+      message = t('searching')
+    }
   } else {
     if (totalFound === 0) {
       message = t('noResults')

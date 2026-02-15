@@ -172,6 +172,7 @@
     "searchStatus": {
       "searching": "Searching for jobs...",
       "searchingFound": "Found {count} jobs so far...",
+      "searchingFoundPending": "Found {count} jobs so far ({pending} searches left)...",
       "complete": "Found {count} jobs matching your search",
       "completeWithFailures": "Found {count} jobs ({failed} search failed)",
       "noResults": "No jobs found matching your search"
