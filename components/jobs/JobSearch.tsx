@@ -9,6 +9,7 @@ import { SearchResults } from '@/components/jobs/SearchResults'
 import { SearchStatusBar } from '@/components/jobs/SearchStatusBar'
 import { SavedJobsPanel } from '@/components/jobs/SavedJobsPanel'
 import { extractJobSkills, scoreJobRelevance } from '@/lib/scoring'
+import { normalizeSkillKey } from '@/lib/skills/normalize'
 import { cn } from '@/lib/utils'
 import type { AFJobHit } from '@/lib/services/arbetsformedlingen'
 
@@ -91,10 +92,10 @@ function asJobs(value: unknown): ScoredJob[] {
 function reconcileSelectedSkills(selected: string[], available: string[]): string[] {
   if (selected.length === 0 || available.length === 0) return []
   const availableByKey = new Map(
-    available.map((skill) => [skill.trim().toLowerCase(), skill] as const)
+    available.map((skill) => [normalizeSkillKey(skill), skill] as const)
   )
   const reconciled = selected
-    .map((skill) => availableByKey.get(skill.trim().toLowerCase()) ?? null)
+    .map((skill) => availableByKey.get(normalizeSkillKey(skill)) ?? null)
     .filter((skill): skill is string => typeof skill === 'string')
   return getUniqueSkills(reconciled)
 }
@@ -140,7 +141,8 @@ function getUniqueSkills(values: string[]): string[] {
   for (const value of values) {
     const trimmed = value.trim()
     if (!trimmed) continue
-    const key = trimmed.toLowerCase()
+    const key = normalizeSkillKey(trimmed)
+    if (!key) continue
     if (!unique.has(key)) {
       unique.set(key, trimmed)
     }
@@ -150,7 +152,7 @@ function getUniqueSkills(values: string[]): string[] {
 
 function buildSkillsKey(skills: string[]): string {
   return skills
-    .map((skill) => skill.trim().toLowerCase())
+    .map((skill) => normalizeSkillKey(skill))
     .filter(Boolean)
     .sort()
     .join('\n')
@@ -369,17 +371,17 @@ export function JobSearch() {
   useEffect(() => {
     if (jobMatchedQuerySkillsRef.current.size === 0) return
 
-    const selectedKeys = new Set(selectedSkillSet.map((skill) => skill.trim().toLowerCase()))
+    const selectedKeys = new Set(selectedSkillSet.map((skill) => normalizeSkillKey(skill)))
     const next = Object.fromEntries(
       Array.from(jobMatchedQuerySkillsRef.current.entries())
         .map(([jobId, matchedSkills]) => {
           let count = 0
           for (const skillKey of matchedSkills) {
-            if (selectedKeys.has(skillKey)) {
-              count += 1
+              if (selectedKeys.has(skillKey)) {
+                count += 1
+              }
             }
-          }
-          return [jobId, count] as const
+            return [jobId, count] as const
         })
         .filter(([, count]) => count > 0)
     )
@@ -745,7 +747,7 @@ export function JobSearch() {
             if (searchRunIdRef.current !== runId) return
 
             // Score and merge into map (score once)
-            const skillKey = skill.toLowerCase()
+            const skillKey = normalizeSkillKey(skill)
             for (const hit of hits) {
               const skillSet = jobMatchedQuerySkillsRef.current.get(hit.id) ?? new Set<string>()
               skillSet.add(skillKey)
@@ -971,12 +973,12 @@ export function JobSearch() {
   }, [jobs, skillCatalog])
 
   const matchedSkillsByJob = useMemo(() => {
-    const selectedKeys = new Set(selectedSkillSet.map((skill) => skill.trim().toLowerCase()))
+    const selectedKeys = new Set(selectedSkillSet.map((skill) => normalizeSkillKey(skill)))
 
     return Object.fromEntries(
       Object.entries(extractedSkillsByJob).map(([jobId, extractedSkills]) => [
         jobId,
-        extractedSkills.filter((skill) => selectedKeys.has(skill.trim().toLowerCase())),
+        extractedSkills.filter((skill) => selectedKeys.has(normalizeSkillKey(skill))),
       ])
     )
   }, [extractedSkillsByJob, selectedSkillSet])

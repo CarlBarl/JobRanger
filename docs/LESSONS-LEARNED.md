@@ -38,6 +38,11 @@ Strict equality between typed region input and `workplace_address.region` can hi
 ### Job Skill Extraction Should Not Depend Only on Selected Skills
 Per-job "skills found" UI should be derived from listing text using a shared extractor (`lib/scoring.ts`) and a stable job-skill catalog, independent of the user's selected CV skills. Keep matched-vs-unmatched distinction in UI, but always show all extracted job skills when expanded.
 
+### CV Skills Should Be Canonicalized to the Job Skills Catalog
+Gemini-extracted CV skills are free-form strings, while job-skill extraction uses a catalog (AF synonym dictionary via `/api/skills/catalog`). If CV skills are stored unnormalized/unmapped (e.g. `React.js`, `Type Script`, `NodeJS`), overlap/highlighting and skills-based search can look "weak" even for relevant jobs.
+
+On skill extraction (`POST /api/skills` and `POST /api/skills/batch`), map extracted CV skills onto the catalog using shared normalization + alias handling, cap to a small top-N (25), and store canonical labels. Client-side matching/highlighting should also use the same normalization (not just `toLowerCase()`).
+
 ## Next.js / React
 
 ### Hydration Mismatch from Chrome Extensions

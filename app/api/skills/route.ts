@@ -3,6 +3,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { extractSkillsFromCV } from '@/lib/services/gemini'
+import { fetchSkillCatalog } from '@/lib/services/jobtech-enrichments'
+import { buildCatalogIndex, mapSkillsToCatalogWithIndex } from '@/lib/skills/catalog-map'
+import { DEFAULT_JOB_SKILL_CATALOG } from '@/lib/scoring'
 import { enforceCsrfProtection } from '@/lib/security/csrf'
 import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
@@ -67,14 +70,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const skills = await extractSkillsFromCV(document.parsedContent)
+    const extractedSkills = await extractSkillsFromCV(document.parsedContent)
+
+    let catalog: string[] = []
+    try {
+      catalog = await fetchSkillCatalog()
+    } catch {
+      catalog = []
+    }
+
+    if (catalog.length === 0) {
+      catalog = Array.from(DEFAULT_JOB_SKILL_CATALOG)
+    }
+
+    const catalogIndex = buildCatalogIndex(catalog)
+    const { skillsToStore } = mapSkillsToCatalogWithIndex(extractedSkills, catalogIndex)
 
     await prisma.document.update({
       where: { id: documentId },
-      data: { skills },
+      data: { skills: skillsToStore },
     })
 
-    return NextResponse.json({ success: true, data: { skills } })
+    return NextResponse.json({ success: true, data: { skills: skillsToStore } })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

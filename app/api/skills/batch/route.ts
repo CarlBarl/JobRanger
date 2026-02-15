@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { extractSkillsFromCV } from '@/lib/services/gemini'
+import { fetchSkillCatalog } from '@/lib/services/jobtech-enrichments'
+import { buildCatalogIndex, mapSkillsToCatalogWithIndex } from '@/lib/skills/catalog-map'
+import { DEFAULT_JOB_SKILL_CATALOG } from '@/lib/scoring'
 import { enforceCsrfProtection } from '@/lib/security/csrf'
 import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
@@ -79,6 +82,19 @@ export async function POST(request: NextRequest) {
       skipped: []
     }
 
+    let catalog: string[] = []
+    try {
+      catalog = await fetchSkillCatalog()
+    } catch {
+      catalog = []
+    }
+
+    if (catalog.length === 0) {
+      catalog = Array.from(DEFAULT_JOB_SKILL_CATALOG)
+    }
+
+    const catalogIndex = buildCatalogIndex(catalog)
+
     // Process each CV sequentially
     for (const document of cvDocuments) {
       // Skip if no parsed content
@@ -96,22 +112,23 @@ export async function POST(request: NextRequest) {
         const previousSkills = (document.skills as string[]) || []
 
         // Extract skills using Gemini
-        const newSkills = await extractSkillsFromCV(document.parsedContent)
+        const extractedSkills = await extractSkillsFromCV(document.parsedContent)
+        const { skillsToStore } = mapSkillsToCatalogWithIndex(extractedSkills, catalogIndex)
 
         // Calculate diff
-        const added = newSkills.filter(s => !previousSkills.includes(s))
-        const removed = previousSkills.filter(s => !newSkills.includes(s))
+        const added = skillsToStore.filter(s => !previousSkills.includes(s))
+        const removed = previousSkills.filter(s => !skillsToStore.includes(s))
 
         // Update document with new skills
         await prisma.document.update({
           where: { id: document.id },
-          data: { skills: newSkills }
+          data: { skills: skillsToStore }
         })
 
         results.updated.push({
           documentId: document.id,
           previousSkills,
-          newSkills,
+          newSkills: skillsToStore,
           added,
           removed,
           createdAt: document.createdAt.toISOString()

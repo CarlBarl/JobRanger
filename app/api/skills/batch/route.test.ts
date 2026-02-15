@@ -24,9 +24,14 @@ vi.mock('@/lib/services/gemini', () => ({
   extractSkillsFromCV: vi.fn()
 }))
 
+vi.mock('@/lib/services/jobtech-enrichments', () => ({
+  fetchSkillCatalog: vi.fn(),
+}))
+
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { extractSkillsFromCV } from '@/lib/services/gemini'
+import { fetchSkillCatalog } from '@/lib/services/jobtech-enrichments'
 
 describe('POST /api/skills/batch', () => {
   let mockSupabase: any
@@ -44,6 +49,8 @@ describe('POST /api/skills/batch', () => {
     mockRequest = new NextRequest('http://localhost:3000/api/skills/batch', {
       method: 'POST'
     })
+
+    ;(fetchSkillCatalog as any).mockResolvedValue(['JavaScript', 'React', 'Python', 'Django'])
   })
 
   describe('Authentication', () => {
@@ -137,10 +144,10 @@ describe('POST /api/skills/batch', () => {
 
       ;(prisma.document.findMany as any).mockResolvedValue(mockCVs)
       ;(extractSkillsFromCV as any)
-        .mockResolvedValueOnce(['JavaScript', 'React'])
+        .mockResolvedValueOnce(['React.js', 'Java Script'])
         .mockResolvedValueOnce(['Python', 'Django'])
       ;(prisma.document.update as any)
-        .mockResolvedValueOnce({ ...mockCVs[0], skills: ['JavaScript', 'React'] })
+        .mockResolvedValueOnce({ ...mockCVs[0], skills: ['React', 'JavaScript'] })
         .mockResolvedValueOnce({ ...mockCVs[1], skills: ['Python', 'Django'] })
 
       const response = await POST(mockRequest)
@@ -153,8 +160,8 @@ describe('POST /api/skills/batch', () => {
       expect(data.data.updated[0]).toEqual({
         documentId: 'cv-1',
         previousSkills: [],
-        newSkills: ['JavaScript', 'React'],
-        added: ['JavaScript', 'React'],
+        newSkills: ['React', 'JavaScript'],
+        added: ['React', 'JavaScript'],
         removed: [],
         createdAt: '2024-01-01T00:00:00.000Z'
       })
@@ -176,7 +183,7 @@ describe('POST /api/skills/batch', () => {
       expect(prisma.document.update).toHaveBeenCalledTimes(2)
       expect(prisma.document.update).toHaveBeenCalledWith({
         where: { id: 'cv-1' },
-        data: { skills: ['JavaScript', 'React'] }
+        data: { skills: ['React', 'JavaScript'] }
       })
       expect(prisma.document.update).toHaveBeenCalledWith({
         where: { id: 'cv-2' },
