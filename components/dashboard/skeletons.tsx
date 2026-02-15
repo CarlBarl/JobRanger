@@ -1,13 +1,15 @@
 export function StatsSkeleton() {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div className="space-y-2">
-        <div className="skeleton h-7 w-48" />
-        <div className="skeleton h-4 w-32" />
-      </div>
-      <div className="flex gap-6">
-        <div className="skeleton h-6 w-20" />
-        <div className="skeleton h-6 w-20" />
+    <div className="rounded-2xl border border-primary/[0.08] bg-gradient-to-br from-primary/[0.03] to-transparent p-4 sm:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <div className="skeleton h-7 w-48" />
+          <div className="skeleton h-4 w-32" />
+        </div>
+        <div className="flex gap-2 sm:gap-3">
+          <div className="skeleton h-[52px] w-32 rounded-xl sm:w-36" />
+          <div className="skeleton h-[52px] w-32 rounded-xl sm:w-36" />
+        </div>
       </div>
     </div>
   )

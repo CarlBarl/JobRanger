@@ -6,8 +6,8 @@ import { BatchSkillsButton } from './BatchSkillsButton'
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => {
     const translations: Record<string, string> = {
-      'dashboard.regenerateAllSkills': 'Regenerate All Skills',
-      'dashboard.regenerating': 'Regenerating skills...'
+      'dashboard.regenerateAllSkills': 'Update skills from CV',
+      'dashboard.regenerating': 'Updating skills...'
     }
     return translations[key] || key
   }
@@ -19,7 +19,7 @@ describe('BatchSkillsButton', () => {
       const onTrigger = vi.fn()
       render(<BatchSkillsButton onTrigger={onTrigger} loading={false} />)
 
-      const button = screen.getByRole('button', { name: /regenerate all skills/i })
+      const button = screen.getByRole('button', { name: /update skills from cv/i })
       expect(button).toBeInTheDocument()
       expect(button).not.toBeDisabled()
     })
@@ -31,7 +31,7 @@ describe('BatchSkillsButton', () => {
       const button = screen.getByRole('button')
       expect(button).toBeDisabled()
       expect(button).toHaveAttribute('aria-busy', 'true')
-      expect(screen.getByText(/regenerating skills/i)).toBeInTheDocument()
+      expect(screen.getByText(/updating skills/i)).toBeInTheDocument()
     })
 
     it('renders as disabled when disabled prop is true', () => {
@@ -90,7 +90,7 @@ describe('BatchSkillsButton', () => {
       render(<BatchSkillsButton onTrigger={onTrigger} loading={false} />)
 
       const button = screen.getByRole('button')
-      expect(button).toHaveAttribute('aria-label', 'Regenerate All Skills')
+      expect(button).toHaveAttribute('aria-label', 'Update skills from CV')
     })
 
     it('has aria-busy when loading', () => {

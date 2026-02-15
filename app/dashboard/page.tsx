@@ -46,13 +46,15 @@ export default async function DashboardPage() {
           <DashboardDocumentsSection userId={user.id} />
         </Suspense>
 
-        <Suspense fallback={<SkillsSkeleton />}>
-          <DashboardSkillsSection userId={user.id} />
-        </Suspense>
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
+          <Suspense fallback={<SkillsSkeleton />}>
+            <DashboardSkillsSection userId={user.id} />
+          </Suspense>
 
-        <Suspense fallback={<RecentJobsSkeleton />}>
-          <DashboardRecentJobsSection userId={user.id} />
-        </Suspense>
+          <Suspense fallback={<RecentJobsSkeleton />}>
+            <DashboardRecentJobsSection userId={user.id} />
+          </Suspense>
+        </div>
       </main>
 
       {authUser.email === DEBUG_EMAIL && <DebugChat modelName={GEMINI_MODEL} />}

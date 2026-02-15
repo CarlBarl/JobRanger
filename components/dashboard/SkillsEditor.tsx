@@ -132,10 +132,11 @@ export function SkillsEditor({
               <span
                 key={skill}
                 className={cn(
-                  'group inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2 py-0.5',
-                  'text-[11px] font-medium text-muted-foreground',
+                  'group inline-flex items-center gap-1 rounded-md border px-2 py-0.5',
+                  'bg-primary/[0.08] text-primary border-primary/[0.10]',
+                  'text-[11px] font-medium',
                   'transition-all duration-200',
-                  'hover:bg-secondary',
+                  'hover:bg-primary/[0.12]',
                   removingSkill === skill && 'scale-90 opacity-0'
                 )}
               >
@@ -144,8 +145,8 @@ export function SkillsEditor({
                   onClick={() => handleRemoveSkill(skill)}
                   className={cn(
                     'rounded p-0.5 transition-all duration-200',
-                    'text-muted-foreground/30 hover:text-destructive',
                     'opacity-0 group-hover:opacity-100 focus:opacity-100',
+                    'hover:text-destructive',
                     'focus:outline-none'
                   )}
                   aria-label={t('skills.removeSkill', { skill })}

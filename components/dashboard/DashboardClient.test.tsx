@@ -166,7 +166,7 @@ describe('DashboardClient', () => {
     expect(screen.getByText(/no personal letter uploaded yet/i)).toBeInTheDocument()
   })
 
-  describe('Batch Skills Regeneration', () => {
+  describe('Batch Skills Update', () => {
     it('shows batch skills button when CV exists', () => {
       render(
         <DashboardClient
@@ -177,7 +177,7 @@ describe('DashboardClient', () => {
         />
       )
 
-      expect(screen.getByRole('button', { name: /regenerate all skills/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /update skills from cv/i })).toBeInTheDocument()
     })
 
     it('does not show batch skills button when no CV', () => {
@@ -190,7 +190,7 @@ describe('DashboardClient', () => {
         />
       )
 
-      expect(screen.queryByRole('button', { name: /regenerate all skills/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /update skills from cv/i })).not.toBeInTheDocument()
     })
 
     it('handles successful batch regeneration', async () => {
@@ -224,7 +224,7 @@ describe('DashboardClient', () => {
         />
       )
 
-      const button = screen.getByRole('button', { name: /regenerate all skills/i })
+      const button = screen.getByRole('button', { name: /update skills from cv/i })
       await user.click(button)
 
       await waitFor(() => {
@@ -232,11 +232,11 @@ describe('DashboardClient', () => {
       })
 
       await waitFor(() => {
-        expect(screen.getByText('Skills Regeneration Results')).toBeInTheDocument()
+        expect(screen.getByText('Skills Update Results')).toBeInTheDocument()
       })
     })
 
-    it('shows loading state during regeneration', async () => {
+    it('shows loading state during update', async () => {
       const user = userEvent.setup()
       ;(global.fetch as any).mockImplementation(() => new Promise(() => {})) // Never resolves
 
@@ -249,11 +249,11 @@ describe('DashboardClient', () => {
         />
       )
 
-      const button = screen.getByRole('button', { name: /regenerate all skills/i })
+      const button = screen.getByRole('button', { name: /update skills from cv/i })
       await user.click(button)
 
       await waitFor(() => {
-        expect(screen.getByText(/regenerating skills/i)).toBeInTheDocument()
+        expect(screen.getByText(/updating skills/i)).toBeInTheDocument()
       })
     })
 
@@ -272,12 +272,12 @@ describe('DashboardClient', () => {
         />
       )
 
-      const button = screen.getByRole('button', { name: /regenerate all skills/i })
+      const button = screen.getByRole('button', { name: /update skills from cv/i })
       await user.click(button)
 
       await waitFor(() => {
         expect(consoleError).toHaveBeenCalledWith(
-          'Batch skills regeneration error:',
+          'Batch skills update error:',
           expect.any(Error)
         )
       })
@@ -307,7 +307,7 @@ describe('DashboardClient', () => {
         />
       )
 
-      const button = screen.getByRole('button', { name: /regenerate all skills/i })
+      const button = screen.getByRole('button', { name: /update skills from cv/i })
       await user.click(button)
 
       await waitFor(() => {

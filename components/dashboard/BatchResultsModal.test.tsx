@@ -14,7 +14,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string, values?: any) => {
     const translations: Record<string, string> = {
-      'dashboard.batchResults.title': 'Skills Regeneration Results',
+      'dashboard.batchResults.title': 'Skills Update Results',
       'dashboard.batchResults.summary': 'Updated {updated} of {total} CVs',
       'dashboard.batchResults.updated': 'Successfully Updated',
       'dashboard.batchResults.failed': 'Failed to Update',
@@ -78,7 +78,7 @@ describe('BatchResultsModal', () => {
         />
       )
 
-      expect(screen.getByText('Skills Regeneration Results')).toBeInTheDocument()
+      expect(screen.getByText('Skills Update Results')).toBeInTheDocument()
       expect(screen.getByText(/Updated 2 of 3 CVs/i)).toBeInTheDocument()
     })
 
@@ -92,7 +92,7 @@ describe('BatchResultsModal', () => {
         />
       )
 
-      expect(screen.queryByText('Skills Regeneration Results')).not.toBeInTheDocument()
+      expect(screen.queryByText('Skills Update Results')).not.toBeInTheDocument()
     })
 
     it('renders null results message', () => {

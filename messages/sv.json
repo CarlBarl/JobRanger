@@ -128,10 +128,10 @@
     "backToDashboard": "Tillbaka till Dashboard",
     "lastUpdated": "Senast uppdaterad",
     "changesSaved": "Ändringar sparade",
-    "regenerateAllSkills": "Återskapa alla kompetenser",
-    "regenerating": "Återskapar kompetenser...",
+    "regenerateAllSkills": "Uppdatera kompetenser från CV",
+    "regenerating": "Uppdaterar kompetenser...",
     "batchResults": {
-      "title": "Resultat för kompetenståterskapning",
+      "title": "Resultat för kompetensuppdatering",
       "summary": "Uppdaterade {updated} av {total} CV:n",
       "updated": "Uppdaterade",
       "failed": "Misslyckades",
