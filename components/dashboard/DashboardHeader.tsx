@@ -14,14 +14,14 @@ export async function DashboardHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-card/90 backdrop-blur-md">
-      <div className="container mx-auto flex items-center justify-between px-4 py-3 sm:px-6">
+      <div className="container mx-auto flex min-w-0 items-center justify-between px-4 py-3 sm:px-6">
         <Link
           href="/dashboard"
           className="text-[15px] font-semibold tracking-tight text-foreground transition-colors duration-200 hover:text-muted-foreground"
         >
           {t('appName')}
         </Link>
-        <nav className="flex items-center gap-0.5">
+        <nav className="flex min-w-0 items-center gap-0.5">
           <NavLinks />
           <div className="mx-2 hidden h-3.5 w-px bg-border/60 sm:block" />
           <LanguageSwitcher />
