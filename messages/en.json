@@ -232,7 +232,9 @@
       "failedToSave": "Failed to save",
       "failedToLoadDocuments": "Failed to load documents",
       "uploadCvFirst": "Upload a CV first",
-      "failedToGenerate": "Failed to generate letter"
+      "failedToGenerate": "Failed to generate letter",
+      "generateSuccess": "Letter generated!",
+      "viewLetters": "View your letters"
     },
     "card": {
       "published": "Published",
@@ -252,12 +254,20 @@
     },
     "detail": {
       "apply": "Apply",
-      "viewListing": "View listing",
+      "viewListing": "View original listing",
       "noDescription": "No description available.",
       "loadErrorTitle": "Could not load job",
       "loadErrorMessage": "Failed to load job",
       "published": "Published",
-      "deadline": "Deadline"
+      "deadline": "Deadline",
+      "backToJobs": "Back to jobs",
+      "aboutRole": "About this role",
+      "keyDetails": "Key details",
+      "occupationLabel": "Occupation",
+      "locationLabel": "Location",
+      "employmentLabel": "Employment",
+      "expired": "Expired",
+      "closingSoon": "Closing soon"
     }
   },
   "letters": {
@@ -272,6 +282,7 @@
     "viewListing": "View listing",
     "copy": "Copy",
     "copied": "Copied!",
+    "copiedToast": "Letter copied to clipboard",
     "copyFailed": "Failed to copy letter.",
     "useOriginal": "Use my original letter",
     "useAI": "Use AI-adapted letter",
