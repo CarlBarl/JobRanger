@@ -546,6 +546,7 @@ function mockFetchWithNoSkillJob() {
 describe('JobSearch', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    sessionStorage.clear()
   })
 
   it('renders tabs and search button', async () => {
@@ -556,6 +557,48 @@ describe('JobSearch', () => {
     expect(await screen.findByRole('tab', { name: /search results/i })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /saved/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument()
+  })
+
+  it('restores previous search state from sessionStorage', async () => {
+    mockFetchWithSkills(['React', 'TypeScript'])
+    sessionStorage.setItem(
+      'jobranger:jobsSearchState:v1',
+      JSON.stringify({
+        v: 1,
+        tab: 'search',
+        query: 'developer',
+        region: 'Stockholm',
+        skills: ['React', 'TypeScript'],
+        selectedSkills: ['React'],
+        skillsPanelOpen: true,
+        hasSearched: true,
+        jobs: [
+          {
+            id: 'persisted-job',
+            headline: 'Persisted Job',
+            publication_date: '2026-01-01T10:00:00.000Z',
+            description: { text: 'React TypeScript' },
+            workplace_address: { region: 'Stockholm' },
+            occupation: { label: 'Developer' },
+          },
+        ],
+        searchSkillMatches: {},
+        error: null,
+        currentPage: 1,
+        itemsPerPage: 20,
+      })
+    )
+
+    render(<JobSearch />)
+
+    const searchInput = await screen.findByPlaceholderText(/search by job title/i)
+    expect(searchInput).toHaveValue('developer')
+
+    const regionInput = screen.getByPlaceholderText(/region/i)
+    expect(regionInput).toHaveValue('Stockholm')
+
+    expect(await screen.findByText(/1\/2 skills selected/i)).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /persisted job/i })).toBeInTheDocument()
   })
 
   it('searches using selected skills via unified search', async () => {
@@ -664,7 +707,7 @@ describe('JobSearch', () => {
     expect(
       await screen.findByText(/some saved jobs are no longer available/i)
     ).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Still Active Role' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /still active role/i })).toBeInTheDocument()
   })
 
   it('performs text-only search when no skills are selected', async () => {
@@ -768,7 +811,7 @@ describe('JobSearch', () => {
     await user.click(screen.getByRole('button', { name: /^search$/i }))
 
     expect(
-      await screen.findByRole('link', { name: 'Developer Stockholm County' })
+      await screen.findByRole('link', { name: /developer stockholm county/i })
     ).toBeInTheDocument()
   })
 
@@ -785,8 +828,8 @@ describe('JobSearch', () => {
     await user.type(regionInput, 'stockholm')
     await user.click(screen.getByRole('button', { name: /^search$/i }))
 
-    expect(await screen.findByRole('link', { name: 'Stockholm Match Role' })).toBeInTheDocument()
-    expect(await screen.findByRole('link', { name: 'Remote Role' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /stockholm match role/i })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /remote role/i })).toBeInTheDocument()
   })
 
   it('shows all extracted job skills when expanded, including unmatched ones', async () => {
@@ -798,7 +841,7 @@ describe('JobSearch', () => {
     await screen.findByText(/1\/1 skills selected/i)
     await user.click(screen.getByRole('button', { name: /^search$/i }))
 
-    expect(await screen.findByRole('link', { name: 'Backend Developer' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /backend developer/i })).toBeInTheDocument()
     expect(await screen.findByText(/1 matched skills/i)).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /show job skills/i }))
@@ -818,7 +861,7 @@ describe('JobSearch', () => {
     await screen.findByText(/1\/1 skills selected/i)
     await user.click(screen.getByRole('button', { name: /^search$/i }))
 
-    expect(await screen.findByRole('link', { name: 'Backend Developer' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /backend developer/i })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /show job skills/i }))
 
@@ -844,7 +887,7 @@ describe('JobSearch', () => {
     await screen.findByText(/1\/1 skills selected/i)
     await user.click(screen.getByRole('button', { name: /^search$/i }))
 
-    expect(await screen.findByRole('link', { name: 'CNC-operat\u00f6r' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /cnc-operat\u00f6r/i })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /show job skills/i }))
 
@@ -864,7 +907,7 @@ describe('JobSearch', () => {
     await user.type(searchInput, 'truck driver')
     await user.click(screen.getByRole('button', { name: /^search$/i }))
 
-    expect(await screen.findByRole('link', { name: 'Truck Driver' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /truck driver/i })).toBeInTheDocument()
 
     // Button should be visible even with no skills
     const showButton = screen.getByRole('button', { name: /show job skills/i })
@@ -1024,8 +1067,8 @@ describe('JobSearch', () => {
     await screen.findByText(/2\/2 skills selected/i)
     await user.click(screen.getByRole('button', { name: /^search$/i }))
 
-    expect(await screen.findByRole('link', { name: 'Fullstack React Node' })).toBeInTheDocument()
-    expect(await screen.findByRole('link', { name: 'React Only Role' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /fullstack react node/i })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /react only role/i })).toBeInTheDocument()
 
     expect(screen.getByText('2 matched skills')).toBeInTheDocument()
     expect(screen.getByText('1 matched skills')).toBeInTheDocument()
@@ -1109,8 +1152,8 @@ describe('JobSearch', () => {
     await user.type(searchInput, 'developer')
     await user.click(screen.getByRole('button', { name: /^search$/i }))
 
-    expect(await screen.findByRole('link', { name: 'No Skill Match Developer' })).toBeInTheDocument()
-    expect(await screen.findByRole('link', { name: 'React Developer' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /no skill match developer/i })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /react developer/i })).toBeInTheDocument()
 
     const beforeLinks = screen.getAllByRole('link', {
       name: /No Skill Match Developer|React Developer/i,
