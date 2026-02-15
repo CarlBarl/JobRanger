@@ -262,15 +262,26 @@
   },
   "letters": {
     "title": "Genererade Brev",
+    "count": "{count, plural, one {# brev} other {# brev}}",
     "jobIdLabel": "Jobb-ID",
     "jobTitleLabel": "Jobb",
+    "unknownJobTitle": "Okänt jobb",
     "empty": "Inga brev genererade än. Sök jobb och generera personliga brev.",
     "aiAdapted": "Personligt Brev AI-anpassat för detta jobb",
+    "viewJob": "Visa jobb",
+    "viewListing": "Visa annons",
     "copy": "Kopiera",
     "copied": "Kopierat!",
+    "copyFailed": "Kunde inte kopiera brevet.",
     "useOriginal": "Använd mitt originalbrev",
     "useAI": "Använd AI-anpassat brev",
-    "createdAt": "Skapad"
+    "createdAt": "Skapad",
+    "showMore": "Visa mer",
+    "showLess": "Visa mindre",
+    "delete": "Ta bort",
+    "deleting": "Tar bort...",
+    "confirmDelete": "Ta bort brevet för \"{title}\"?",
+    "deleteFailed": "Det gick inte att ta bort brevet."
   },
   "onboarding": {
     "welcome": {

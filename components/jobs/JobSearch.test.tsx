@@ -959,6 +959,183 @@ describe('JobSearch', () => {
     })
   })
 
+  it('updates skill-match sorting when selected skills change after a skill search', async () => {
+    const user = userEvent.setup()
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+      const url = typeof input === 'string' ? input : input.toString()
+
+      if (url === '/api/documents') {
+        return Promise.resolve(
+          jsonResponse({
+            success: true,
+            data: [{ id: 'doc-1', type: 'cv', skills: ['React', 'Node'] }],
+          })
+        )
+      }
+
+      if (url.startsWith('/api/skills/catalog')) {
+        return Promise.resolve(jsonResponse({ success: true, data: [] }))
+      }
+
+      if (url === '/api/jobs/save') {
+        return Promise.resolve(jsonResponse({ success: true, data: [] }))
+      }
+
+      if (url.startsWith('/api/jobs?')) {
+        const query = new URL(url, 'http://localhost').searchParams.get('q') ?? ''
+
+        const jobA = {
+          id: 'job-a',
+          headline: 'Fullstack React Node',
+          publication_date: '2026-01-01T10:00:00.000Z',
+          description: { text: 'React Node' },
+          occupation: { label: 'Developer' },
+          workplace_address: { region: 'Stockholm' },
+        }
+
+        const jobB = {
+          id: 'job-b',
+          headline: 'React Only Role',
+          publication_date: '2026-01-30T10:00:00.000Z',
+          description: { text: 'React' },
+          occupation: { label: 'Developer' },
+          workplace_address: { region: 'Stockholm' },
+        }
+
+        if (query === 'React') {
+          return Promise.resolve(
+            jsonResponse({ success: true, data: { hits: [jobA, jobB] } })
+          )
+        }
+
+        if (query === 'Node') {
+          return Promise.resolve(
+            jsonResponse({ success: true, data: { hits: [jobA] } })
+          )
+        }
+      }
+
+      return Promise.reject(new Error(`Unexpected fetch: ${url}`))
+    })
+
+    render(<JobSearch />)
+
+    await screen.findByText(/2\/2 skills selected/i)
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
+
+    expect(await screen.findByRole('link', { name: 'Fullstack React Node' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'React Only Role' })).toBeInTheDocument()
+
+    expect(screen.getByText('2 matched skills')).toBeInTheDocument()
+    expect(screen.getByText('1 matched skills')).toBeInTheDocument()
+
+    const initialLinks = screen.getAllByRole('link', {
+      name: /Fullstack React Node|React Only Role/i,
+    })
+    expect(initialLinks[0]).toHaveTextContent('Fullstack React Node')
+
+    await user.click(screen.getByRole('button', { name: /2\/2 skills selected/i }))
+    await user.click(screen.getByRole('button', { name: 'Node' }))
+
+    await waitFor(() => {
+      expect(screen.queryByText('2 matched skills')).not.toBeInTheDocument()
+    })
+
+    const updatedLinks = screen.getAllByRole('link', {
+      name: /Fullstack React Node|React Only Role/i,
+    })
+    expect(updatedLinks[0]).toHaveTextContent('React Only Role')
+  })
+
+  it('re-ranks text results when skills load after searching', async () => {
+    const user = userEvent.setup()
+    let resolveDocuments: ((value: Response | PromiseLike<Response>) => void) | null = null
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+      const url = typeof input === 'string' ? input : input.toString()
+
+      if (url === '/api/documents') {
+        return new Promise<Response>((resolve) => {
+          resolveDocuments = resolve
+        })
+      }
+
+      if (url.startsWith('/api/skills/catalog')) {
+        return Promise.resolve(jsonResponse({ success: true, data: [] }))
+      }
+
+      if (url === '/api/jobs/save') {
+        return Promise.resolve(jsonResponse({ success: true, data: [] }))
+      }
+
+      if (url.startsWith('/api/jobs?')) {
+        const query = new URL(url, 'http://localhost').searchParams.get('q') ?? ''
+        if (query === 'developer') {
+          return Promise.resolve(
+            jsonResponse({
+              success: true,
+              data: {
+                hits: [
+                  {
+                    id: 'job-b',
+                    headline: 'No Skill Match Developer',
+                    publication_date: '2026-01-30T10:00:00.000Z',
+                    description: { text: 'Docker Kubernetes' },
+                    occupation: { label: 'Developer' },
+                    workplace_address: { region: 'Stockholm' },
+                  },
+                  {
+                    id: 'job-a',
+                    headline: 'React Developer',
+                    publication_date: '2026-01-01T10:00:00.000Z',
+                    description: { text: 'React TypeScript' },
+                    occupation: { label: 'Developer' },
+                    workplace_address: { region: 'Stockholm' },
+                  },
+                ],
+              },
+            })
+          )
+        }
+      }
+
+      return Promise.reject(new Error(`Unexpected fetch: ${url}`))
+    })
+
+    render(<JobSearch />)
+
+    const searchInput = await screen.findByPlaceholderText(/search by job title/i)
+    await user.type(searchInput, 'developer')
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
+
+    expect(await screen.findByRole('link', { name: 'No Skill Match Developer' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'React Developer' })).toBeInTheDocument()
+
+    const beforeLinks = screen.getAllByRole('link', {
+      name: /No Skill Match Developer|React Developer/i,
+    })
+    expect(beforeLinks[0]).toHaveTextContent('No Skill Match Developer')
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- set by mock
+    resolveDocuments!(
+      jsonResponse({
+        success: true,
+        data: [{ id: 'doc-1', type: 'cv', skills: ['React'] }],
+      })
+    )
+
+    await screen.findByText(/1\/1 skills selected/i)
+    expect(await screen.findByText('1/1 skills match')).toBeInTheDocument()
+
+    await waitFor(() => {
+      const afterLinks = screen.getAllByRole('link', {
+        name: /No Skill Match Developer|React Developer/i,
+      })
+      expect(afterLinks[0]).toHaveTextContent('React Developer')
+    })
+  })
+
   it('aborts in-flight text search on unmount', async () => {
     const user = userEvent.setup()
     let requestAborted = false

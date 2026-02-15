@@ -262,15 +262,26 @@
   },
   "letters": {
     "title": "Generated Letters",
+    "count": "{count, plural, one {# letter} other {# letters}}",
     "jobIdLabel": "Job ID",
     "jobTitleLabel": "Job",
+    "unknownJobTitle": "Unknown job",
     "empty": "No letters generated yet. Search for jobs and generate personal letters.",
     "aiAdapted": "Personal Letter AI-adapted for this job",
+    "viewJob": "View job",
+    "viewListing": "View listing",
     "copy": "Copy",
     "copied": "Copied!",
+    "copyFailed": "Failed to copy letter.",
     "useOriginal": "Use my original letter",
     "useAI": "Use AI-adapted letter",
-    "createdAt": "Created"
+    "createdAt": "Created",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "confirmDelete": "Delete the letter for \"{title}\"?",
+    "deleteFailed": "Failed to delete letter."
   },
   "onboarding": {
     "welcome": {
