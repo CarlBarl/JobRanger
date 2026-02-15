@@ -232,7 +232,9 @@
       "failedToSave": "Kunde inte spara",
       "failedToLoadDocuments": "Kunde inte ladda dokument",
       "uploadCvFirst": "Ladda upp ett CV först",
-      "failedToGenerate": "Kunde inte generera brev"
+      "failedToGenerate": "Kunde inte generera brev",
+      "generateSuccess": "Brevet har skapats!",
+      "viewLetters": "Visa dina brev"
     },
     "card": {
       "published": "Publicerad",
@@ -252,12 +254,20 @@
     },
     "detail": {
       "apply": "Ansök",
-      "viewListing": "Visa annons",
+      "viewListing": "Visa originalannons",
       "noDescription": "Ingen beskrivning tillgänglig.",
       "loadErrorTitle": "Kunde inte ladda jobb",
       "loadErrorMessage": "Det gick inte att ladda jobbet",
       "published": "Publicerad",
-      "deadline": "Sista ansökningsdag"
+      "deadline": "Sista ansökningsdag",
+      "backToJobs": "Tillbaka till jobb",
+      "aboutRole": "Om tjänsten",
+      "keyDetails": "Nyckeluppgifter",
+      "occupationLabel": "Yrke",
+      "locationLabel": "Plats",
+      "employmentLabel": "Anställning",
+      "expired": "Utgången",
+      "closingSoon": "Stänger snart"
     }
   },
   "letters": {
@@ -272,6 +282,7 @@
     "viewListing": "Visa annons",
     "copy": "Kopiera",
     "copied": "Kopierat!",
+    "copiedToast": "Brevet har kopierats",
     "copyFailed": "Kunde inte kopiera brevet.",
     "useOriginal": "Använd mitt originalbrev",
     "useAI": "Använd AI-anpassat brev",
