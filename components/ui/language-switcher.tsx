@@ -23,8 +23,8 @@ export function LanguageSwitcher() {
 
   return (
     <Button variant="ghost" size="sm" onClick={toggleLocale}>
-      <Globe className="h-4 w-4 mr-1" />
-      {locale === 'sv' ? 'EN' : 'SV'}
+      <Globe className="h-4 w-4 sm:mr-1" />
+      <span className="hidden sm:inline">{locale === 'sv' ? 'EN' : 'SV'}</span>
     </Button>
   )
 }
