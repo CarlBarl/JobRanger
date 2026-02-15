@@ -75,7 +75,15 @@
       "Bash(netstat:*)",
       "Bash(cmd /c \"taskkill /PID 36576 /F /T\")",
       "Bash(cmd /c \"taskkill /IM node.exe /F\")",
-      "Bash(cmd /c \"netstat -ano | findstr :3001 | findstr LISTENING\")"
+      "Bash(cmd /c \"netstat -ano | findstr :3001 | findstr LISTENING\")",
+      "WebFetch(domain:jobtechdev.se)",
+      "WebFetch(domain:gitlab.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:jobad-enrichments-api.jobtechdev.se)",
+      "mcp__ide__getDiagnostics",
+      "Bash(npx next lint:*)",
+      "Bash(cmd /c \"taskkill /PID 3268 /F\")",
+      "Bash(cmd /c \"del /f C:\\\\Users\\\\Calle\\\\Dev\\\\JobRanger\\\\.next\\\\dev\\\\lock 2>nul\")"
     ]
   }
 }
