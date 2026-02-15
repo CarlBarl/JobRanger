@@ -1,11 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SearchBar } from '@/components/jobs/SearchBar'
 import { SkillSelector } from '@/components/jobs/SkillSelector'
 import { SearchResults } from '@/components/jobs/SearchResults'
+import { SearchStatusBar } from '@/components/jobs/SearchStatusBar'
 import { SavedJobsPanel } from '@/components/jobs/SavedJobsPanel'
 import { extractJobSkills, scoreJobRelevance } from '@/lib/scoring'
 import { cn } from '@/lib/utils'
@@ -120,7 +121,7 @@ const MAX_VISIBLE_CHIPS = 5
 export function JobSearch() {
   const t = useTranslations('jobs')
   const [query, setQuery] = useState('')
-  const [jobs, setJobs] = useState<AFJobHit[]>([])
+  const [jobs, setJobs] = useState<ScoredJob[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
@@ -139,6 +140,14 @@ export function JobSearch() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(20)
   const [skillCatalog, setSkillCatalog] = useState<string[] | null>(null)
+  const [searchPhase, setSearchPhase] = useState<'idle' | 'searching' | 'complete'>('idle')
+  const [pendingQueries, setPendingQueries] = useState(0)
+  const [failedQueries, setFailedQueries] = useState(0)
+  const [totalFound, setTotalFound] = useState(0)
+  const searchRunIdRef = useRef(0)
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const jobsMapRef = useRef(new Map<string, ScoredJob>())
+  const flushTimerRef = useRef<number | null>(null)
 
   const selectedSkillSet = useMemo(() => getUniqueSkills(selectedSkills), [selectedSkills])
   const allSkillSet = useMemo(() => getUniqueSkills(skills), [skills])
@@ -170,6 +179,30 @@ export function JobSearch() {
     },
     [t]
   )
+
+  const flushJobsToState = useCallback(() => {
+    const allJobs = Array.from(jobsMapRef.current.values())
+    // Stable sort: score desc -> date desc -> id asc (deterministic tie-breaker)
+    allJobs.sort((a, b) => {
+      const scoreA = a.relevance?.matched ?? 0
+      const scoreB = b.relevance?.matched ?? 0
+      if (scoreB !== scoreA) return scoreB - scoreA
+      const dateA = Date.parse(a.publication_date ?? '') || 0
+      const dateB = Date.parse(b.publication_date ?? '') || 0
+      if (dateB !== dateA) return dateB - dateA
+      return a.id.localeCompare(b.id)
+    })
+    setJobs(allJobs)
+    setTotalFound(allJobs.length)
+  }, [])
+
+  const scheduleFlush = useCallback(() => {
+    if (flushTimerRef.current !== null) return
+    flushTimerRef.current = requestAnimationFrame(() => {
+      flushTimerRef.current = null
+      flushJobsToState()
+    })
+  }, [flushJobsToState])
 
   const fetchJobById = useCallback(async (id: string): Promise<AFJobHit | null> => {
     const res = await fetch(`/api/jobs/${encodeURIComponent(id)}`)
@@ -417,105 +450,86 @@ export function JobSearch() {
         return
       }
 
+      // Cancel previous search
+      abortControllerRef.current?.abort()
+      const controller = new AbortController()
+      abortControllerRef.current = controller
+      const runId = ++searchRunIdRef.current
+
+      // Reset state
+      jobsMapRef.current = new Map()
+      setJobs([])
+      setSearchPhase('searching')
       setLoading(true)
       setHasSearched(true)
       setError(null)
       setCurrentPage(1)
+      setPendingQueries(normalizedSkills.length)
+      setFailedQueries(0)
+      setTotalFound(0)
+      setSearchSkillMatches({})
 
-      try {
-        const settled = await Promise.allSettled(
-          normalizedSkills.map(async (skill) => ({
-            skill,
-            hits: await fetchJobsByQuery(
+      let localFailed = 0
+
+      await Promise.allSettled(
+        normalizedSkills.map(async (skill) => {
+          try {
+            const hits = await fetchJobsByQuery(
               textQuery ? `${skill} ${textQuery}` : skill,
               { region }
-            ),
-          }))
-        )
-
-        const successfulSearches = settled.filter(
-          (result): result is PromiseFulfilledResult<{ skill: string; hits: AFJobHit[] }> =>
-            result.status === 'fulfilled'
-        )
-
-        if (successfulSearches.length === 0) {
-          setJobs([])
-          setSearchSkillMatches({})
-          setError(t('errorSearchFailed'))
-          return
-        }
-
-        const mergedResults = new Map<string, { job: AFJobHit; skills: Set<string> }>()
-        for (const result of successfulSearches) {
-          for (const hit of result.value.hits) {
-            const existing = mergedResults.get(hit.id)
-            if (existing) {
-              existing.skills.add(result.value.skill)
-            } else {
-              mergedResults.set(hit.id, {
-                job: hit,
-                skills: new Set([result.value.skill]),
-              })
-            }
-          }
-        }
-
-        const queryLower = textQuery.toLowerCase()
-
-        const rankedResults = Array.from(mergedResults.values())
-          .map((entry) => {
-            const relevance = scoreJobRelevance(
-              {
-                headline: entry.job.headline,
-                description: entry.job.description?.text,
-                occupation: entry.job.occupation?.label,
-              },
-              normalizedSkills
             )
 
-            return {
-              ...entry,
-              relevance,
+            // Guard: ignore if stale search
+            if (searchRunIdRef.current !== runId) return
+
+            // Score and merge into map (score once)
+            for (const hit of hits) {
+              if (!jobsMapRef.current.has(hit.id)) {
+                const relevance = scoreJobRelevance(
+                  {
+                    headline: hit.headline,
+                    description: hit.description?.text,
+                    occupation: hit.occupation?.label,
+                  },
+                  normalizedSkills
+                )
+                const scoredJob: ScoredJob = { ...hit, relevance }
+                jobsMapRef.current.set(hit.id, scoredJob)
+              }
             }
-          })
-          .sort((left, right) => {
-            const localMatchDelta = right.relevance.matched - left.relevance.matched
-            if (localMatchDelta !== 0) return localMatchDelta
 
-            const queryCoverageDelta = right.skills.size - left.skills.size
-            if (queryCoverageDelta !== 0) return queryCoverageDelta
-
-            if (textQuery) {
-              const leftScore = textRelevanceBonus(left.job, queryLower)
-              const rightScore = textRelevanceBonus(right.job, queryLower)
-              if (rightScore !== leftScore) return rightScore - leftScore
+            // Schedule batched UI update
+            scheduleFlush()
+          } catch {
+            if (searchRunIdRef.current !== runId) return
+            localFailed++
+          } finally {
+            if (searchRunIdRef.current === runId) {
+              setPendingQueries((prev) => Math.max(0, prev - 1))
             }
+          }
+        })
+      )
 
-            return sortByDateDesc(left.job.publication_date, right.job.publication_date)
-          })
+      // Final flush
+      if (searchRunIdRef.current !== runId) return
+      if (flushTimerRef.current !== null) {
+        cancelAnimationFrame(flushTimerRef.current)
+        flushTimerRef.current = null
+      }
+      flushJobsToState()
 
-        const mergedJobs = rankedResults.map((entry) => entry.job)
+      setFailedQueries(localFailed)
+      setSearchPhase('complete')
+      setLoading(false)
 
-        const matchCounts = Object.fromEntries(
-          rankedResults.map((entry) => [entry.job.id, entry.relevance.matched])
-        )
-
-        setJobs(mergedJobs)
-        setSearchSkillMatches(matchCounts)
-
-        const failedSearches = settled.length - successfulSearches.length
-        if (failedSearches > 0) {
-          setError(t('skillSearchPartialFailure', { count: failedSearches }))
-        }
-      } catch {
-        setJobs([])
-        setSearchSkillMatches({})
+      if (localFailed > 0 && jobsMapRef.current.size > 0) {
+        setError(t('skillSearchPartialFailure', { count: localFailed }))
+      } else if (jobsMapRef.current.size === 0) {
         setError(t('errorSearchFailed'))
-      } finally {
-        setLoading(false)
       }
     },
-    [fetchJobsByQuery, t]
+    [fetchJobsByQuery, flushJobsToState, scheduleFlush, t]
   )
 
   // Unified search: uses skills if selected, text query as fallback/addition
@@ -546,14 +560,23 @@ export function JobSearch() {
     setSearchSkillMatches({})
     setRelevanceEnabled(hasQuery && hasSelectedSkills)
     setCurrentPage(1)
+    setSearchPhase('searching')
+    setTotalFound(0)
+    setFailedQueries(0)
 
     void fetchJobsByQuery(queryForFetch, { region: trimmedRegion })
-      .then((results) => setJobs(results))
+      .then((results) => {
+        setJobs(results)
+        setTotalFound(results.length)
+        setSearchPhase('complete')
+      })
       .catch((searchError) => {
         const message =
           searchError instanceof Error ? searchError.message : t('errorSearchFailed')
         setJobs([])
         setError(message)
+        setTotalFound(0)
+        setSearchPhase('complete')
       })
       .finally(() => setLoading(false))
   }, [fetchJobsByQuery, query, runSkillsSearch, selectedRegion, selectedSkillSet, t])
@@ -583,17 +606,20 @@ export function JobSearch() {
     const relevanceSkills = selectedSkillSet
     const shouldApplyRelevance = relevanceEnabled && relevanceSkills.length > 0
     const withRelevance: ScoredJob[] = shouldApplyRelevance
-      ? jobs.map((job) => ({
-          ...job,
-          relevance: scoreJobRelevance(
-            {
-              headline: job.headline,
-              description: job.description?.text,
-              occupation: job.occupation?.label,
-            },
-            relevanceSkills
-          ),
-        }))
+      ? jobs.map((job) => {
+          if (job.relevance) return job
+          return {
+            ...job,
+            relevance: scoreJobRelevance(
+              {
+                headline: job.headline,
+                description: job.description?.text,
+                occupation: job.occupation?.label,
+              },
+              relevanceSkills
+            ),
+          }
+        })
       : jobs
 
     const getSearchSkillMatchCount = (job: ScoredJob): number => {
@@ -674,6 +700,16 @@ export function JobSearch() {
     setCurrentPage((prev) => Math.min(prev, maxPage))
   }, [scoredJobs.length, itemsPerPage])
 
+  // Cleanup flush timer and abort controller on unmount
+  useEffect(() => {
+    return () => {
+      if (flushTimerRef.current !== null) {
+        cancelAnimationFrame(flushTimerRef.current)
+      }
+      abortControllerRef.current?.abort()
+    }
+  }, [])
+
   const totalPages = Math.max(1, Math.ceil(scoredJobs.length / itemsPerPage))
   const paginatedJobs = scoredJobs.slice(
     (currentPage - 1) * itemsPerPage,
@@ -753,6 +789,12 @@ export function JobSearch() {
             skillsError={skillsError}
           />
 
+          <SearchStatusBar
+            phase={searchPhase}
+            totalFound={totalFound}
+            failedQueries={failedQueries}
+          />
+
           <SearchResults
             jobs={paginatedJobs}
             hasSearched={hasSearched}
@@ -768,8 +810,8 @@ export function JobSearch() {
               totalPages,
               totalItems: scoredJobs.length,
               itemsPerPage,
-              onPageChange: setCurrentPage,
-              onItemsPerPageChange: setItemsPerPage,
+              onPageChange: searchPhase !== 'searching' ? setCurrentPage : () => {},
+              onItemsPerPageChange: searchPhase !== 'searching' ? setItemsPerPage : () => {},
             }}
           />
         </TabsContent>
