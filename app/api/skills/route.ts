@@ -1,13 +1,16 @@
 import { z } from 'zod'
 import { NextResponse, type NextRequest } from 'next/server'
+import { UsageEventType } from '@prisma/client'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { getOrCreateUser } from '@/lib/auth'
 import { extractSkillsFromCV } from '@/lib/services/gemini'
 import { fetchSkillCatalog } from '@/lib/services/jobtech-enrichments'
 import { buildCatalogIndex, mapSkillsToCatalogWithIndex } from '@/lib/skills/catalog-map'
 import { DEFAULT_JOB_SKILL_CATALOG } from '@/lib/scoring'
 import { enforceCsrfProtection } from '@/lib/security/csrf'
 import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
+import { enforceMonthlyQuota, recordUsageEvent } from '@/lib/security/monthly-quota'
 
 const RequestSchema = z.object({
   documentId: z.string().min(1),
@@ -37,6 +40,16 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  if (!user.email) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: { code: 'BAD_REQUEST', message: 'Missing email for authenticated user' },
+      },
+      { status: 400 }
+    )
+  }
+
   const extractLimit = consumeRateLimit('skills-extract-user', user.id, 30, 60 * 60 * 1000)
   if (!extractLimit.allowed) {
     return rateLimitResponse(
@@ -45,12 +58,23 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  const appUser = await getOrCreateUser(user.id, user.email)
+  const monthlyQuotaError = await enforceMonthlyQuota({
+    userId: appUser.id,
+    userTier: appUser.tier,
+    usageType: UsageEventType.SKILLS_EXTRACT,
+    message: 'Monthly skills extraction quota reached for your plan.',
+  })
+  if (monthlyQuotaError) {
+    return monthlyQuotaError
+  }
+
   try {
     const body = await request.json()
     const { documentId } = RequestSchema.parse(body)
 
     const document = await prisma.document.findFirst({
-      where: { id: documentId, userId: user.id, type: 'cv' },
+      where: { id: documentId, userId: appUser.id, type: 'cv' },
     })
 
     if (!document) {
@@ -90,6 +114,15 @@ export async function POST(request: NextRequest) {
       where: { id: documentId },
       data: { skills: skillsToStore },
     })
+
+    try {
+      await recordUsageEvent(appUser.id, UsageEventType.SKILLS_EXTRACT)
+    } catch (usageEventError) {
+      console.error(
+        'Failed to record skills extract usage event:',
+        usageEventError instanceof Error ? usageEventError.message : usageEventError
+      )
+    }
 
     return NextResponse.json({ success: true, data: { skills: skillsToStore } })
   } catch (error) {

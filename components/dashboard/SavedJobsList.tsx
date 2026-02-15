@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { ArrowUpRight, MapPin, Briefcase, X } from 'lucide-react'
+import { MapPin, Briefcase, X } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
@@ -92,45 +92,54 @@ export function SavedJobsList({ jobs: initialJobs, totalCount: initialCount, cla
                   job.isStale ? 'opacity-60' : 'hover:bg-secondary/30'
                 )}
               >
-                <a
-                  href={job.isStale ? undefined : (job.webpageUrl || `/jobs/${job.afJobId}`)}
-                  target={!job.isStale && job.webpageUrl ? '_blank' : undefined}
-                  rel={!job.isStale && job.webpageUrl ? 'noopener noreferrer' : undefined}
-                  className={cn(
-                    'min-w-0 flex-1',
-                    job.isStale ? 'cursor-default' : 'cursor-pointer'
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <p className={cn(
-                      'truncate text-[13px] font-medium transition-colors duration-200',
-                      job.isStale
-                        ? 'text-muted-foreground line-through decoration-muted-foreground/30'
-                        : 'text-foreground group-hover:text-primary'
-                    )}>
-                      {job.headline}
-                    </p>
-                    {job.isStale && (
+                {job.isStale ? (
+                  <div className="min-w-0 flex-1 cursor-default">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-[13px] font-medium transition-colors duration-200 text-muted-foreground line-through decoration-muted-foreground/30">
+                        {job.headline}
+                      </p>
                       <span className="shrink-0 rounded bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive/70">
                         {t('jobExpired')}
                       </span>
-                    )}
+                    </div>
+                    <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground/70">
+                      {job.employer && (
+                        <span className="inline-flex items-center gap-1 truncate">
+                          <Briefcase className="h-2.5 w-2.5 shrink-0" />
+                          {job.employer}
+                        </span>
+                      )}
+                      {job.location && (
+                        <span className="inline-flex items-center gap-1 truncate">
+                          <MapPin className="h-2.5 w-2.5 shrink-0" />
+                          {job.location}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground/70">
-                    {job.employer && (
-                      <span className="inline-flex items-center gap-1 truncate">
-                        <Briefcase className="h-2.5 w-2.5 shrink-0" />
-                        {job.employer}
-                      </span>
-                    )}
-                    {job.location && (
-                      <span className="inline-flex items-center gap-1 truncate">
-                        <MapPin className="h-2.5 w-2.5 shrink-0" />
-                        {job.location}
-                      </span>
-                    )}
-                  </div>
-                </a>
+                ) : (
+                  <Link href={`/jobs/${job.afJobId}`} className="min-w-0 flex-1 cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-[13px] font-medium transition-colors duration-200 text-foreground group-hover:text-primary">
+                        {job.headline}
+                      </p>
+                    </div>
+                    <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground/70">
+                      {job.employer && (
+                        <span className="inline-flex items-center gap-1 truncate">
+                          <Briefcase className="h-2.5 w-2.5 shrink-0" />
+                          {job.employer}
+                        </span>
+                      )}
+                      {job.location && (
+                        <span className="inline-flex items-center gap-1 truncate">
+                          <MapPin className="h-2.5 w-2.5 shrink-0" />
+                          {job.location}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                )}
 
                 <div className="flex shrink-0 items-center gap-2 pt-0.5">
                   {!job.isStale && job.deadline && (

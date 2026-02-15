@@ -80,6 +80,7 @@ The `SavedJob` model intentionally stores only `afJobId` (not full job data) to 
 
 ### Supabase RLS Policies
 Row Level Security policies must be applied manually via SQL after `prisma db push`. Files: `prisma/rls-policies.sql` and `prisma/storage-rls-policies.sql`.
+When adding new app tables (for example quota tracking like `UsageEvent`), update `prisma/rls-policies.sql` immediately; otherwise Supabase client-side access can be unintentionally unrestricted.
 
 ## i18n
 
@@ -119,3 +120,11 @@ For complex route handlers (for example `app/api/upload/route.ts`), split respon
 
 ### Keep Interactive UI Files Focused on Composition
 When client components grow large, extract stateful hooks + presentational blocks into feature folders (`components/jobs/search`, `components/jobs/results`, `components/dashboard/guide`, `components/auth/signin`, `components/letters`). This keeps the top-level component as composition logic and preserves behavior while improving readability and testability.
+
+## Quotas & Entitlements
+
+### Layer Monthly Plan Quotas Over Hourly Rate Limits
+For AI endpoints, keep existing hourly in-memory anti-abuse limits (`consumeRateLimit`) and add DB-backed monthly quotas by tier (`UsageEvent` counts). The layered approach protects infrastructure from bursts while enforcing product entitlements across server restarts/instances.
+
+### Normalize Blank Guidance Inputs Before Prompting
+For letter generation guidance fields, normalize missing/empty/whitespace inputs to `undefined` before building prompts. This avoids treating blank strings as explicit instructions and keeps "generate with no guidance" behavior reliable.

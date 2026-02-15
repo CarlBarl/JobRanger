@@ -16,6 +16,7 @@ ALTER TABLE "User" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Document" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "SavedJob" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "GeneratedLetter" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "UsageEvent" ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- 2. USER TABLE POLICIES
@@ -131,7 +132,21 @@ CREATE POLICY "Users can delete own letters"
   USING (auth.uid()::text = "userId");
 
 -- ============================================
--- 6. VERIFY RLS IS ENABLED
+-- 6. USAGEEVENT TABLE POLICIES
+-- ============================================
+
+-- Allow users to read only their own usage events
+DROP POLICY IF EXISTS "Users can view own usage events" ON "UsageEvent";
+CREATE POLICY "Users can view own usage events"
+  ON "UsageEvent"
+  FOR SELECT
+  USING (auth.uid()::text = "userId");
+
+-- Intentionally no INSERT/UPDATE/DELETE policy for authenticated clients.
+-- Usage events are server-managed for quota accounting integrity.
+
+-- ============================================
+-- 7. VERIFY RLS IS ENABLED
 -- ============================================
 
 -- Run this to verify RLS status:
