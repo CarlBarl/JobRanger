@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { JobCard } from '@/components/jobs/JobCard'
+import { normalizeSkillKey } from '@/lib/skills/normalize'
 import {
   Pagination,
   PaginationContent,
@@ -153,7 +154,7 @@ export function SearchResults({
           {jobs.map((job) => {
             const extractedSkills = jobSkillsByJob[job.id] ?? []
             const matchedSkills = matchedSkillsByJob[job.id] ?? []
-            const matchedSkillSet = new Set(matchedSkills.map((skill) => skill.toLowerCase()))
+            const matchedSkillSet = new Set(matchedSkills.map((skill) => normalizeSkillKey(skill)))
             const isExpanded = expandedMatchedSkills.has(job.id)
             const hasExtractedSkills = extractedSkills.length > 0
 
@@ -191,7 +192,7 @@ export function SearchResults({
                     hasExtractedSkills ? (
                       <div className="flex flex-wrap gap-1.5" data-testid={`job-skills-${job.id}`}>
                         {extractedSkills.map((skill) => {
-                          const isMatched = matchedSkillSet.has(skill.toLowerCase())
+                          const isMatched = matchedSkillSet.has(normalizeSkillKey(skill))
 
                           return (
                             <span

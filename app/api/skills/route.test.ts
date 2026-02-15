@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   findFirst: vi.fn(),
   update: vi.fn(),
   extractSkillsFromCV: vi.fn(),
+  fetchSkillCatalog: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -29,11 +30,16 @@ vi.mock('@/lib/services/gemini', () => ({
   extractSkillsFromCV: mocks.extractSkillsFromCV,
 }))
 
+vi.mock('@/lib/services/jobtech-enrichments', () => ({
+  fetchSkillCatalog: mocks.fetchSkillCatalog,
+}))
+
 import { POST } from './route'
 
 describe('POST /api/skills', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.fetchSkillCatalog.mockResolvedValue([])
   })
 
   it('returns 401 when unauthenticated', async () => {
@@ -99,7 +105,8 @@ describe('POST /api/skills', () => {
       type: 'cv',
       parsedContent: 'cv text',
     })
-    mocks.extractSkillsFromCV.mockResolvedValue(['TypeScript'])
+    mocks.extractSkillsFromCV.mockResolvedValue(['React.js', 'Type Script', 'nodejs', 'Kubernetes'])
+    mocks.fetchSkillCatalog.mockResolvedValue(['React', 'TypeScript', 'Node.js', 'Kubernetes'])
 
     const req = new NextRequest('http://localhost/api/skills', {
       method: 'POST',
@@ -110,12 +117,12 @@ describe('POST /api/skills', () => {
     expect(res.status).toBe(200)
     await expect(res.json()).resolves.toEqual({
       success: true,
-      data: { skills: ['TypeScript'] },
+      data: { skills: ['React', 'TypeScript', 'Node.js', 'Kubernetes'] },
     })
 
     expect(mocks.update).toHaveBeenCalledWith({
       where: { id: 'doc-1' },
-      data: { skills: ['TypeScript'] },
+      data: { skills: ['React', 'TypeScript', 'Node.js', 'Kubernetes'] },
     })
   })
 })

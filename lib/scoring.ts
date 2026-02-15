@@ -1,3 +1,5 @@
+import { normalizeSkillKey } from './skills/normalize'
+
 interface JobTextFields {
   headline?: string | null
   description?: string | null
@@ -11,8 +13,6 @@ interface RelevanceScore {
   matchedSkills: string[]
 }
 
-const DIACRITIC_REGEX = /[\u0300-\u036f]/g
-const SPACE_REGEX = /\s+/g
 export const DEFAULT_JOB_SKILL_CATALOG = [
   // --- Programming Languages ---
   'JavaScript', 'TypeScript', 'Python', 'Java', 'C#', 'C++', 'C',
@@ -135,33 +135,21 @@ export const DEFAULT_JOB_SKILL_CATALOG = [
   'Arabiska', 'Mandarin',
 ] as const
 
-function normalize(value: string): string {
-  return value
-    .normalize('NFKD')
-    .replace(DIACRITIC_REGEX, '')
-    .toLowerCase()
-}
-
-function cleanSpaces(value: string): string {
-  return value.replace(SPACE_REGEX, ' ').trim()
-}
-
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-function normalizeForSkillMatching(value: string): string {
-  return cleanSpaces(normalize(value).replace(/[./_-]+/g, ' '))
-}
-
 function buildSkillVariants(skill: string): string[] {
-  const normalized = normalizeForSkillMatching(skill)
+  const normalized = normalizeSkillKey(skill)
   if (!normalized) return []
 
   const variants = new Set<string>([normalized])
 
+  if (normalized.includes(' ')) {
+    variants.add(normalized.replace(/ /g, ''))
+  }
+
   if (normalized === 'node' || normalized === 'nodejs' || normalized === 'node js') {
-    variants.add('node.js')
     variants.add('node js')
     variants.add('nodejs')
   }
@@ -175,6 +163,28 @@ function buildSkillVariants(skill: string): string[] {
   if (normalized === 'c++' || normalized === 'cpp') {
     variants.add('c++')
     variants.add('cpp')
+  }
+
+  if (normalized === 'react') {
+    variants.add('react js')
+    variants.add('reactjs')
+  }
+
+  if (normalized === 'vue') {
+    variants.add('vue js')
+    variants.add('vuejs')
+  }
+
+  if (normalized === 'typescript') {
+    variants.add('type script')
+  }
+
+  if (normalized === 'javascript') {
+    variants.add('java script')
+  }
+
+  if (normalized === 'net') {
+    variants.add('dotnet')
   }
 
   return Array.from(variants)
@@ -201,17 +211,13 @@ function hasSkillMatch(text: string, skill: string): boolean {
 }
 
 function buildJobText(job: JobTextFields): string {
-  return normalizeForSkillMatching(
-    [job.headline, job.description, job.occupation]
-      .filter(Boolean)
-      .join(' ')
-  )
+  return normalizeSkillKey([job.headline, job.description, job.occupation].filter(Boolean).join(' '))
 }
 
 function dedupeSkills(skills: readonly string[]): string[] {
   const byKey = new Map<string, string>()
   for (const skill of skills) {
-    const key = normalizeForSkillMatching(skill)
+    const key = normalizeSkillKey(skill)
     if (!key || byKey.has(key)) continue
     byKey.set(key, skill)
   }
