@@ -1,6 +1,9 @@
 import type { GuidedTourStep } from '@/components/guides/types'
 
-export type SegmentGuideMap = Record<'dashboard' | 'jobs' | 'job-detail', GuidedTourStep[]>
+export type SegmentGuideMap = Record<
+  'dashboard' | 'jobs' | 'job-detail' | 'letters' | 'settings',
+  GuidedTourStep[]
+>
 
 type GuideTranslations = (
   key: string,
@@ -161,12 +164,43 @@ export function createSegmentGuides(t: GuideTranslations): SegmentGuideMap {
         targetId: 'jobs-detail-guidance-input',
         title: t('tour.detail.steps.guidance.title'),
         description: t('tour.detail.steps.guidance.description'),
+        allowTargetInteraction: true,
       },
       {
         id: 'detail-generate',
         targetId: 'jobs-detail-generate-button',
         title: t('tour.detail.steps.generate.title'),
         description: t('tour.detail.steps.generate.description'),
+        allowTargetInteraction: true,
+        nextRequiresTargetId: 'jobs-detail-generated-now',
+      },
+    ],
+    letters: [
+      {
+        id: 'letters-overview',
+        targetId: 'letters-main',
+        title: t('tour.letters.steps.overview.title'),
+        description: t('tour.letters.steps.overview.description'),
+      },
+      {
+        id: 'letters-copy',
+        targetId: 'letters-first-copy',
+        title: t('tour.letters.steps.copy.title'),
+        description: t('tour.letters.steps.copy.description'),
+      },
+    ],
+    settings: [
+      {
+        id: 'settings-language',
+        targetId: 'settings-language-switcher',
+        title: t('tour.settings.steps.language.title'),
+        description: t('tour.settings.steps.language.description'),
+      },
+      {
+        id: 'settings-guidance',
+        targetId: 'dashboard-letter-guidance',
+        title: t('tour.settings.steps.guidance.title'),
+        description: t('tour.settings.steps.guidance.description'),
       },
     ],
   }

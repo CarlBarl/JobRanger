@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { CircleHelp } from 'lucide-react'
 import { GuidedTourOverlay } from '@/components/guides/GuidedTourOverlay'
 import { GuideReplayMenu } from '@/components/dashboard/guide/GuideReplayMenu'
+import { GuideCompletionToast } from '@/components/dashboard/guide/GuideCompletionToast'
 import { createSegmentGuides } from '@/components/dashboard/guide/segments'
 import { useGuideFlowState } from '@/components/dashboard/guide/useGuideFlowState'
 import { useGuideReplayActions } from '@/components/dashboard/guide/useGuideReplayActions'
@@ -21,6 +22,7 @@ export function GuideReplayControl() {
   const router = useRouter()
   const wrapperRef = useRef<HTMLDivElement | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [completionToastOpen, setCompletionToastOpen] = useState(false)
 
   const postGuideAction = useCallback(async (action: string): Promise<boolean> => {
     try {
@@ -50,17 +52,27 @@ export function GuideReplayControl() {
   } = useGuideFlowState({
     pathname,
     onNavigateDashboard: () => router.push('/dashboard'),
+    onNavigateJobs: () => router.push('/jobs'),
+    onNavigateLetters: (jobId?: string) =>
+      router.push(jobId ? `/letters?jobId=${encodeURIComponent(jobId)}` : '/letters'),
+    onNavigateSettings: () => router.push('/settings'),
     onDismissed: () => {
       void postGuideAction('markDashboardGuideDismissed')
     },
     onCompleted: () => {
       void postGuideAction('markDashboardGuideCompleted')
+      setCompletionToastOpen(true)
     },
   })
 
+  const startGuide = useCallback(() => {
+    void postGuideAction('markDashboardGuideStarted')
+    startFullGuide()
+  }, [postGuideAction, startFullGuide])
+
   const { busyAction, handleReplayDashboardGuide, handleReplayOnboardingGuide } = useGuideReplayActions({
     postGuideAction,
-    startFullGuide,
+    startFullGuide: startGuide,
     resetLocalGuideState,
     onNavigateOnboardingReplay: () => router.push('/onboarding?replay=true'),
   })
@@ -70,13 +82,17 @@ export function GuideReplayControl() {
   const currentGuide =
     activeSegment === 'dashboard' ||
     activeSegment === 'jobs' ||
-    activeSegment === 'job-detail'
+    activeSegment === 'job-detail' ||
+    activeSegment === 'letters' ||
+    activeSegment === 'settings'
       ? segmentGuides[activeSegment]
       : []
 
   const finishLabel = useMemo(() => {
     if (activeSegment === 'dashboard') return t('tour.controls.continueJobs')
     if (activeSegment === 'jobs') return t('tour.controls.continueListing')
+    if (activeSegment === 'job-detail') return t('tour.controls.continueLetters')
+    if (activeSegment === 'letters') return t('tour.controls.continueSettings')
     return t('tour.controls.finish')
   }, [activeSegment, t])
 
@@ -95,14 +111,14 @@ export function GuideReplayControl() {
 
   useEffect(() => {
     const handleStartDashboardGuide = () => {
-      startFullGuide()
+      startGuide()
     }
 
     window.addEventListener(START_DASHBOARD_GUIDE_EVENT, handleStartDashboardGuide)
     return () => {
       window.removeEventListener(START_DASHBOARD_GUIDE_EVENT, handleStartDashboardGuide)
     }
-  }, [startFullGuide])
+  }, [startGuide])
 
   const onReplayDashboard = useCallback(async () => {
     await handleReplayDashboardGuide()
@@ -116,6 +132,12 @@ export function GuideReplayControl() {
 
   return (
     <>
+      <GuideCompletionToast
+        open={completionToastOpen}
+        title={t('tour.completionToast.title')}
+        description={t('tour.completionToast.description')}
+        onClose={() => setCompletionToastOpen(false)}
+      />
       <div ref={wrapperRef} className="relative" data-guide-id="top-nav-guide-button">
         <button
           type="button"
@@ -146,6 +168,8 @@ export function GuideReplayControl() {
           next: t('tour.controls.next'),
           finish: finishLabel,
           skip: t('tour.controls.skip'),
+          outsideClickHint: t('tour.controls.outsideClickHint'),
+          nextLockedHint: t('tour.controls.nextLockedHint'),
         }}
         onClose={handleGuideClose}
       />

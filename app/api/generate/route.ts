@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { NextResponse, type NextRequest } from 'next/server'
-import { Prisma, UsageEventType } from '@prisma/client'
+import { Prisma, UsageEventType, UserTier } from '@prisma/client'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
@@ -14,7 +14,10 @@ const RequestSchema = z.object({
   afJobId: z.string().min(1).regex(/^\d{1,15}$/, 'Invalid job ID format'),
   documentId: z.string().min(1),
   guidanceOverride: z.string().trim().max(1200).optional(),
+  guideBonus: z.boolean().optional(),
 })
+
+const GUIDE_BONUS_MAX_AGE_MS = 6 * 60 * 60 * 1000
 
 export async function POST(request: NextRequest) {
   const csrfError = enforceCsrfProtection(request)
@@ -34,7 +37,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { afJobId, documentId, guidanceOverride } = RequestSchema.parse(body)
+    const { afJobId, documentId, guidanceOverride, guideBonus } = RequestSchema.parse(body)
 
     if (!authUser.email) {
       return NextResponse.json(
@@ -51,6 +54,7 @@ export async function POST(request: NextRequest) {
     const guidanceOverrideTrimmed = guidanceOverride?.trim() || undefined
     const defaultGuidanceTrimmed = user.letterGuidanceDefault?.trim() || undefined
     const resolvedGuidance = guidanceOverrideTrimmed ?? defaultGuidanceTrimmed
+    const wantsGuideBonus = Boolean(guideBonus)
 
     const userLimit = consumeRateLimit('generate-letter-user', user.id, 20, 60 * 60 * 1000)
     if (!userLimit.allowed) {
@@ -60,14 +64,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const monthlyQuotaError = await enforceMonthlyQuota({
-      userId: user.id,
-      userTier: user.tier,
-      usageType: UsageEventType.GENERATE_LETTER,
-      message: 'Monthly letter generation quota reached for your plan.',
-    })
-    if (monthlyQuotaError) {
-      return monthlyQuotaError
+    const now = new Date()
+    const bonusWindowStart = new Date(now.getTime() - GUIDE_BONUS_MAX_AGE_MS)
+    const canAttemptGuideBonus =
+      wantsGuideBonus &&
+      user.tier === UserTier.FREE &&
+      !user.dashboardGuideBonusGenerateLetterUsedAt &&
+      Boolean(user.dashboardGuideLastStartedAt) &&
+      (user.dashboardGuideLastStartedAt?.getTime() ?? 0) >= bonusWindowStart.getTime()
+
+    if (!wantsGuideBonus) {
+      const monthlyQuotaError = await enforceMonthlyQuota({
+        userId: user.id,
+        userTier: user.tier,
+        usageType: UsageEventType.GENERATE_LETTER,
+        message: 'Monthly letter generation quota reached for your plan.',
+        now,
+      })
+      if (monthlyQuotaError) {
+        return monthlyQuotaError
+      }
     }
 
     const job = await getJobById(afJobId)
@@ -87,6 +103,36 @@ export async function POST(request: NextRequest) {
         { success: false, error: { code: 'NOT_FOUND', message: 'CV not found' } },
         { status: 404 }
       )
+    }
+
+    let guideBonusReserved = false
+    if (canAttemptGuideBonus) {
+      const reservation = await prisma.user.updateMany({
+        where: {
+          id: user.id,
+          tier: UserTier.FREE,
+          dashboardGuideBonusGenerateLetterUsedAt: null,
+          dashboardGuideLastStartedAt: { gte: bonusWindowStart },
+        },
+        data: {
+          dashboardGuideBonusGenerateLetterUsedAt: now,
+        },
+      })
+
+      guideBonusReserved = reservation.count === 1
+    }
+
+    if (wantsGuideBonus && !guideBonusReserved) {
+      const monthlyQuotaError = await enforceMonthlyQuota({
+        userId: user.id,
+        userTier: user.tier,
+        usageType: UsageEventType.GENERATE_LETTER,
+        message: 'Monthly letter generation quota reached for your plan.',
+        now,
+      })
+      if (monthlyQuotaError) {
+        return monthlyQuotaError
+      }
     }
 
     // Find user's Personal Letter (optional) - use the most recent one
@@ -142,13 +188,15 @@ export async function POST(request: NextRequest) {
       data: createData,
     })
 
-    try {
-      await recordUsageEvent(user.id, UsageEventType.GENERATE_LETTER)
-    } catch (usageEventError) {
-      console.error(
-        'Failed to record generate usage event:',
-        usageEventError instanceof Error ? usageEventError.message : usageEventError
-      )
+    if (!guideBonusReserved) {
+      try {
+        await recordUsageEvent(user.id, UsageEventType.GENERATE_LETTER)
+      } catch (usageEventError) {
+        console.error(
+          'Failed to record generate usage event:',
+          usageEventError instanceof Error ? usageEventError.message : usageEventError
+        )
+      }
     }
 
     return NextResponse.json({
@@ -157,6 +205,7 @@ export async function POST(request: NextRequest) {
         id: letter.id,
         content: letter.content,
         createdAt: letter.createdAt,
+        guideBonusApplied: guideBonusReserved,
       },
     })
   } catch (error) {

@@ -1,5 +1,6 @@
 'use client'
 
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { GuidedTourTooltip } from './GuidedTourTooltip'
 import { useGuidedTourOverlayState } from './useGuidedTourOverlayState'
 import type { GuidedTourLabels, GuidedTourStep } from './types'
@@ -12,8 +13,35 @@ interface GuidedTourOverlayProps {
 }
 
 export function GuidedTourOverlay({ open, steps, labels, onClose }: GuidedTourOverlayProps) {
+  const hintTimeoutRef = useRef<number | null>(null)
+  const [showOutsideClickHint, setShowOutsideClickHint] = useState(false)
+
+  const showBlockedInteractionHint = useCallback(() => {
+    setShowOutsideClickHint(true)
+    if (hintTimeoutRef.current) {
+      window.clearTimeout(hintTimeoutRef.current)
+    }
+
+    hintTimeoutRef.current = window.setTimeout(() => {
+      setShowOutsideClickHint(false)
+      hintTimeoutRef.current = null
+    }, 1600)
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    setShowOutsideClickHint(false)
+    return () => {
+      if (hintTimeoutRef.current) {
+        window.clearTimeout(hintTimeoutRef.current)
+        hintTimeoutRef.current = null
+      }
+    }
+  }, [open])
+
   const {
     activeStep,
+    canGoNext,
     goNext,
     goPrev,
     isFirstStep,
@@ -32,23 +60,52 @@ export function GuidedTourOverlay({ open, steps, labels, onClose }: GuidedTourOv
     onClose,
   })
 
+  useEffect(() => {
+    if (!open) return
+
+    const blockOutsideTooltip = (event: Event) => {
+      const tooltip = tooltipRef.current
+      const target = event.target as Node | null
+
+      if (!tooltip || !target) return
+      if (tooltip.contains(target)) return
+
+      if (activeStep?.allowTargetInteraction) {
+        const allowedTarget = document.querySelector<HTMLElement>(`[data-guide-id="${activeStep.targetId}"]`)
+        if (allowedTarget?.contains(target)) return
+      }
+
+      showBlockedInteractionHint()
+
+      if (event.cancelable) {
+        event.preventDefault()
+      }
+
+      event.stopPropagation()
+      ;(event as unknown as { stopImmediatePropagation?: () => void }).stopImmediatePropagation?.()
+    }
+
+    document.addEventListener('pointerdown', blockOutsideTooltip, true)
+    document.addEventListener('click', blockOutsideTooltip, true)
+
+    return () => {
+      document.removeEventListener('pointerdown', blockOutsideTooltip, true)
+      document.removeEventListener('click', blockOutsideTooltip, true)
+    }
+  }, [activeStep?.allowTargetInteraction, activeStep?.targetId, open, showBlockedInteractionHint, tooltipRef])
+
   if (!open || !activeStep) return null
 
   return (
-    <div className="fixed inset-0 z-[80]">
-      {!spotlightRect ? (
-        <div
-          className="absolute inset-0 bg-slate-950/55 animate-fade-in"
-          onClick={() => onClose(false)}
-        />
-      ) : null}
-
-      {spotlightRect ? (
-        <div
-          className="absolute inset-0"
-          onClick={() => onClose(false)}
-        />
-      ) : null}
+    <div className="fixed inset-0 z-[80] pointer-events-none">
+      <div
+        data-testid="guided-tour-backdrop"
+        className={
+          spotlightRect
+            ? 'absolute inset-0'
+            : 'absolute inset-0 bg-slate-950/55 animate-fade-in'
+        }
+      />
 
       {spotlightRect ? (
         <div
@@ -67,9 +124,12 @@ export function GuidedTourOverlay({ open, steps, labels, onClose }: GuidedTourOv
 
       <GuidedTourTooltip
         activeStep={activeStep}
+        canGoNext={canGoNext}
         isFirstStep={isFirstStep}
         isLastStep={isLastStep}
         labels={labels}
+        outsideClickHint={labels.outsideClickHint}
+        showOutsideClickHint={showOutsideClickHint}
         onClose={onClose}
         onNext={goNext}
         onPrev={goPrev}

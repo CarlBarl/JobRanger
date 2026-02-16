@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { readGuideFlowState } from '@/lib/guides/flow'
 
 type ApiEnvelope =
   | { success: true; data: unknown }
@@ -127,8 +128,13 @@ export function JobActions({
   const [generateLetterQuota, setGenerateLetterQuota] = useState<GenerateLetterQuota | null>(null)
   const [lettersForJobCount, setLettersForJobCount] = useState(existingLettersCount)
 
+  const guideBonusActive = useMemo(() => {
+    const guideFlow = readGuideFlowState()
+    return Boolean(guideFlow?.active && guideFlow.segment === 'job-detail')
+  }, [])
+
   const generateQuotaExhausted = generateLetterQuota?.isExhausted ?? false
-  const generateDisabled = generating || generateQuotaExhausted
+  const generateDisabled = generating || (generateQuotaExhausted && !guideBonusActive)
   const lettersForJobHref = `/letters?jobId=${encodeURIComponent(afJobId)}`
 
   const resetAtLabel = useMemo(() => {
@@ -192,7 +198,7 @@ export function JobActions({
   }, [afJobId, t])
 
   const handleGenerate = useCallback(async () => {
-    if (generateQuotaExhausted) return
+    if (generateQuotaExhausted && !guideBonusActive) return
 
     setGenerating(true)
     setError(null)
@@ -223,6 +229,7 @@ export function JobActions({
           afJobId,
           documentId: cv.id,
           guidanceOverride: guidanceOverride.trim() || undefined,
+          guideBonus: guideBonusActive ? true : undefined,
         }),
       })
       const genJson: unknown = await genRes.json()
@@ -231,7 +238,7 @@ export function JobActions({
         return
       }
       if (!genJson.success) {
-        if (genJson.error.code === 'QUOTA_EXCEEDED') {
+        if (genJson.error.code === 'QUOTA_EXCEEDED' && !guideBonusActive) {
           setGenerateLetterQuota((previous) => getQuotaFromError(genJson.error, previous))
           return
         }
@@ -246,7 +253,7 @@ export function JobActions({
     } finally {
       setGenerating(false)
     }
-  }, [afJobId, generateQuotaExhausted, guidanceOverride, t])
+  }, [afJobId, generateQuotaExhausted, guidanceOverride, guideBonusActive, t])
 
   return (
     <div className="flex flex-col gap-2">
@@ -290,7 +297,10 @@ export function JobActions({
         {saved ? t('actions.saved') : saving ? t('actions.saving') : t('actions.saveJob')}
       </Button>
       {generated ? (
-        <div className="rounded-md bg-primary/5 border border-primary/15 px-3 py-2.5 text-center">
+        <div
+          className="rounded-md bg-primary/5 border border-primary/15 px-3 py-2.5 text-center"
+          data-guide-id="jobs-detail-generated-now"
+        >
           <p className="text-sm font-medium text-foreground">{t('actions.generateSuccess')}</p>
         </div>
       ) : (
@@ -314,6 +324,7 @@ export function JobActions({
       {lettersForJobCount > 0 ? (
         <Link
           href={lettersForJobHref}
+          data-guide-id="jobs-detail-view-letters-link"
           className="inline-flex items-center justify-center gap-1 text-sm font-medium text-primary hover:underline"
         >
           {t('actions.viewLettersForJob', { count: lettersForJobCount })}

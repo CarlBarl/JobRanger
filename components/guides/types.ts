@@ -3,6 +3,8 @@ export interface GuidedTourStep {
   targetId: string
   title: string
   description: string
+  allowTargetInteraction?: boolean
+  nextRequiresTargetId?: string
 }
 
 export interface GuidedTourLabels {
@@ -11,4 +13,6 @@ export interface GuidedTourLabels {
   next: string
   finish: string
   skip: string
+  outsideClickHint: string
+  nextLockedHint: string
 }

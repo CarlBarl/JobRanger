@@ -8,6 +8,7 @@ import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 const UpdateGuidesSchema = z.object({
   action: z.enum([
     'markDashboardPromptShown',
+    'markDashboardGuideStarted',
     'markDashboardGuideCompleted',
     'markDashboardGuideDismissed',
     'restartDashboardGuide',
@@ -136,6 +137,10 @@ export async function POST(request: NextRequest) {
         case 'markDashboardPromptShown':
           return {
             dashboardGuidePromptedAt: now,
+          }
+        case 'markDashboardGuideStarted':
+          return {
+            dashboardGuideLastStartedAt: now,
           }
         case 'markDashboardGuideCompleted':
           return {

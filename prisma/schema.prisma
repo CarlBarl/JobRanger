@@ -18,6 +18,8 @@ model User {
   dashboardGuidePromptedAt  DateTime?
   dashboardGuideCompletedAt DateTime?
   dashboardGuideDismissedAt DateTime?
+  dashboardGuideLastStartedAt DateTime?
+  dashboardGuideBonusGenerateLetterUsedAt DateTime?
   onboardingGuideResetAt    DateTime?
   onboardingGuideLastCompletedAt DateTime?
   letterGuidanceDefault     String?  @db.Text

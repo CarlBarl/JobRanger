@@ -8,6 +8,7 @@ import {
   persistJobsSearchState,
   restoreJobsSearchState,
 } from '@/components/jobs/search/persistence'
+import { readGuideFlowState } from '@/lib/guides/flow'
 import type {
   PersistedJobsSearchState,
   JobsSearchStateController,
@@ -78,6 +79,11 @@ export function useJobsSearchState(): JobsSearchStateController {
       setItemsPerPage(persisted.itemsPerPage)
     } else {
       restoredStateRef.current = false
+    }
+
+    const guideFlow = readGuideFlowState()
+    if (guideFlow?.active && guideFlow.segment === 'jobs') {
+      setActiveTab('search')
     }
 
     const timer = setTimeout(() => {
