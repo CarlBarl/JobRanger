@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   findFirst: vi.fn(),
   findUnique: vi.fn(),
   create: vi.fn(),
+  updateMany: vi.fn(),
   enforceMonthlyQuota: vi.fn(),
   recordUsageEvent: vi.fn(),
 }))
@@ -35,6 +36,7 @@ vi.mock('@/lib/services/gemini', () => ({
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
+    user: { updateMany: mocks.updateMany },
     document: { findFirst: mocks.findFirst },
     savedJob: { findUnique: mocks.findUnique },
     generatedLetter: { create: mocks.create },
@@ -53,6 +55,7 @@ describe('POST /api/generate', () => {
     vi.clearAllMocks()
     mocks.enforceMonthlyQuota.mockResolvedValue(null)
     mocks.recordUsageEvent.mockResolvedValue(undefined)
+    mocks.updateMany.mockResolvedValue({ count: 0 })
   })
 
   it('returns 401 when unauthenticated', async () => {
@@ -116,7 +119,7 @@ describe('POST /api/generate', () => {
     expect(res.status).toBe(200)
     await expect(res.json()).resolves.toEqual({
       success: true,
-      data: { id: 'letter-1', content: 'letter', createdAt: 'now' },
+      data: { id: 'letter-1', content: 'letter', createdAt: 'now', guideBonusApplied: false },
     })
 
     expect(mocks.generateCoverLetter).toHaveBeenCalledWith({
@@ -223,6 +226,47 @@ describe('POST /api/generate', () => {
       success: false,
       error: { code: 'QUOTA_EXCEEDED' },
     })
+  })
+
+  it('applies guide bonus generation and skips monthly quota + usage event', async () => {
+    const startedAt = new Date()
+
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
+    mocks.getOrCreateUser.mockResolvedValue({
+      id: 'u1',
+      tier: 'FREE',
+      dashboardGuideLastStartedAt: startedAt,
+      dashboardGuideBonusGenerateLetterUsedAt: null,
+    })
+    mocks.updateMany.mockResolvedValue({ count: 1 })
+    mocks.getJobById.mockResolvedValue({
+      id: '123',
+      headline: 'Dev',
+      employer: { name: 'ACME' },
+      description: { text: 'desc' },
+    })
+    mocks.findFirst
+      .mockResolvedValueOnce({ id: 'doc-1', parsedContent: 'cv text' })
+      .mockResolvedValueOnce(null)
+    mocks.generateCoverLetter.mockResolvedValue('letter')
+    mocks.findUnique.mockResolvedValue({ id: 'saved-1' })
+    mocks.create.mockResolvedValue({ id: 'letter-1', content: 'letter', createdAt: 'now' })
+
+    const req = new NextRequest('http://localhost/api/generate', {
+      method: 'POST',
+      body: JSON.stringify({ afJobId: '123', documentId: 'doc-1', guideBonus: true }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    await expect(res.json()).resolves.toEqual({
+      success: true,
+      data: { id: 'letter-1', content: 'letter', createdAt: 'now', guideBonusApplied: true },
+    })
+
+    expect(mocks.enforceMonthlyQuota).not.toHaveBeenCalled()
+    expect(mocks.recordUsageEvent).not.toHaveBeenCalled()
+    expect(mocks.updateMany).toHaveBeenCalled()
   })
 })
 

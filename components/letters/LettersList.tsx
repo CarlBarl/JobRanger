@@ -159,7 +159,7 @@ export function LettersList({
         </div>
       ) : (
         <div className="animate-fade-up delay-1 space-y-4">
-          {letters.map((letter) => {
+          {letters.map((letter, index) => {
             const title = resolveTitle(letter)
             const createdLabel = dateFormatter.format(new Date(letter.createdAt))
             const metaBits = [
@@ -175,6 +175,7 @@ export function LettersList({
               <LetterCard
                 key={letter.id}
                 copiedId={copiedId}
+                copyGuideId={index === 0 ? 'letters-first-copy' : undefined}
                 createdLabel={createdLabel}
                 deletingId={deletingId}
                 excerpt={excerpt}

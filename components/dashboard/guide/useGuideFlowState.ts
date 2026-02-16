@@ -8,10 +8,42 @@ import {
   writeGuideFlowState,
 } from '@/lib/guides/flow'
 import { isJobDetailPath } from '@/components/dashboard/guide/segments'
+import { JOBS_SEARCH_STATE_KEY } from '@/components/jobs/search/constants'
+
+function getJobIdFromPathname(pathname: string): string | null {
+  if (!isJobDetailPath(pathname)) return null
+  const prefix = '/jobs/'
+  if (!pathname.startsWith(prefix)) return null
+  const jobId = pathname.slice(prefix.length)
+  return jobId ? jobId : null
+}
+
+function forceJobsGuideStartOnSearchTab() {
+  try {
+    const raw = sessionStorage.getItem(JOBS_SEARCH_STATE_KEY)
+    if (!raw) return
+
+    const parsed: unknown = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object') return
+
+    const version = (parsed as { v?: unknown }).v
+    if (version !== 1) return
+
+    const tab = (parsed as { tab?: unknown }).tab
+    if (tab === 'search') return
+
+    sessionStorage.setItem(JOBS_SEARCH_STATE_KEY, JSON.stringify({ ...(parsed as object), tab: 'search' }))
+  } catch {
+    // Ignore persistence failures
+  }
+}
 
 interface UseGuideFlowStateParams {
   pathname: string
   onNavigateDashboard: () => void
+  onNavigateJobs: () => void
+  onNavigateLetters: (jobId?: string) => void
+  onNavigateSettings: () => void
   onDismissed: () => void
   onCompleted: () => void
 }
@@ -19,6 +51,9 @@ interface UseGuideFlowStateParams {
 export function useGuideFlowState({
   pathname,
   onNavigateDashboard,
+  onNavigateJobs,
+  onNavigateLetters,
+  onNavigateSettings,
   onDismissed,
   onCompleted,
 }: UseGuideFlowStateParams) {
@@ -59,6 +94,9 @@ export function useGuideFlowState({
       if (activeSegment === 'dashboard') {
         writeGuideFlowState({ active: true, segment: 'jobs' })
         setActiveSegment('jobs')
+        setTourOpen(false)
+        forceJobsGuideStartOnSearchTab()
+        onNavigateJobs()
         return
       }
 
@@ -68,11 +106,37 @@ export function useGuideFlowState({
         return
       }
 
+      if (activeSegment === 'job-detail') {
+        const persisted = readGuideFlowState()
+        writeGuideFlowState({
+          active: true,
+          segment: 'letters',
+          ...(persisted?.jobId ? { jobId: persisted.jobId } : {}),
+        })
+        setActiveSegment('letters')
+        setTourOpen(false)
+        onNavigateLetters(persisted?.jobId)
+        return
+      }
+
+      if (activeSegment === 'letters') {
+        const persisted = readGuideFlowState()
+        writeGuideFlowState({
+          active: true,
+          segment: 'settings',
+          ...(persisted?.jobId ? { jobId: persisted.jobId } : {}),
+        })
+        setActiveSegment('settings')
+        setTourOpen(false)
+        onNavigateSettings()
+        return
+      }
+
       clearGuideFlowState()
       setActiveSegment(null)
       onCompleted()
     },
-    [activeSegment, onCompleted, onDismissed]
+    [activeSegment, onCompleted, onDismissed, onNavigateJobs, onNavigateLetters, onNavigateSettings]
   )
 
   useEffect(() => {
@@ -84,7 +148,8 @@ export function useGuideFlowState({
 
     if (persisted.segment === 'jobs-await-detail') {
       if (isJobDetailPath(pathname)) {
-        writeGuideFlowState({ active: true, segment: 'job-detail' })
+        const jobId = getJobIdFromPathname(pathname)
+        writeGuideFlowState({ active: true, segment: 'job-detail', ...(jobId ? { jobId } : {}) })
         setActiveSegment('job-detail')
         setTourOpen(true)
       } else {
@@ -106,8 +171,27 @@ export function useGuideFlowState({
       return
     }
 
+    if (persisted.segment === 'letters') {
+      setActiveSegment('letters')
+      setTourOpen(pathname === '/letters')
+      return
+    }
+
+    if (persisted.segment === 'settings') {
+      setActiveSegment('settings')
+      setTourOpen(pathname === '/settings')
+      return
+    }
+
     setActiveSegment('job-detail')
-    setTourOpen(isJobDetailPath(pathname))
+    const isOnDetail = isJobDetailPath(pathname)
+    if (isOnDetail) {
+      const jobId = getJobIdFromPathname(pathname)
+      if (jobId && jobId !== persisted.jobId) {
+        writeGuideFlowState({ active: true, segment: 'job-detail', jobId })
+      }
+    }
+    setTourOpen(isOnDetail)
   }, [pathname, resetLocalGuideState])
 
   return {

@@ -196,8 +196,16 @@
           "next": "Next",
           "continueJobs": "Continue on Jobs",
           "continueListing": "Continue on listing",
+          "continueLetters": "Continue to Letters",
+          "continueSettings": "Continue to Settings",
           "finish": "Done",
-          "skip": "Skip"
+          "skip": "Skip",
+          "outsideClickHint": "Use Next or Skip to continue.",
+          "nextLockedHint": "Generate a letter to continue."
+        },
+        "completionToast": {
+          "title": "Nice! You finished the guide.",
+          "description": "You’re officially dangerous now. Go hunt some jobs."
         },
         "dashboard": {
           "steps": {
@@ -319,7 +327,11 @@
             },
             "generate": {
               "title": "Generate personalized letter",
-              "description": "Click this to generate a tailored letter using your CV, optional personal letter, and your custom pointers."
+              "description": "Go ahead — this one won’t count against your Free plan quota 😉 Generate once to unlock the next step."
+            },
+            "viewLetters": {
+              "title": "Open your new letter",
+              "description": "After you generate, a link appears here to open your letters for this job."
             },
             "letters": {
               "title": "Brev button",
@@ -332,6 +344,30 @@
             "replay": {
               "title": "Guide completed",
               "description": "You can replay this guide or redo onboarding anytime from the question mark button."
+            }
+          }
+        },
+        "letters": {
+          "steps": {
+            "overview": {
+              "title": "Your generated letters",
+              "description": "This page collects your generated letters so you can review, copy, and reuse them."
+            },
+            "copy": {
+              "title": "Copy a letter",
+              "description": "Use Copy to put the full letter on your clipboard, then paste it into your application."
+            }
+          }
+        },
+        "settings": {
+          "steps": {
+            "language": {
+              "title": "Switch language",
+              "description": "Swap between Swedish and English any time. This does not affect your stored data."
+            },
+            "guidance": {
+              "title": "Default letter guidance",
+              "description": "Set reusable guidance so future letters follow your preferred tone and focus."
             }
           }
         }
@@ -597,6 +633,31 @@
     "updatedCvTitle": "Updated CV",
     "beforeLabel": "Before",
     "afterLabel": "After",
+    "guide": {
+      "controls": {
+        "step": "Step {current} of {total}",
+        "previous": "Previous",
+        "next": "Next",
+        "finish": "Done",
+        "skip": "Skip",
+        "outsideClickHint": "Use Next or Skip to continue.",
+        "nextLockedHint": "Generate a letter to continue."
+      },
+      "steps": {
+        "currentCv": {
+          "title": "Your CV",
+          "description": "Review your current CV text here and upload a new version any time."
+        },
+        "targets": {
+          "title": "Target saved jobs",
+          "description": "Optionally select saved jobs to steer feedback toward relevant requirements."
+        },
+        "feedback": {
+          "title": "Generate feedback",
+          "description": "Generate CV feedback, then apply AI edits when you're ready (PRO required)."
+        }
+      }
+    },
     "errors": {
       "feedbackFailed": "Failed to generate CV feedback.",
       "editFailed": "Failed to apply CV edits.",

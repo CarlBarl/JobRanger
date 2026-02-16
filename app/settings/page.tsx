@@ -36,7 +36,10 @@ export default async function SettingsPage() {
         <section className="rounded-xl border bg-card p-5">
           <h2 className="text-[13px] font-medium text-foreground/70">{t('languageTitle')}</h2>
           <p className="mt-1 text-[12px] text-muted-foreground">{t('languageDescription')}</p>
-          <div className="mt-3 inline-flex rounded-md border border-border/60 bg-background p-1">
+          <div
+            className="mt-3 inline-flex rounded-md border border-border/60 bg-background p-1"
+            data-guide-id="settings-language-switcher"
+          >
             <LanguageSwitcher />
           </div>
         </section>

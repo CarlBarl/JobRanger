@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { FileUpload } from '@/components/upload/FileUpload'
+import { CvStudioMiniGuide } from '@/components/cv-studio/CvStudioMiniGuide'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -270,6 +271,7 @@ export function CvStudioClient({
 
   return (
     <div className="space-y-5">
+      <CvStudioMiniGuide />
       <section className="card-elevated rounded-xl border bg-card p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -302,7 +304,10 @@ export function CvStudioClient({
       ) : (
         <>
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-            <section className="card-elevated rounded-xl border bg-card p-5 sm:p-6">
+            <section
+              className="card-elevated rounded-xl border bg-card p-5 sm:p-6"
+              data-guide-id="cv-studio-current-cv"
+            >
               <h2 className="text-base font-semibold text-foreground">{t('currentCvTitle')}</h2>
               {cvDocuments.length > 1 ? (
                 <div className="mt-3">
@@ -377,7 +382,10 @@ export function CvStudioClient({
               </div>
             </section>
 
-            <section className="card-elevated rounded-xl border bg-card p-5 sm:p-6">
+            <section
+              className="card-elevated rounded-xl border bg-card p-5 sm:p-6"
+              data-guide-id="cv-studio-targets"
+            >
               <h2 className="text-base font-semibold text-foreground">{t('targetsTitle')}</h2>
               <p className="mt-1 text-sm text-muted-foreground">{t('targetsDescription')}</p>
 
@@ -466,6 +474,7 @@ export function CvStudioClient({
                 type="button"
                 onClick={handleGenerateFeedback}
                 disabled={!isPro || isFeedbackLoading || isEditLoading}
+                data-guide-id="cv-studio-generate-feedback"
                 className="gap-2"
               >
                 {isFeedbackLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

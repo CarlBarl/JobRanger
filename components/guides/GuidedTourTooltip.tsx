@@ -7,9 +7,12 @@ import type { GuidedTourLabels, GuidedTourStep } from './types'
 
 type GuidedTourTooltipProps = {
   activeStep: GuidedTourStep
+  canGoNext: boolean
   isFirstStep: boolean
   isLastStep: boolean
   labels: GuidedTourLabels
+  outsideClickHint: string
+  showOutsideClickHint: boolean
   onClose: (completed: boolean) => void
   onNext: () => void
   onPrev: () => void
@@ -25,9 +28,12 @@ type GuidedTourTooltipProps = {
 
 export function GuidedTourTooltip({
   activeStep,
+  canGoNext,
   isFirstStep,
   isLastStep,
   labels,
+  outsideClickHint,
+  showOutsideClickHint,
   onClose,
   onNext,
   onPrev,
@@ -42,7 +48,7 @@ export function GuidedTourTooltip({
       key={stepIndex}
       ref={tooltipRef}
       tabIndex={-1}
-      className="fixed z-[81] w-[min(24rem,calc(100vw-1.5rem))] rounded-xl border border-border/80 bg-card p-4 shadow-xl outline-none animate-scale-in"
+      className="pointer-events-auto fixed z-[81] w-[min(24rem,calc(100vw-1.5rem))] rounded-xl border border-border/80 bg-card p-4 shadow-xl outline-none animate-scale-in"
       style={{ left: tooltipPosition.left, top: tooltipPosition.top }}
       role="dialog"
       aria-modal="true"
@@ -81,6 +87,18 @@ export function GuidedTourTooltip({
         {activeStep.description}
       </p>
 
+      {showOutsideClickHint ? (
+        <div className="mt-3 rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-[12px] text-muted-foreground animate-fade-in">
+          {outsideClickHint}
+        </div>
+      ) : null}
+
+      {!canGoNext ? (
+        <div className="mt-3 rounded-md border border-amber-300/50 bg-amber-50 px-3 py-2 text-[12px] text-amber-900 animate-fade-in">
+          {labels.nextLockedHint}
+        </div>
+      ) : null}
+
       <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Button
           type="button"
@@ -106,6 +124,7 @@ export function GuidedTourTooltip({
             type="button"
             size="sm"
             onClick={onNext}
+            disabled={!canGoNext}
             className="text-[12px]"
           >
             {isLastStep ? labels.finish : labels.next}

@@ -63,7 +63,7 @@ export default async function LettersPage({ searchParams }: LettersPageProps) {
   return (
     <div className="min-h-screen">
       <DashboardHeader />
-      <main className="container mx-auto space-y-8 px-6 py-8 sm:py-12">
+      <main className="container mx-auto space-y-8 px-6 py-8 sm:py-12" data-guide-id="letters-main">
         <LettersList initialLetters={initialLetters} activeJobId={activeJobId ?? undefined} />
       </main>
     </div>

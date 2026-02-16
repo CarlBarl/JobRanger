@@ -20,17 +20,21 @@ export function useGuidedTourOverlayState({
   const [stepIndex, setStepIndex] = useState(0)
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
   const [tooltipPosition, setTooltipPosition] = useState({ left: 0, top: 0 })
+  const [nextRequirementMet, setNextRequirementMet] = useState(true)
   const tooltipRef = useRef<HTMLDivElement | null>(null)
   const liveRegionRef = useRef<HTMLDivElement | null>(null)
   const activeStep = steps[stepIndex] ?? null
 
+  const canGoNext = nextRequirementMet
+
   const goNext = useCallback(() => {
+    if (!canGoNext) return
     if (stepIndex >= steps.length - 1) {
       onClose(true)
       return
     }
     setStepIndex((prev) => Math.min(steps.length - 1, prev + 1))
-  }, [onClose, stepIndex, steps.length])
+  }, [canGoNext, onClose, stepIndex, steps.length])
 
   const goPrev = useCallback(() => {
     setStepIndex((prev) => Math.max(0, prev - 1))
@@ -40,6 +44,30 @@ export function useGuidedTourOverlayState({
     if (!open) return
     setStepIndex(0)
   }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    if (!activeStep?.nextRequiresTargetId) {
+      setNextRequirementMet(true)
+      return
+    }
+
+    const requiredId = activeStep.nextRequiresTargetId
+
+    const check = () => {
+      const exists = Boolean(document.querySelector(`[data-guide-id="${requiredId}"]`))
+      setNextRequirementMet(exists)
+    }
+
+    check()
+
+    const observer = new MutationObserver(() => check())
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true })
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [activeStep?.nextRequiresTargetId, open])
 
   useEffect(() => {
     if (!open || !activeStep) {
@@ -167,6 +195,7 @@ export function useGuidedTourOverlayState({
 
   return {
     activeStep,
+    canGoNext,
     goNext,
     goPrev,
     isFirstStep,

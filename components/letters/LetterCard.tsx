@@ -20,6 +20,7 @@ export type LetterCardLabels = {
 
 type LetterCardProps = {
   copiedId: string | null
+  copyGuideId?: string
   createdLabel: string
   deletingId: string | null
   excerpt: string
@@ -37,6 +38,7 @@ type LetterCardProps = {
 
 export function LetterCard({
   copiedId,
+  copyGuideId,
   createdLabel,
   deletingId,
   excerpt,
@@ -99,6 +101,7 @@ export function LetterCard({
               className="h-8 px-2"
               onClick={() => onCopy(letter)}
               disabled={Boolean(deletingId)}
+              data-guide-id={copyGuideId}
               aria-label={copiedId === letter.id ? labels.copied : labels.copy}
             >
               <Copy className="h-4 w-4" />

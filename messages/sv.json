@@ -196,8 +196,16 @@
           "next": "Nästa",
           "continueJobs": "Fortsätt på Jobb",
           "continueListing": "Fortsätt på annonsen",
+          "continueLetters": "Fortsätt till Brev",
+          "continueSettings": "Fortsätt till Inställningar",
           "finish": "Klar",
-          "skip": "Hoppa över"
+          "skip": "Hoppa över",
+          "outsideClickHint": "Använd Nästa eller Hoppa över för att fortsätta.",
+          "nextLockedHint": "Generera ett brev för att fortsätta."
+        },
+        "completionToast": {
+          "title": "Snyggt! Du klarade guiden.",
+          "description": "Nu är du officiellt farlig. Dags att jaga jobb."
         },
         "dashboard": {
           "steps": {
@@ -319,7 +327,11 @@
             },
             "generate": {
               "title": "Generera personligt brev",
-              "description": "Klicka här för att skapa ett anpassat brev med ditt CV, eventuellt personligt brev och dina instruktioner."
+              "description": "Kör på — den här gången räknas inte mot din FREE-kvot 😉 Generera en gång för att låsa upp nästa steg."
+            },
+            "viewLetters": {
+              "title": "Öppna ditt nya brev",
+              "description": "Efter att du genererat visas en länk här för att öppna breven för det här jobbet."
             },
             "letters": {
               "title": "Brev-knappen",
@@ -332,6 +344,30 @@
             "replay": {
               "title": "Guiden är klar",
               "description": "Du kan visa den här guiden igen eller starta onboarding på nytt via frågetecknet."
+            }
+          }
+        },
+        "letters": {
+          "steps": {
+            "overview": {
+              "title": "Dina genererade brev",
+              "description": "Den här sidan samlar dina genererade brev så du kan granska, kopiera och återanvända dem."
+            },
+            "copy": {
+              "title": "Kopiera ett brev",
+              "description": "Klicka Kopiera för att lägga hela brevet i urklipp och klistra in det i din ansökan."
+            }
+          }
+        },
+        "settings": {
+          "steps": {
+            "language": {
+              "title": "Byt språk",
+              "description": "Växla mellan svenska och engelska när som helst. Det påverkar inte dina sparade data."
+            },
+            "guidance": {
+              "title": "Standardinstruktioner för brev",
+              "description": "Sätt återanvändbara riktlinjer så framtida brev får rätt ton och fokus."
             }
           }
         }
@@ -597,6 +633,31 @@
     "updatedCvTitle": "Uppdaterat CV",
     "beforeLabel": "Före",
     "afterLabel": "Efter",
+    "guide": {
+      "controls": {
+        "step": "Steg {current} av {total}",
+        "previous": "Föregående",
+        "next": "Nästa",
+        "finish": "Klar",
+        "skip": "Hoppa över",
+        "outsideClickHint": "Använd Nästa eller Hoppa över för att fortsätta.",
+        "nextLockedHint": "Generera ett brev för att fortsätta."
+      },
+      "steps": {
+        "currentCv": {
+          "title": "Ditt CV",
+          "description": "Granska texten i ditt nuvarande CV här och ladda upp en ny version när som helst."
+        },
+        "targets": {
+          "title": "Rikta mot sparade jobb",
+          "description": "Välj frivilligt sparade jobb för att styra feedback mot relevanta krav."
+        },
+        "feedback": {
+          "title": "Generera feedback",
+          "description": "Generera CV-feedback och tillämpa AI-redigeringar när du är redo (kräver PRO)."
+        }
+      }
+    },
     "errors": {
       "feedbackFailed": "Kunde inte generera CV-feedback.",
       "editFailed": "Kunde inte tillämpa CV-redigeringar.",
