@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const rateLimit = consumeRateLimit('user-guides-read', userId, 120, 60 * 60 * 1000)
+  const rateLimit = await consumeRateLimit('user-guides-read', userId, 120, 60 * 60 * 1000)
   if (!rateLimit.allowed) {
     return rateLimitResponse(
       'Guide state read limit reached. Please try again later.',
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const rateLimit = consumeRateLimit('user-guides-write', userId, 60, 60 * 60 * 1000)
+  const rateLimit = await consumeRateLimit('user-guides-write', userId, 60, 60 * 60 * 1000)
   if (!rateLimit.allowed) {
     return rateLimitResponse(
       'Guide state update limit reached. Please try again later.',

@@ -23,7 +23,7 @@ export async function GET(
     )
   }
 
-  const jobLimit = consumeRateLimit('job-detail-user', user.id, 200, 60 * 60 * 1000)
+  const jobLimit = await consumeRateLimit('job-detail-user', user.id, 200, 60 * 60 * 1000)
   if (!jobLimit.allowed) {
     return rateLimitResponse('Rate limit exceeded.', jobLimit.retryAfterSeconds)
   }

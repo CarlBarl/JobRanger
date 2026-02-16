@@ -25,7 +25,7 @@ export async function DELETE(
     )
   }
 
-  const deleteLimit = consumeRateLimit('document-delete-user', user.id, 120, 60 * 60 * 1000)
+  const deleteLimit = await consumeRateLimit('document-delete-user', user.id, 120, 60 * 60 * 1000)
   if (!deleteLimit.allowed) {
     return rateLimitResponse(
       'Delete document rate limit exceeded. Please try again later.',
@@ -92,7 +92,7 @@ export async function PATCH(
     )
   }
 
-  const patchLimit = consumeRateLimit('document-patch-user', user.id, 120, 60 * 60 * 1000)
+  const patchLimit = await consumeRateLimit('document-patch-user', user.id, 120, 60 * 60 * 1000)
   if (!patchLimit.allowed) {
     return rateLimitResponse(
       'Document update rate limit exceeded. Please try again later.',

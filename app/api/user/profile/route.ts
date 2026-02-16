@@ -9,6 +9,12 @@ import { z } from 'zod'
 
 const MAX_GUIDANCE_CHARS = 1200
 
+const CountrySchema = z
+  .string()
+  .trim()
+  .transform((value) => value.toUpperCase())
+  .refine((value) => value === 'SE', { message: 'Only Sweden (SE) is supported' })
+
 const UpdateProfileSchema = z
   .object({
     name: z
@@ -25,9 +31,13 @@ const UpdateProfileSchema = z
         `Guidance must be ${MAX_GUIDANCE_CHARS} characters or less`
       )
       .optional(),
+    country: z.union([CountrySchema, z.null()]).optional(),
   })
   .refine(
-    (value) => value.name !== undefined || value.letterGuidanceDefault !== undefined,
+    (value) =>
+      value.name !== undefined ||
+      value.letterGuidanceDefault !== undefined ||
+      value.country !== undefined,
     { message: 'At least one profile field is required' }
   )
 
@@ -47,7 +57,7 @@ export async function GET() {
     )
   }
 
-  const rateLimit = consumeRateLimit('user-profile-read', user.id, 120, 60 * 60 * 1000)
+  const rateLimit = await consumeRateLimit('user-profile-read', user.id, 120, 60 * 60 * 1000)
   if (!rateLimit.allowed) {
     return rateLimitResponse(
       'Profile read limit reached. Please try again later.',
@@ -62,6 +72,7 @@ export async function GET() {
         name: true,
         letterGuidanceDefault: true,
         tier: true,
+        country: true,
       },
     })
 
@@ -87,6 +98,7 @@ export async function GET() {
         name: profile.name ?? null,
         letterGuidanceDefault: profile.letterGuidanceDefault ?? null,
         tier: profile.tier,
+        country: profile.country ?? null,
         quotas: {
           generateLetter: {
             limit: generateLetterQuota.limit,
@@ -129,7 +141,7 @@ export async function PATCH(request: NextRequest) {
     )
   }
 
-  const rateLimit = consumeRateLimit('user-profile-update', user.id, 20, 60 * 60 * 1000)
+  const rateLimit = await consumeRateLimit('user-profile-update', user.id, 20, 60 * 60 * 1000)
   if (!rateLimit.allowed) {
     return rateLimitResponse(
       'Profile update limit reached. Please try again later.',
@@ -141,7 +153,7 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json()
     const parsed = UpdateProfileSchema.parse(body)
 
-    const updateData: { name?: string; letterGuidanceDefault?: string | null } = {}
+    const updateData: { name?: string; letterGuidanceDefault?: string | null; country?: string | null } = {}
     if (parsed.name !== undefined) {
       updateData.name = parsed.name
     }
@@ -151,6 +163,9 @@ export async function PATCH(request: NextRequest) {
           ? parsed.letterGuidanceDefault
           : null
     }
+    if (parsed.country !== undefined) {
+      updateData.country = parsed.country
+    }
 
     const updated = await prisma.user.update({
       where: { id: user.id },
@@ -158,6 +173,7 @@ export async function PATCH(request: NextRequest) {
       select: {
         name: true,
         letterGuidanceDefault: true,
+        country: true,
       },
     })
 
@@ -166,6 +182,7 @@ export async function PATCH(request: NextRequest) {
       data: {
         name: updated.name ?? null,
         letterGuidanceDefault: updated.letterGuidanceDefault ?? null,
+        country: updated.country ?? null,
       },
     })
   } catch (error) {

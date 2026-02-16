@@ -667,14 +667,18 @@
   "pricing": {
     "title": "Choose your plan",
     "subtitle": "Upgrade to Pro to unlock much higher monthly AI limits.",
+    "swedenOnlyNote": "Available in Sweden only (SE).",
     "freeName": "Free",
     "proName": "Pro",
+    "proPriceLabel": "SEK 99 / month (incl. VAT)",
     "monthlyQuotaLabel": "Monthly AI usage",
     "generateLetterQuota": "Cover letter generation: {count}",
     "skillsExtractQuota": "Skills extraction: {count}",
     "skillsBatchQuota": "Batch CV skill extraction: {count}",
     "freeCta": "Start free",
     "proCta": "Upgrade to Pro",
+    "manageSubscriptionCta": "Manage subscription",
+    "setSwedenCta": "Confirm Sweden in Settings",
     "backToJobs": "Back to jobs"
   },
   "settings": {
@@ -682,6 +686,13 @@
     "subtitle": "Manage your language and default generation preferences.",
     "languageTitle": "Language",
     "languageDescription": "Switch interface language for your account experience.",
+    "billingTitle": "Billing",
+    "billingDescription": "Manage your Pro subscription and eligibility.",
+    "billingCountryToggleLabel": "Toggle Sweden eligibility",
+    "billingCountryLabel": "I live in Sweden (SE)",
+    "billingCountryHint": "Required to purchase Pro during the Sweden-only launch.",
+    "billingCountrySaveFailed": "Could not update billing country.",
+    "billingManageSubscription": "Manage subscription",
     "guidesTitle": "Guides",
     "guidesDescription": "Replay the full product guide or onboarding whenever you need a refresher."
   },

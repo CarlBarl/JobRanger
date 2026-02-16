@@ -12,7 +12,9 @@ model User {
   // Use Supabase Auth user id as the primary key.
   id        String   @id
   email     String   @unique
+  role      UserRole @default(USER)
   tier      UserTier @default(FREE)
+  country   String?  @db.Char(2)
   name                String?
   onboardingCompleted Boolean  @default(false)
   dashboardGuidePromptedAt  DateTime?
@@ -29,11 +31,17 @@ model User {
   savedJobs        SavedJob[]
   generatedLetters GeneratedLetter[]
   usageEvents      UsageEvent[]
+  subscriptions    Subscription[]
 }
 
 enum UserTier {
   FREE
   PRO
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }
 
 enum DocumentType {
@@ -109,5 +117,69 @@ model UsageEvent {
   createdAt DateTime       @default(now())
 
   @@index([userId, type, createdAt])
+}
+
+enum BillingProvider {
+  STRIPE
+}
+
+enum SecurityEventCategory {
+  AUTH
+  ADMIN
+  BILLING
+  RATE_LIMIT
+  SYSTEM
+}
+
+enum SecurityEventSeverity {
+  INFO
+  WARN
+  ERROR
+  CRITICAL
+}
+
+model Subscription {
+  id                   String          @id @default(cuid())
+  userId               String
+  user                 User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider             BillingProvider @default(STRIPE)
+  stripeCustomerId     String          @unique
+  stripeSubscriptionId String?         @unique
+  status               String
+  priceId              String?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean         @default(false)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  @@unique([userId, provider])
+  @@index([stripeSubscriptionId])
+}
+
+model BillingEvent {
+  id         String          @id @default(cuid())
+  provider   BillingProvider @default(STRIPE)
+  eventId    String          @unique
+  type       String
+  receivedAt DateTime        @default(now())
+  processedAt DateTime?
+}
+
+model SecurityEvent {
+  id          String                @id @default(cuid())
+  category    SecurityEventCategory
+  severity    SecurityEventSeverity @default(INFO)
+  eventType   String
+  actorUserId String?
+  targetUserId String?
+  requestId   String?
+  ipAddress   String?
+  message     String?
+  metadata    Json?
+  createdAt   DateTime              @default(now())
+
+  @@index([category, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([targetUserId, createdAt])
 }
 

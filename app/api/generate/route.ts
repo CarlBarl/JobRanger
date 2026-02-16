@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     const resolvedGuidance = guidanceOverrideTrimmed ?? defaultGuidanceTrimmed
     const wantsGuideBonus = Boolean(guideBonus)
 
-    const userLimit = consumeRateLimit('generate-letter-user', user.id, 20, 60 * 60 * 1000)
+    const userLimit = await consumeRateLimit('generate-letter-user', user.id, 20, 60 * 60 * 1000)
     if (!userLimit.allowed) {
       return rateLimitResponse(
         'Letter generation limit reached. Please try again later.',

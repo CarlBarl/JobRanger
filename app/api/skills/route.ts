@@ -18,7 +18,7 @@ const RequestSchema = z.object({
 
 const UpdateSkillsSchema = z.object({
   documentId: z.string().min(1),
-  skills: z.array(z.string().min(1)),
+  skills: z.array(z.string().trim().min(1).max(100)).max(100),
 })
 
 export async function POST(request: NextRequest) {
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const extractLimit = consumeRateLimit('skills-extract-user', user.id, 30, 60 * 60 * 1000)
+  const extractLimit = await consumeRateLimit('skills-extract-user', user.id, 30, 60 * 60 * 1000)
   if (!extractLimit.allowed) {
     return rateLimitResponse(
       'Skills extraction limit reached. Please try again later.',
@@ -167,7 +167,7 @@ export async function PATCH(request: NextRequest) {
     )
   }
 
-  const updateLimit = consumeRateLimit('skills-update-user', user.id, 120, 60 * 60 * 1000)
+  const updateLimit = await consumeRateLimit('skills-update-user', user.id, 120, 60 * 60 * 1000)
   if (!updateLimit.allowed) {
     return rateLimitResponse(
       'Skills update limit reached. Please try again later.',

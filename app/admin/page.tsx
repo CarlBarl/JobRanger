@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { isUserAdmin } from '@/lib/security/authorization'
 import { AdminUsersPanel } from './AdminUsersPanel'
-
-const DEBUG_EMAIL = process.env.DEBUG_EMAIL
 
 export default async function AdminPage() {
   const supabase = await createClient()
@@ -14,7 +13,8 @@ export default async function AdminPage() {
     redirect('/auth/signin')
   }
 
-  if (!DEBUG_EMAIL || authUser.email !== DEBUG_EMAIL) {
+  const hasAdminRole = await isUserAdmin(authUser.id)
+  if (!hasAdminRole) {
     redirect('/dashboard')
   }
 

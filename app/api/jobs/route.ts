@@ -5,8 +5,8 @@ import { searchJobs } from '@/lib/services/arbetsformedlingen'
 import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 const JobsSearchQuerySchema = z.object({
-  q: z.string().min(1),
-  region: z.string().min(1).optional(),
+  q: z.string().trim().min(1).max(120),
+  region: z.string().trim().min(1).max(100).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
   offset: z.coerce.number().int().min(0).optional(),
 })
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const searchLimit = consumeRateLimit('jobs-search-user', user.id, 120, 60 * 60 * 1000)
+  const searchLimit = await consumeRateLimit('jobs-search-user', user.id, 120, 60 * 60 * 1000)
   if (!searchLimit.allowed) {
     return rateLimitResponse('Search rate limit exceeded.', searchLimit.retryAfterSeconds)
   }
