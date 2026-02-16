@@ -102,6 +102,10 @@
     "viewLetters": "Visa Brev",
     "jobsSaved": "jobb sparade",
     "lettersGenerated": "brev genererade",
+    "quickLinksTitle": "Snabblänkar",
+    "quickLinkCvStudio": "CV-studio",
+    "quickLinkLetters": "Brev",
+    "quickLinkSettings": "Inställningar",
     "recentSavedJobs": "Sparade jobb",
     "viewAllJobs": "Visa alla jobb",
     "noSavedJobsYet": "Inga sparade jobb ännu",
@@ -199,11 +203,27 @@
           "steps": {
             "nav": {
               "title": "Översikt av toppnavigeringen",
-              "description": "Den här menyn är din huvudnavigering mellan Översikt, Jobb och Brev."
+              "description": "Den här menyn är din huvudnavigering mellan Översikt och Jobb."
             },
             "navJobs": {
               "title": "Jobb-knappen",
               "description": "Använd den här knappen när du vill söka nya annonser eller öppna fliken Sparade."
+            },
+            "quickLinks": {
+              "title": "Snabblänkar på översikten",
+              "description": "Använd dessa genvägar för att öppna CV-studio, dina brev och inställningar."
+            },
+            "quickCvStudio": {
+              "title": "Genväg till CV-studio",
+              "description": "Öppna CV-studio här när du vill ha AI-feedback och redigering av ditt CV."
+            },
+            "quickLetters": {
+              "title": "Genväg till brev",
+              "description": "Öppna dina genererade brev via den här snabblänken."
+            },
+            "quickSettings": {
+              "title": "Genväg till inställningar",
+              "description": "Öppna Inställningar för att byta språk och standardinstruktioner."
             },
             "navLetters": {
               "title": "Brev-knappen",
@@ -583,6 +603,14 @@
     "freeCta": "Börja gratis",
     "proCta": "Uppgradera till Pro",
     "backToJobs": "Tillbaka till jobb"
+  },
+  "settings": {
+    "title": "Inställningar",
+    "subtitle": "Hantera språk och standardval för generering.",
+    "languageTitle": "Språk",
+    "languageDescription": "Byt gränssnittsspråk för ditt konto.",
+    "guidesTitle": "Guider",
+    "guidesDescription": "Visa hela produktguiden eller onboarding igen när du behöver en repetition."
   },
   "upload": {
     "dropCV": "Klicka för att ladda upp CV (PDF, DOCX eller TXT)",
