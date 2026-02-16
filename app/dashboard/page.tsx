@@ -6,7 +6,6 @@ import { DashboardStatsSection } from '@/components/dashboard/DashboardStatsSect
 import { DashboardDocumentsSection } from '@/components/dashboard/DashboardDocumentsSection'
 import { DashboardSkillsSection } from '@/components/dashboard/DashboardSkillsSection'
 import { DashboardRecentJobsSection } from '@/components/dashboard/DashboardRecentJobsSection'
-import { LetterGuidanceSettings } from '@/components/dashboard/LetterGuidanceSettings'
 import { StatsSkeleton, DocumentsSkeleton, SkillsSkeleton, RecentJobsSkeleton } from '@/components/dashboard/skeletons'
 import { createClient } from '@/lib/supabase/server'
 import { getOrCreateUser } from '@/lib/auth'
@@ -54,8 +53,6 @@ export default async function DashboardPage() {
         <Suspense fallback={<DocumentsSkeleton />}>
           <DashboardDocumentsSection userId={user.id} />
         </Suspense>
-
-        <LetterGuidanceSettings initialValue={user.letterGuidanceDefault ?? null} />
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
           <Suspense fallback={<SkillsSkeleton />}>

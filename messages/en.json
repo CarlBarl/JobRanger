@@ -102,6 +102,10 @@
     "viewLetters": "View Letters",
     "jobsSaved": "jobs saved",
     "lettersGenerated": "letters generated",
+    "quickLinksTitle": "Quick links",
+    "quickLinkCvStudio": "CV Studio",
+    "quickLinkLetters": "Letters",
+    "quickLinkSettings": "Settings",
     "recentSavedJobs": "Saved jobs",
     "viewAllJobs": "View all jobs",
     "noSavedJobsYet": "No saved jobs yet",
@@ -199,11 +203,27 @@
           "steps": {
             "nav": {
               "title": "Top navigation overview",
-              "description": "This top bar is your main navigation between Dashboard, Jobs, and Letters."
+              "description": "This top bar is your main navigation between Dashboard and Jobs."
             },
             "navJobs": {
               "title": "Jobs button",
               "description": "Use this button when you want to search new listings or open your saved jobs tab."
+            },
+            "quickLinks": {
+              "title": "Dashboard quick links",
+              "description": "Use these shortcuts to open CV Studio, your letters, and settings."
+            },
+            "quickCvStudio": {
+              "title": "CV Studio shortcut",
+              "description": "Open CV Studio from here when you want AI feedback and editing for your CV."
+            },
+            "quickLetters": {
+              "title": "Letters shortcut",
+              "description": "Open your generated letters from this quick link."
+            },
+            "quickSettings": {
+              "title": "Settings shortcut",
+              "description": "Open Settings to change language and default guidance."
             },
             "navLetters": {
               "title": "Brev / Letters button",
@@ -583,6 +603,14 @@
     "freeCta": "Start free",
     "proCta": "Upgrade to Pro",
     "backToJobs": "Back to jobs"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your language and default generation preferences.",
+    "languageTitle": "Language",
+    "languageDescription": "Switch interface language for your account experience.",
+    "guidesTitle": "Guides",
+    "guidesDescription": "Replay the full product guide or onboarding whenever you need a refresher."
   },
   "upload": {
     "dropCV": "Click to upload CV (PDF, DOCX, or TXT)",
