@@ -1,17 +1,31 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 import { UserTier, UsageEventType } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 
-const MONTHLY_AI_QUOTAS: Record<UserTier, Record<UsageEventType, number>> = {
+export type AppUsageEventType = UsageEventType | 'CV_FEEDBACK' | 'CV_EDIT'
+
+export const USAGE_EVENT_TYPES = {
+  GENERATE_LETTER: 'GENERATE_LETTER' as AppUsageEventType,
+  SKILLS_EXTRACT: 'SKILLS_EXTRACT' as AppUsageEventType,
+  SKILLS_BATCH: 'SKILLS_BATCH' as AppUsageEventType,
+  CV_FEEDBACK: 'CV_FEEDBACK' as AppUsageEventType,
+  CV_EDIT: 'CV_EDIT' as AppUsageEventType,
+} as const
+
+const MONTHLY_AI_QUOTAS: Record<UserTier, Record<string, number>> = {
   [UserTier.FREE]: {
-    [UsageEventType.GENERATE_LETTER]: 1,
-    [UsageEventType.SKILLS_EXTRACT]: 3,
-    [UsageEventType.SKILLS_BATCH]: 1,
+    [USAGE_EVENT_TYPES.GENERATE_LETTER]: 1,
+    [USAGE_EVENT_TYPES.SKILLS_EXTRACT]: 3,
+    [USAGE_EVENT_TYPES.SKILLS_BATCH]: 1,
+    [USAGE_EVENT_TYPES.CV_FEEDBACK]: 0,
+    [USAGE_EVENT_TYPES.CV_EDIT]: 0,
   },
   [UserTier.PRO]: {
-    [UsageEventType.GENERATE_LETTER]: 200,
-    [UsageEventType.SKILLS_EXTRACT]: 300,
-    [UsageEventType.SKILLS_BATCH]: 50,
+    [USAGE_EVENT_TYPES.GENERATE_LETTER]: 200,
+    [USAGE_EVENT_TYPES.SKILLS_EXTRACT]: 300,
+    [USAGE_EVENT_TYPES.SKILLS_BATCH]: 50,
+    [USAGE_EVENT_TYPES.CV_FEEDBACK]: 200,
+    [USAGE_EVENT_TYPES.CV_EDIT]: 100,
   },
 }
 
@@ -23,7 +37,7 @@ type MonthlyWindow = {
 type MonthlyQuotaParams = {
   userId: string
   userTier: UserTier
-  usageType: UsageEventType
+  usageType: AppUsageEventType
   message: string
   now?: Date
 }
@@ -31,7 +45,7 @@ type MonthlyQuotaParams = {
 type MonthlyQuotaSnapshotParams = {
   userId: string
   userTier: UserTier
-  usageType: UsageEventType
+  usageType: AppUsageEventType
   now?: Date
 }
 
@@ -58,8 +72,8 @@ function secondsUntil(date: Date, from = new Date()) {
   return Math.max(1, Math.ceil((date.getTime() - from.getTime()) / 1000))
 }
 
-export function getMonthlyQuotaLimit(userTier: UserTier, usageType: UsageEventType) {
-  return MONTHLY_AI_QUOTAS[userTier][usageType]
+export function getMonthlyQuotaLimit(userTier: UserTier, usageType: AppUsageEventType) {
+  return MONTHLY_AI_QUOTAS[userTier][usageType] ?? 0
 }
 
 export async function getMonthlyQuotaSnapshot({
@@ -74,7 +88,7 @@ export async function getMonthlyQuotaSnapshot({
   const used = await prisma.usageEvent.count({
     where: {
       userId,
-      type: usageType,
+      type: usageType as UsageEventType,
       createdAt: {
         gte: startAt,
         lt: resetAt,
@@ -134,11 +148,11 @@ export async function enforceMonthlyQuota({
   )
 }
 
-export async function recordUsageEvent(userId: string, usageType: UsageEventType) {
+export async function recordUsageEvent(userId: string, usageType: AppUsageEventType) {
   await prisma.usageEvent.create({
     data: {
       userId,
-      type: usageType,
+      type: usageType as UsageEventType,
     },
   })
 }

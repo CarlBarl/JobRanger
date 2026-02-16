@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { href: '/dashboard', labelKey: 'navDashboard', guideId: 'top-nav-dashboard' },
+  { href: '/cv-studio', labelKey: 'navCvStudio', guideId: 'top-nav-cv-studio' },
   { href: '/jobs', labelKey: 'navJobs', guideId: 'top-nav-jobs' },
   { href: '/letters', labelKey: 'navLetters', guideId: 'top-nav-letters' },
 ] as const

@@ -30,9 +30,13 @@ describe('monthly quota helpers', () => {
     expect(getMonthlyQuotaLimit('FREE', 'GENERATE_LETTER')).toBe(1)
     expect(getMonthlyQuotaLimit('FREE', 'SKILLS_EXTRACT')).toBe(3)
     expect(getMonthlyQuotaLimit('FREE', 'SKILLS_BATCH')).toBe(1)
+    expect(getMonthlyQuotaLimit('FREE', 'CV_FEEDBACK')).toBe(0)
+    expect(getMonthlyQuotaLimit('FREE', 'CV_EDIT')).toBe(0)
     expect(getMonthlyQuotaLimit('PRO', 'GENERATE_LETTER')).toBe(200)
     expect(getMonthlyQuotaLimit('PRO', 'SKILLS_EXTRACT')).toBe(300)
     expect(getMonthlyQuotaLimit('PRO', 'SKILLS_BATCH')).toBe(50)
+    expect(getMonthlyQuotaLimit('PRO', 'CV_FEEDBACK')).toBe(200)
+    expect(getMonthlyQuotaLimit('PRO', 'CV_EDIT')).toBe(100)
   })
 
   it('allows request when monthly usage is below limit', async () => {
