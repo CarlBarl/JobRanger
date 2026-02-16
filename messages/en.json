@@ -393,7 +393,12 @@
       "viewLetters": "View your letters",
       "guidanceLabel": "Optional pointers for this letter",
       "guidancePlaceholder": "Example: Keep the tone concise, mention customer handling and forklift safety.",
-      "guidanceHelp": "These pointers apply to this generation request."
+      "guidanceHelp": "These pointers apply to this generation request.",
+      "quotaExceededTitle": "Monthly letter limit reached",
+      "quotaUsage": "Used {used}/{limit} letters this month.",
+      "quotaResetAt": "Resets on {date}.",
+      "quotaResetUnknown": "next month",
+      "upgradeCta": "Upgrade for more letters"
     },
     "card": {
       "published": "Published",
@@ -516,6 +521,19 @@
       "searchJobs": "Search for jobs",
       "goToDashboard": "Go to dashboard"
     }
+  },
+  "pricing": {
+    "title": "Choose your plan",
+    "subtitle": "Upgrade to Pro to unlock much higher monthly AI limits.",
+    "freeName": "Free",
+    "proName": "Pro",
+    "monthlyQuotaLabel": "Monthly AI usage",
+    "generateLetterQuota": "Cover letter generation: {count}",
+    "skillsExtractQuota": "Skills extraction: {count}",
+    "skillsBatchQuota": "Batch CV skill extraction: {count}",
+    "freeCta": "Start free",
+    "proCta": "Upgrade to Pro",
+    "backToJobs": "Back to jobs"
   },
   "upload": {
     "dropCV": "Click to upload CV (PDF, DOCX, or TXT)",

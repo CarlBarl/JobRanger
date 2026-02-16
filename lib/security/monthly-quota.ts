@@ -28,6 +28,22 @@ type MonthlyQuotaParams = {
   now?: Date
 }
 
+type MonthlyQuotaSnapshotParams = {
+  userId: string
+  userTier: UserTier
+  usageType: UsageEventType
+  now?: Date
+}
+
+export type MonthlyQuotaSnapshot = {
+  limit: number
+  used: number
+  remaining: number
+  window: 'monthly'
+  resetAt: string
+  isExhausted: boolean
+}
+
 function getMonthWindow(now = new Date()): MonthlyWindow {
   const year = now.getUTCFullYear()
   const month = now.getUTCMonth()
@@ -46,13 +62,12 @@ export function getMonthlyQuotaLimit(userTier: UserTier, usageType: UsageEventTy
   return MONTHLY_AI_QUOTAS[userTier][usageType]
 }
 
-export async function enforceMonthlyQuota({
+export async function getMonthlyQuotaSnapshot({
   userId,
   userTier,
   usageType,
-  message,
   now = new Date(),
-}: MonthlyQuotaParams): Promise<NextResponse | null> {
+}: MonthlyQuotaSnapshotParams): Promise<MonthlyQuotaSnapshot> {
   const { startAt, resetAt } = getMonthWindow(now)
   const limit = getMonthlyQuotaLimit(userTier, usageType)
 
@@ -67,7 +82,33 @@ export async function enforceMonthlyQuota({
     },
   })
 
-  if (used < limit) {
+  const remaining = Math.max(limit - used, 0)
+
+  return {
+    limit,
+    used,
+    remaining,
+    window: 'monthly',
+    resetAt: resetAt.toISOString(),
+    isExhausted: used >= limit,
+  }
+}
+
+export async function enforceMonthlyQuota({
+  userId,
+  userTier,
+  usageType,
+  message,
+  now = new Date(),
+}: MonthlyQuotaParams): Promise<NextResponse | null> {
+  const snapshot = await getMonthlyQuotaSnapshot({
+    userId,
+    userTier,
+    usageType,
+    now,
+  })
+
+  if (!snapshot.isExhausted) {
     return null
   }
 
@@ -77,16 +118,17 @@ export async function enforceMonthlyQuota({
       error: {
         code: 'QUOTA_EXCEEDED',
         message,
-        limit,
-        used,
-        window: 'monthly',
-        resetAt: resetAt.toISOString(),
+        limit: snapshot.limit,
+        used: snapshot.used,
+        remaining: snapshot.remaining,
+        window: snapshot.window,
+        resetAt: snapshot.resetAt,
       },
     },
     {
       status: 429,
       headers: {
-        'Retry-After': String(secondsUntil(resetAt, now)),
+        'Retry-After': String(secondsUntil(new Date(snapshot.resetAt), now)),
       },
     }
   )

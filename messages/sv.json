@@ -393,7 +393,12 @@
       "viewLetters": "Visa dina brev",
       "guidanceLabel": "Valfria instruktioner för det här brevet",
       "guidancePlaceholder": "Exempel: Håll tonen kort, nämn kundkontakt och trucksäkerhet.",
-      "guidanceHelp": "De här instruktionerna används bara i denna generering."
+      "guidanceHelp": "De här instruktionerna används bara i denna generering.",
+      "quotaExceededTitle": "Månadens brevgräns är nådd",
+      "quotaUsage": "Använt {used}/{limit} brev den här månaden.",
+      "quotaResetAt": "Nollställs {date}.",
+      "quotaResetUnknown": "nästa månad",
+      "upgradeCta": "Uppgradera för fler brev"
     },
     "card": {
       "published": "Publicerad",
@@ -516,6 +521,19 @@
       "searchJobs": "Sök efter jobb",
       "goToDashboard": "Gå till dashboard"
     }
+  },
+  "pricing": {
+    "title": "Välj plan",
+    "subtitle": "Uppgradera till Pro för mycket högre månatliga AI-gränser.",
+    "freeName": "Free",
+    "proName": "Pro",
+    "monthlyQuotaLabel": "Månatlig AI-användning",
+    "generateLetterQuota": "Generering av personligt brev: {count}",
+    "skillsExtractQuota": "Kompetensextraktion: {count}",
+    "skillsBatchQuota": "Batch-extraktion av kompetenser från CV: {count}",
+    "freeCta": "Börja gratis",
+    "proCta": "Uppgradera till Pro",
+    "backToJobs": "Tillbaka till jobb"
   },
   "upload": {
     "dropCV": "Klicka för att ladda upp CV (PDF, DOCX eller TXT)",

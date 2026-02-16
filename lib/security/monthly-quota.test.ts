@@ -14,7 +14,12 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
-import { enforceMonthlyQuota, getMonthlyQuotaLimit, recordUsageEvent } from './monthly-quota'
+import {
+  enforceMonthlyQuota,
+  getMonthlyQuotaLimit,
+  getMonthlyQuotaSnapshot,
+  recordUsageEvent,
+} from './monthly-quota'
 
 describe('monthly quota helpers', () => {
   beforeEach(() => {
@@ -44,6 +49,26 @@ describe('monthly quota helpers', () => {
     expect(result).toBeNull()
   })
 
+  it('returns a quota snapshot for UI prechecks', async () => {
+    mocks.count.mockResolvedValue(1)
+
+    const snapshot = await getMonthlyQuotaSnapshot({
+      userId: 'u1',
+      userTier: 'FREE',
+      usageType: 'GENERATE_LETTER',
+      now: new Date('2026-02-15T00:00:00.000Z'),
+    })
+
+    expect(snapshot).toEqual({
+      limit: 1,
+      used: 1,
+      remaining: 0,
+      window: 'monthly',
+      resetAt: '2026-03-01T00:00:00.000Z',
+      isExhausted: true,
+    })
+  })
+
   it('returns quota response when monthly usage hits limit', async () => {
     mocks.count.mockResolvedValue(1)
     const now = new Date('2026-02-15T00:00:00.000Z')
@@ -64,6 +89,7 @@ describe('monthly quota helpers', () => {
         code: 'QUOTA_EXCEEDED',
         limit: 1,
         used: 1,
+        remaining: 0,
         window: 'monthly',
         resetAt: '2026-03-01T00:00:00.000Z',
       },

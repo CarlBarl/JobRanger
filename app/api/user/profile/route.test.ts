@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
   findUnique: vi.fn(),
   update: vi.fn(),
+  getMonthlyQuotaSnapshot: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -24,11 +25,23 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
+vi.mock('@/lib/security/monthly-quota', () => ({
+  getMonthlyQuotaSnapshot: (...args: unknown[]) => mocks.getMonthlyQuotaSnapshot(...args),
+}))
+
 import { GET, PATCH } from './route'
 
 describe('/api/user/profile', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.getMonthlyQuotaSnapshot.mockResolvedValue({
+      limit: 1,
+      used: 0,
+      remaining: 1,
+      window: 'monthly',
+      resetAt: '2026-03-01T00:00:00.000Z',
+      isExhausted: false,
+    })
   })
 
   it('returns profile data for authenticated user', async () => {
@@ -36,6 +49,7 @@ describe('/api/user/profile', () => {
     mocks.findUnique.mockResolvedValue({
       name: 'Calle',
       letterGuidanceDefault: 'Keep it concise',
+      tier: 'FREE',
     })
 
     const response = await GET()
@@ -45,7 +59,23 @@ describe('/api/user/profile', () => {
       data: {
         name: 'Calle',
         letterGuidanceDefault: 'Keep it concise',
+        tier: 'FREE',
+        quotas: {
+          generateLetter: {
+            limit: 1,
+            used: 0,
+            remaining: 1,
+            resetAt: '2026-03-01T00:00:00.000Z',
+            isExhausted: false,
+          },
+        },
       },
+    })
+
+    expect(mocks.getMonthlyQuotaSnapshot).toHaveBeenCalledWith({
+      userId: 'u1',
+      userTier: 'FREE',
+      usageType: 'GENERATE_LETTER',
     })
   })
 

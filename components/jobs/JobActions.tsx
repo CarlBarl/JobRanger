@@ -1,15 +1,32 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 
 type ApiEnvelope =
   | { success: true; data: unknown }
-  | { success: false; error: { message?: string } }
+  | {
+      success: false
+      error: {
+        code?: string
+        message?: string
+        limit?: number
+        used?: number
+        resetAt?: string
+      }
+    }
 
 type DocumentRecord = { id: string; type?: string }
+
+type GenerateLetterQuota = {
+  limit: number
+  used: number
+  remaining: number
+  resetAt: string
+  isExhausted: boolean
+}
 
 function isEnvelope(value: unknown): value is ApiEnvelope {
   return (
@@ -25,6 +42,71 @@ function getDocuments(data: unknown): DocumentRecord[] {
   return data as DocumentRecord[]
 }
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+function parseGenerateLetterQuota(data: unknown): GenerateLetterQuota | null {
+  if (!data || typeof data !== 'object') return null
+  const quotas = (data as { quotas?: unknown }).quotas
+  if (!quotas || typeof quotas !== 'object') return null
+  const generateLetter = (quotas as { generateLetter?: unknown }).generateLetter
+  if (!generateLetter || typeof generateLetter !== 'object') return null
+
+  const limit = (generateLetter as { limit?: unknown }).limit
+  const used = (generateLetter as { used?: unknown }).used
+  const remaining = (generateLetter as { remaining?: unknown }).remaining
+  const resetAt = (generateLetter as { resetAt?: unknown }).resetAt
+  const isExhausted = (generateLetter as { isExhausted?: unknown }).isExhausted
+
+  if (
+    !isFiniteNumber(limit) ||
+    !isFiniteNumber(used) ||
+    !isFiniteNumber(remaining) ||
+    typeof resetAt !== 'string' ||
+    typeof isExhausted !== 'boolean'
+  ) {
+    return null
+  }
+
+  return { limit, used, remaining, resetAt, isExhausted }
+}
+
+function getQuotaFromError(
+  error: Extract<ApiEnvelope, { success: false }>['error'],
+  fallback: GenerateLetterQuota | null
+): GenerateLetterQuota {
+  const limit = isFiniteNumber(error.limit) && error.limit > 0 ? error.limit : (fallback?.limit ?? 1)
+  const used =
+    isFiniteNumber(error.used) && error.used >= 0
+      ? error.used
+      : Math.max(fallback?.used ?? limit, limit)
+  const resetAt =
+    typeof error.resetAt === 'string' && error.resetAt.length > 0
+      ? error.resetAt
+      : (fallback?.resetAt ?? '')
+
+  return {
+    limit,
+    used,
+    remaining: Math.max(limit - used, 0),
+    resetAt,
+    isExhausted: true,
+  }
+}
+
+function formatResetAtDate(resetAt: string, locale: string): string | null {
+  if (!resetAt) return null
+  const parsed = new Date(resetAt)
+  if (Number.isNaN(parsed.getTime())) return null
+
+  return new Intl.DateTimeFormat(locale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(parsed)
+}
+
 export function JobActions({
   afJobId,
   defaultGuidance,
@@ -33,12 +115,47 @@ export function JobActions({
   defaultGuidance?: string | null
 }) {
   const t = useTranslations('jobs')
+  const locale = useLocale()
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [generated, setGenerated] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [guidanceOverride, setGuidanceOverride] = useState(defaultGuidance ?? '')
+  const [generateLetterQuota, setGenerateLetterQuota] = useState<GenerateLetterQuota | null>(null)
+
+  const generateQuotaExhausted = generateLetterQuota?.isExhausted ?? false
+  const generateDisabled = generating || generateQuotaExhausted
+
+  const resetAtLabel = useMemo(() => {
+    if (!generateLetterQuota?.resetAt) return t('actions.quotaResetUnknown')
+    return formatResetAtDate(generateLetterQuota.resetAt, locale) ?? t('actions.quotaResetUnknown')
+  }, [generateLetterQuota?.resetAt, locale, t])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadQuota = async () => {
+      try {
+        const response = await fetch('/api/user/profile')
+        const json: unknown = await response.json()
+        if (!isEnvelope(json) || !json.success) return
+
+        const quota = parseGenerateLetterQuota(json.data)
+        if (!cancelled && quota) {
+          setGenerateLetterQuota(quota)
+        }
+      } catch {
+        // Best-effort precheck; fallback still handled on /api/generate response.
+      }
+    }
+
+    void loadQuota()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const handleSave = useCallback(async () => {
     setSaving(true)
@@ -67,6 +184,8 @@ export function JobActions({
   }, [afJobId, t])
 
   const handleGenerate = useCallback(async () => {
+    if (generateQuotaExhausted) return
+
     setGenerating(true)
     setError(null)
 
@@ -104,6 +223,10 @@ export function JobActions({
         return
       }
       if (!genJson.success) {
+        if (genJson.error.code === 'QUOTA_EXCEEDED') {
+          setGenerateLetterQuota((previous) => getQuotaFromError(genJson.error, previous))
+          return
+        }
         setError(genJson.error.message ?? t('actions.failedToGenerate'))
         return
       }
@@ -114,7 +237,7 @@ export function JobActions({
     } finally {
       setGenerating(false)
     }
-  }, [afJobId, t])
+  }, [afJobId, generateQuotaExhausted, guidanceOverride, t])
 
   return (
     <div className="flex flex-col gap-2">
@@ -175,7 +298,7 @@ export function JobActions({
           type="button"
           variant="secondary"
           onClick={handleGenerate}
-          disabled={generating}
+          disabled={generateDisabled}
           data-guide-id="jobs-detail-generate-button"
           className="w-full justify-center gap-2"
         >
@@ -188,6 +311,26 @@ export function JobActions({
           {generating ? t('actions.generating') : t('actions.generateLetter')}
         </Button>
       )}
+      {generateQuotaExhausted ? (
+        <div className="rounded-md border border-border bg-muted/35 px-3 py-2 text-xs text-foreground">
+          <p className="font-medium">{t('actions.quotaExceededTitle')}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {t('actions.quotaUsage', {
+              used: generateLetterQuota?.used ?? 0,
+              limit: generateLetterQuota?.limit ?? 1,
+            })}
+          </p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {t('actions.quotaResetAt', { date: resetAtLabel })}
+          </p>
+          <Link
+            href="/pricing"
+            className="mt-2 inline-flex items-center text-[11px] font-medium text-primary underline-offset-2 hover:underline"
+          >
+            {t('actions.upgradeCta')}
+          </Link>
+        </div>
+      ) : null}
       {error ? (
         <p className="rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
           {error}
