@@ -19,7 +19,15 @@ import { PasswordSignInPanel } from './signin/PasswordSignInPanel'
 import { QuickSignInButton } from './signin/QuickSignInButton'
 import { signInWithPasswordApi } from './signin/sign-in-api'
 
-export function SignInForm() {
+function sanitizeNextPath(rawNext: string | undefined) {
+  if (!rawNext) return '/dashboard'
+  if (!rawNext.startsWith('/')) return '/dashboard'
+  if (rawNext.startsWith('//')) return '/dashboard'
+  if (/[\r\n]/.test(rawNext)) return '/dashboard'
+  return rawNext
+}
+
+export function SignInForm({ nextPath }: { nextPath?: string }) {
   const t = useTranslations('auth')
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -31,6 +39,7 @@ export function SignInForm() {
   const [shouldShake, setShouldShake] = useState(false)
 
   const isDev = process.env.NODE_ENV === 'development'
+  const nextDestination = sanitizeNextPath(nextPath)
 
   useEffect(() => {
     if (!shouldShake) return
@@ -57,7 +66,7 @@ export function SignInForm() {
     const { error: signInError } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextDestination)}`,
       },
     })
 
@@ -88,7 +97,7 @@ export function SignInForm() {
       return
     }
 
-    router.push('/dashboard')
+    router.push(nextDestination)
     router.refresh()
   }
 
@@ -117,7 +126,7 @@ export function SignInForm() {
       return
     }
 
-    router.push('/dashboard')
+    router.push(nextDestination)
     router.refresh()
   }
 

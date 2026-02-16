@@ -23,7 +23,7 @@ export async function DELETE(
     )
   }
 
-  const deleteLimit = consumeRateLimit('letter-delete-user', user.id, 120, 60 * 60 * 1000)
+  const deleteLimit = await consumeRateLimit('letter-delete-user', user.id, 120, 60 * 60 * 1000)
   if (!deleteLimit.allowed) {
     return rateLimitResponse(
       'Delete letter rate limit exceeded. Please try again later.',

@@ -1,8 +1,13 @@
 import { SignInForm } from '@/components/auth/SignInForm'
 import { getTranslations } from 'next-intl/server'
 
-export default async function SignInPage() {
+interface SignInPageProps {
+  searchParams?: Promise<{ next?: string }>
+}
+
+export default async function SignInPage({ searchParams }: SignInPageProps) {
   const common = await getTranslations('common')
+  const { next } = (await searchParams) ?? {}
 
   return (
     <main className="relative flex min-h-screen items-center justify-center p-4">
@@ -14,7 +19,7 @@ export default async function SignInPage() {
           </span>
         </div>
         <div className="animate-fade-up delay-1">
-          <SignInForm />
+          <SignInForm nextPath={next} />
         </div>
       </div>
     </main>

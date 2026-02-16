@@ -17,25 +17,37 @@ ALTER TABLE "Document" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "SavedJob" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "GeneratedLetter" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "UsageEvent" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Subscription" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "BillingEvent" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "SecurityEvent" ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- 2. USER TABLE POLICIES
 -- ============================================
 
 -- Users can only read their own profile
+DROP POLICY IF EXISTS "Users can view own profile" ON "User";
 CREATE POLICY "Users can view own profile"
   ON "User"
   FOR SELECT
   USING (auth.uid()::text = id);
 
 -- Users can update their own profile
+DROP POLICY IF EXISTS "Users can update own profile" ON "User";
 CREATE POLICY "Users can update own profile"
   ON "User"
   FOR UPDATE
   USING (auth.uid()::text = id)
   WITH CHECK (auth.uid()::text = id);
 
+-- Prevent authenticated clients from updating server-managed fields like tier/role.
+-- RLS cannot restrict columns, so tighten column privileges as well.
+REVOKE UPDATE ON "User" FROM anon, authenticated;
+-- Note: Prisma creates camelCase columns as quoted identifiers, so keep quotes here.
+GRANT UPDATE ("name", "letterGuidanceDefault", "country") ON "User" TO authenticated;
+
 -- Users can insert their own profile (for initial creation)
+DROP POLICY IF EXISTS "Users can insert own profile" ON "User";
 CREATE POLICY "Users can insert own profile"
   ON "User"
   FOR INSERT
@@ -49,18 +61,21 @@ CREATE POLICY "Users can insert own profile"
 -- ============================================
 
 -- Users can only view their own documents
+DROP POLICY IF EXISTS "Users can view own documents" ON "Document";
 CREATE POLICY "Users can view own documents"
   ON "Document"
   FOR SELECT
   USING (auth.uid()::text = "userId");
 
 -- Users can insert their own documents
+DROP POLICY IF EXISTS "Users can insert own documents" ON "Document";
 CREATE POLICY "Users can insert own documents"
   ON "Document"
   FOR INSERT
   WITH CHECK (auth.uid()::text = "userId");
 
 -- Users can update their own documents
+DROP POLICY IF EXISTS "Users can update own documents" ON "Document";
 CREATE POLICY "Users can update own documents"
   ON "Document"
   FOR UPDATE
@@ -68,6 +83,7 @@ CREATE POLICY "Users can update own documents"
   WITH CHECK (auth.uid()::text = "userId");
 
 -- Users can delete their own documents
+DROP POLICY IF EXISTS "Users can delete own documents" ON "Document";
 CREATE POLICY "Users can delete own documents"
   ON "Document"
   FOR DELETE
@@ -78,18 +94,21 @@ CREATE POLICY "Users can delete own documents"
 -- ============================================
 
 -- Users can only view their own saved jobs
+DROP POLICY IF EXISTS "Users can view own saved jobs" ON "SavedJob";
 CREATE POLICY "Users can view own saved jobs"
   ON "SavedJob"
   FOR SELECT
   USING (auth.uid()::text = "userId");
 
 -- Users can insert their own saved jobs
+DROP POLICY IF EXISTS "Users can insert own saved jobs" ON "SavedJob";
 CREATE POLICY "Users can insert own saved jobs"
   ON "SavedJob"
   FOR INSERT
   WITH CHECK (auth.uid()::text = "userId");
 
 -- Users can update their own saved jobs
+DROP POLICY IF EXISTS "Users can update own saved jobs" ON "SavedJob";
 CREATE POLICY "Users can update own saved jobs"
   ON "SavedJob"
   FOR UPDATE
@@ -97,6 +116,7 @@ CREATE POLICY "Users can update own saved jobs"
   WITH CHECK (auth.uid()::text = "userId");
 
 -- Users can delete their own saved jobs
+DROP POLICY IF EXISTS "Users can delete own saved jobs" ON "SavedJob";
 CREATE POLICY "Users can delete own saved jobs"
   ON "SavedJob"
   FOR DELETE
@@ -107,18 +127,21 @@ CREATE POLICY "Users can delete own saved jobs"
 -- ============================================
 
 -- Users can only view their own letters
+DROP POLICY IF EXISTS "Users can view own letters" ON "GeneratedLetter";
 CREATE POLICY "Users can view own letters"
   ON "GeneratedLetter"
   FOR SELECT
   USING (auth.uid()::text = "userId");
 
 -- Users can insert their own letters
+DROP POLICY IF EXISTS "Users can insert own letters" ON "GeneratedLetter";
 CREATE POLICY "Users can insert own letters"
   ON "GeneratedLetter"
   FOR INSERT
   WITH CHECK (auth.uid()::text = "userId");
 
 -- Users can update their own letters
+DROP POLICY IF EXISTS "Users can update own letters" ON "GeneratedLetter";
 CREATE POLICY "Users can update own letters"
   ON "GeneratedLetter"
   FOR UPDATE
@@ -126,6 +149,7 @@ CREATE POLICY "Users can update own letters"
   WITH CHECK (auth.uid()::text = "userId");
 
 -- Users can delete their own letters
+DROP POLICY IF EXISTS "Users can delete own letters" ON "GeneratedLetter";
 CREATE POLICY "Users can delete own letters"
   ON "GeneratedLetter"
   FOR DELETE
@@ -146,7 +170,33 @@ CREATE POLICY "Users can view own usage events"
 -- Usage events are server-managed for quota accounting integrity.
 
 -- ============================================
--- 7. VERIFY RLS IS ENABLED
+-- 7. SUBSCRIPTION TABLE POLICIES
+-- ============================================
+
+-- Allow users to read only their own subscription record (server remains the source of truth).
+DROP POLICY IF EXISTS "Users can view own subscription" ON "Subscription";
+CREATE POLICY "Users can view own subscription"
+  ON "Subscription"
+  FOR SELECT
+  USING (auth.uid()::text = "userId");
+
+-- Intentionally no INSERT/UPDATE/DELETE policy for authenticated clients.
+-- Subscription state is server-managed via billing webhooks.
+
+-- ============================================
+-- 8. BILLINGEVENT TABLE POLICIES
+-- ============================================
+
+-- Intentionally no policies for BillingEvent (no client access).
+
+-- ============================================
+-- 9. SECURITYEVENT TABLE POLICIES
+-- ============================================
+
+-- Intentionally no policies for SecurityEvent (no client access).
+
+-- ============================================
+-- 10. VERIFY RLS IS ENABLED
 -- ============================================
 
 -- Run this to verify RLS status:

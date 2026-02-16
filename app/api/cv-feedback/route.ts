@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const rateLimit = consumeRateLimit('cv-feedback-user', appUser.id, 30, 60 * 60 * 1000)
+    const rateLimit = await consumeRateLimit('cv-feedback-user', appUser.id, 30, 60 * 60 * 1000)
     if (!rateLimit.allowed) {
       return rateLimitResponse(
         'CV feedback rate limit exceeded. Please try again later.',

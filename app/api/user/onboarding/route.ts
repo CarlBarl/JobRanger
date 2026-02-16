@@ -28,7 +28,7 @@ export async function PATCH(request: NextRequest) {
     )
   }
 
-  const rateLimit = consumeRateLimit('user-onboarding', user.id, 10, 60 * 60 * 1000)
+  const rateLimit = await consumeRateLimit('user-onboarding', user.id, 10, 60 * 60 * 1000)
   if (!rateLimit.allowed) {
     return rateLimitResponse(
       'Onboarding update limit reached. Please try again later.',

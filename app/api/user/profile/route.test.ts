@@ -50,6 +50,7 @@ describe('/api/user/profile', () => {
       name: 'Calle',
       letterGuidanceDefault: 'Keep it concise',
       tier: 'FREE',
+      country: 'SE',
     })
 
     const response = await GET()
@@ -60,6 +61,7 @@ describe('/api/user/profile', () => {
         name: 'Calle',
         letterGuidanceDefault: 'Keep it concise',
         tier: 'FREE',
+        country: 'SE',
         quotas: {
           generateLetter: {
             limit: 1,
@@ -84,6 +86,7 @@ describe('/api/user/profile', () => {
     mocks.update.mockResolvedValue({
       name: null,
       letterGuidanceDefault: 'Mention warehouse safety',
+      country: null,
     })
 
     const request = new NextRequest('http://localhost/api/user/profile', {
@@ -99,6 +102,7 @@ describe('/api/user/profile', () => {
       select: {
         name: true,
         letterGuidanceDefault: true,
+        country: true,
       },
     })
   })
