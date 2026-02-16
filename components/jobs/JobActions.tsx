@@ -110,9 +110,11 @@ function formatResetAtDate(resetAt: string, locale: string): string | null {
 export function JobActions({
   afJobId,
   defaultGuidance,
+  existingLettersCount = 0,
 }: {
   afJobId: string
   defaultGuidance?: string | null
+  existingLettersCount?: number
 }) {
   const t = useTranslations('jobs')
   const locale = useLocale()
@@ -123,14 +125,20 @@ export function JobActions({
   const [error, setError] = useState<string | null>(null)
   const [guidanceOverride, setGuidanceOverride] = useState(defaultGuidance ?? '')
   const [generateLetterQuota, setGenerateLetterQuota] = useState<GenerateLetterQuota | null>(null)
+  const [lettersForJobCount, setLettersForJobCount] = useState(existingLettersCount)
 
   const generateQuotaExhausted = generateLetterQuota?.isExhausted ?? false
   const generateDisabled = generating || generateQuotaExhausted
+  const lettersForJobHref = `/letters?jobId=${encodeURIComponent(afJobId)}`
 
   const resetAtLabel = useMemo(() => {
     if (!generateLetterQuota?.resetAt) return t('actions.quotaResetUnknown')
     return formatResetAtDate(generateLetterQuota.resetAt, locale) ?? t('actions.quotaResetUnknown')
   }, [generateLetterQuota?.resetAt, locale, t])
+
+  useEffect(() => {
+    setLettersForJobCount(existingLettersCount)
+  }, [existingLettersCount])
 
   useEffect(() => {
     let cancelled = false
@@ -232,6 +240,7 @@ export function JobActions({
       }
 
       setGenerated(true)
+      setLettersForJobCount((current) => current + 1)
     } catch {
       setError(t('actions.failedToGenerate'))
     } finally {
@@ -283,15 +292,6 @@ export function JobActions({
       {generated ? (
         <div className="rounded-md bg-primary/5 border border-primary/15 px-3 py-2.5 text-center">
           <p className="text-sm font-medium text-foreground">{t('actions.generateSuccess')}</p>
-          <Link
-            href="/letters"
-            className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-          >
-            {t('actions.viewLetters')}
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M5 3L9 7L5 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </Link>
         </div>
       ) : (
         <Button
@@ -311,6 +311,17 @@ export function JobActions({
           {generating ? t('actions.generating') : t('actions.generateLetter')}
         </Button>
       )}
+      {lettersForJobCount > 0 ? (
+        <Link
+          href={lettersForJobHref}
+          className="inline-flex items-center justify-center gap-1 text-sm font-medium text-primary hover:underline"
+        >
+          {t('actions.viewLettersForJob', { count: lettersForJobCount })}
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M5 3L9 7L5 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </Link>
+      ) : null}
       {generateQuotaExhausted ? (
         <div className="rounded-md border border-border bg-muted/35 px-3 py-2 text-xs text-foreground">
           <p className="font-medium">{t('actions.quotaExceededTitle')}</p>

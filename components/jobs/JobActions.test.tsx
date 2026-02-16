@@ -14,6 +14,7 @@ const messages = {
       generateLetter: 'Generate a letter',
       generateSuccess: 'Generated successfully',
       viewLetters: 'View letters',
+      viewLettersForJob: 'View letters for this job ({count})',
       generated: 'Generated: {id}',
       failedToSave: 'Could not save',
       failedToLoadDocuments: 'Could not load docs',
@@ -50,6 +51,33 @@ describe('JobActions', () => {
     expect(
       screen.getByRole('button', { name: 'Generate a letter' })
     ).toBeInTheDocument()
+  })
+
+  it('shows job-specific letters link when letters already exist', () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error('profile fetch unavailable'))
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(
+      <NextIntlClientProvider locale="en" messages={messages}>
+        <JobActions afJobId="123" existingLettersCount={2} />
+      </NextIntlClientProvider>
+    )
+
+    const link = screen.getByRole('link', { name: 'View letters for this job (2)' })
+    expect(link).toHaveAttribute('href', '/letters?jobId=123')
+  })
+
+  it('hides job-specific letters link when no letters exist yet', () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error('profile fetch unavailable'))
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(
+      <NextIntlClientProvider locale="en" messages={messages}>
+        <JobActions afJobId="123" />
+      </NextIntlClientProvider>
+    )
+
+    expect(screen.queryByRole('link', { name: /view letters for this job/i })).not.toBeInTheDocument()
   })
 
   it('generates without guidance override when textarea is blank', async () => {
@@ -118,6 +146,11 @@ describe('JobActions', () => {
       afJobId: '123',
       documentId: 'cv-1',
     })
+
+    expect(await screen.findByRole('link', { name: 'View letters for this job (1)' })).toHaveAttribute(
+      'href',
+      '/letters?jobId=123'
+    )
   })
 
   it('disables generate and shows quota helper when monthly limit is exhausted', async () => {

@@ -116,6 +116,12 @@ Current `npm run lint` uses CLI flags (`--no-config-lookup`, `--parser-options`)
 ### Prisma Generate Can Fail While `next dev` Runs (Windows)
 If `npx prisma generate` fails with `EPERM ... query_engine-windows.dll.node`, a local Node process (commonly `npm run dev`) is locking the Prisma engine binary. Stop the dev server (and its child `next` processes), then rerun `npx prisma generate`.
 
+### Git Worktrees Need Their Own Dependencies
+When creating a separate worktree for parallel agent work, that folder may not have `node_modules`. Run `npm ci` in the new worktree before running `vitest` or `npx next build --webpack`.
+
+### Webpack Build Check May Need Prisma Generate First
+In this repository we validate builds with `npx next build --webpack` (not `npm run build`). That command does not run `prisma generate`, so a fresh/stale worktree can fail with Prisma type errors (for example missing enum exports like `UserTier`). Run `npx prisma generate` before the webpack build check when this happens.
+
 ## Refactoring Patterns
 
 ### Keep Route Handlers Thin with Local `_lib` Modules

@@ -1,9 +1,14 @@
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { isValidAfJobId } from '@/lib/security/sanitize'
 import { LettersList } from '@/components/letters/LettersList'
 
-export default async function LettersPage() {
+interface LettersPageProps {
+  searchParams: Promise<{ jobId?: string }>
+}
+
+export default async function LettersPage({ searchParams }: LettersPageProps) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -11,8 +16,14 @@ export default async function LettersPage() {
 
   if (!user) return null
 
+  const { jobId } = await searchParams
+  const activeJobId = jobId && isValidAfJobId(jobId) ? jobId : null
+
   const letters = await prisma.generatedLetter.findMany({
-    where: { userId: user.id },
+    where: {
+      userId: user.id,
+      ...(activeJobId ? { afJobId: activeJobId } : {}),
+    },
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,
@@ -53,7 +64,7 @@ export default async function LettersPage() {
     <div className="min-h-screen">
       <DashboardHeader />
       <main className="container mx-auto space-y-8 px-6 py-8 sm:py-12">
-        <LettersList initialLetters={initialLetters} />
+        <LettersList initialLetters={initialLetters} activeJobId={activeJobId ?? undefined} />
       </main>
     </div>
   )

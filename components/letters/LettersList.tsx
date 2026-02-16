@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { FileText } from 'lucide-react'
@@ -9,7 +10,13 @@ import { LetterCard, type LetterCardLabels } from './LetterCard'
 import type { LetterListItem } from './types'
 import { buildExcerpt, copyTextToClipboard } from './utils'
 
-export function LettersList({ initialLetters }: { initialLetters: LetterListItem[] }) {
+export function LettersList({
+  initialLetters,
+  activeJobId,
+}: {
+  initialLetters: LetterListItem[]
+  activeJobId?: string
+}) {
   const t = useTranslations('letters')
   const locale = useLocale()
   const router = useRouter()
@@ -129,6 +136,14 @@ export function LettersList({ initialLetters }: { initialLetters: LetterListItem
           {t('count', { count: letters.length })}
         </p>
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('title')}</h1>
+        {activeJobId ? (
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            <span>{t('filteredByJob', { jobId: activeJobId })}</span>
+            <Link href="/letters" className="font-medium text-primary hover:underline">
+              {t('showAll')}
+            </Link>
+          </div>
+        ) : null}
       </div>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -138,7 +153,9 @@ export function LettersList({ initialLetters }: { initialLetters: LetterListItem
           <div className="mb-4 rounded-full border p-4">
             <FileText className="h-6 w-6 text-muted-foreground" strokeWidth={1.5} />
           </div>
-          <p className="text-sm text-muted-foreground">{t('empty')}</p>
+          <p className="text-sm text-muted-foreground">
+            {activeJobId ? t('emptyForJob') : t('empty')}
+          </p>
         </div>
       ) : (
         <div className="animate-fade-up delay-1 space-y-4">

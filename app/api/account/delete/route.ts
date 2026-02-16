@@ -53,8 +53,8 @@ export async function DELETE(request: NextRequest) {
     })
 
     const storagePaths = documents
-      .map((doc) => getDocumentStoragePath(doc.fileUrl))
-      .filter((path): path is string => path !== null)
+      .map((doc: { fileUrl: string | null }) => getDocumentStoragePath(doc.fileUrl))
+      .filter((path: string | null): path is string => path !== null)
 
     if (storagePaths.length > 0) {
       const { error: storageError } = await supabase.storage
