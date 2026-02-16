@@ -6,6 +6,13 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { FileUpload } from '@/components/upload/FileUpload'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 
 type UserTier = 'FREE' | 'PRO'
@@ -74,7 +81,7 @@ interface ApiFailure {
 
 interface CvStudioClientProps {
   userTier: UserTier
-  initialCvDocument: CvDocumentData | null
+  initialCvDocuments: CvDocumentData[]
   savedJobs: SavedJobOption[]
 }
 
@@ -108,13 +115,15 @@ const PRIORITY_STYLE: Record<CvFeedbackItem['priority'], string> = {
 
 export function CvStudioClient({
   userTier,
-  initialCvDocument,
+  initialCvDocuments,
   savedJobs,
 }: CvStudioClientProps) {
   const t = useTranslations('cvStudio')
   const router = useRouter()
 
-  const [cvDocument, setCvDocument] = useState<CvDocumentData | null>(initialCvDocument)
+  const [cvDocuments, setCvDocuments] = useState<CvDocumentData[]>(initialCvDocuments)
+  const [selectedCvId, setSelectedCvId] = useState(initialCvDocuments[0]?.id ?? '')
+  const [isCvPreviewOpen, setIsCvPreviewOpen] = useState(false)
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([])
   const [directiveText, setDirectiveText] = useState('')
   const [feedbackResult, setFeedbackResult] = useState<CvFeedbackData | null>(null)
@@ -124,7 +133,16 @@ export function CvStudioClient({
   const [error, setError] = useState<string | null>(null)
 
   const isPro = userTier === 'PRO'
-  const hasCv = !!cvDocument
+  const hasCvDocuments = cvDocuments.length > 0
+
+  const selectedCvDocument = useMemo(() => {
+    if (!hasCvDocuments) return null
+    const match = cvDocuments.find((doc) => doc.id === selectedCvId)
+    return match ?? cvDocuments[0] ?? null
+  }, [cvDocuments, hasCvDocuments, selectedCvId])
+
+  const selectedCvContent = selectedCvDocument?.parsedContent ?? null
+  const hasSelectedCvContent = !!selectedCvContent?.trim()
 
   const sortedSelectedJobIds = useMemo(
     () => [...selectedJobIds].sort((a, b) => a.localeCompare(b)),
@@ -132,8 +150,16 @@ export function CvStudioClient({
   )
 
   useEffect(() => {
-    setCvDocument(initialCvDocument)
-  }, [initialCvDocument])
+    setCvDocuments(initialCvDocuments)
+    setSelectedCvId(initialCvDocuments[0]?.id ?? '')
+  }, [initialCvDocuments])
+
+  const handleSelectCv = (nextId: string) => {
+    setSelectedCvId(nextId)
+    setError(null)
+    setFeedbackResult(null)
+    setEditResult(null)
+  }
 
   const toggleJob = (jobId: string) => {
     setSelectedJobIds((current) =>
@@ -159,7 +185,7 @@ export function CvStudioClient({
   }
 
   const handleGenerateFeedback = async () => {
-    if (!cvDocument || isFeedbackLoading || !isPro) return
+    if (!selectedCvDocument || isFeedbackLoading || !isPro || !hasSelectedCvContent) return
 
     setIsFeedbackLoading(true)
     setError(null)
@@ -170,7 +196,7 @@ export function CvStudioClient({
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          cvDocumentId: cvDocument.id,
+          cvDocumentId: selectedCvDocument.id,
           selectedJobIds: sortedSelectedJobIds,
           directiveText: directiveText.trim() || undefined,
         }),
@@ -196,7 +222,7 @@ export function CvStudioClient({
   }
 
   const handleApplyEdits = async () => {
-    if (!cvDocument || isEditLoading || !isPro) return
+    if (!selectedCvDocument || isEditLoading || !isPro || !hasSelectedCvContent) return
 
     setIsEditLoading(true)
     setError(null)
@@ -206,7 +232,7 @@ export function CvStudioClient({
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          cvDocumentId: cvDocument.id,
+          cvDocumentId: selectedCvDocument.id,
           selectedJobIds: sortedSelectedJobIds,
           directiveText: directiveText.trim() || undefined,
         }),
@@ -224,11 +250,16 @@ export function CvStudioClient({
       }
 
       setEditResult(json.data)
-      setCvDocument({
+      const updatedDoc: CvDocumentData = {
         id: json.data.document.id,
         createdAt: json.data.document.createdAt,
         parsedContent: json.data.document.parsedContent,
-      })
+      }
+      setCvDocuments((current) => [
+        updatedDoc,
+        ...current.filter((doc) => doc.id !== updatedDoc.id),
+      ])
+      setSelectedCvId(updatedDoc.id)
       router.refresh()
     } catch {
       setError(t('errors.editFailed'))
@@ -260,7 +291,7 @@ export function CvStudioClient({
         </div>
       </section>
 
-      {!hasCv ? (
+      {!hasCvDocuments ? (
         <section className="card-elevated rounded-xl border bg-card p-5 sm:p-6">
           <h2 className="text-base font-semibold text-foreground">{t('uploadTitle')}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{t('uploadDescription')}</p>
@@ -273,18 +304,74 @@ export function CvStudioClient({
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <section className="card-elevated rounded-xl border bg-card p-5 sm:p-6">
               <h2 className="text-base font-semibold text-foreground">{t('currentCvTitle')}</h2>
-              <dl className="mt-3 space-y-2 text-sm text-muted-foreground">
+              {cvDocuments.length > 1 ? (
+                <div className="mt-3">
+                  <p className="text-sm font-medium text-foreground">{t('selectCvLabel')}</p>
+                  <Select value={selectedCvId} onValueChange={handleSelectCv}>
+                    <SelectTrigger aria-label={t('selectCvLabel')} className="mt-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cvDocuments.map((doc) => (
+                        <SelectItem key={doc.id} value={doc.id}>
+                          {t('cvVersionLabel', { date: formatDateTime(doc.createdAt) })}{' '}
+                          {doc.parsedContent
+                            ? `(${doc.parsedContent.length.toLocaleString()} ${t('cvChars')})`
+                            : `(${t('noCvContentShort')})`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : null}
+
+              <dl className="mt-4 space-y-2 text-sm text-muted-foreground">
                 <div className="flex items-center justify-between gap-2">
                   <dt>{t('cvUpdated')}</dt>
-                  <dd className="font-medium text-foreground/80">{formatDateTime(cvDocument.createdAt)}</dd>
+                  <dd className="font-medium text-foreground/80">
+                    {selectedCvDocument ? formatDateTime(selectedCvDocument.createdAt) : '-'}
+                  </dd>
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <dt>{t('cvChars')}</dt>
                   <dd className="font-medium text-foreground/80">
-                    {(cvDocument.parsedContent?.length || 0).toLocaleString()}
+                    {(selectedCvContent?.length || 0).toLocaleString()}
                   </dd>
                 </div>
               </dl>
+
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCvPreviewOpen((current) => !current)}
+                >
+                  {isCvPreviewOpen ? t('hideCv') : t('showCv')}
+                </Button>
+                {selectedCvDocument ? (
+                  <Button asChild type="button" variant="ghost" size="sm">
+                    <a href={`/documents/${selectedCvDocument.id}`}>{t('openFull')}</a>
+                  </Button>
+                ) : null}
+              </div>
+
+              {isCvPreviewOpen ? (
+                <div className="mt-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    {t('cvContentsTitle')}
+                  </p>
+                  {hasSelectedCvContent ? (
+                    <pre className="mt-2 max-h-56 overflow-y-auto whitespace-pre-wrap rounded-md border border-border bg-muted/20 p-3 text-xs leading-relaxed text-foreground">
+                      {selectedCvContent}
+                    </pre>
+                  ) : (
+                    <p className="mt-2 rounded-md border border-amber-300/50 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                      {t('noCvContent')}
+                    </p>
+                  )}
+                </div>
+              ) : null}
               <div className="mt-4">
                 <FileUpload variant="embedded" onUploadComplete={handleUploadComplete} />
               </div>
