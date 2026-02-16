@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { UsageEventType } from '@prisma/client'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { enforceCsrfProtection } from '@/lib/security/csrf'
 import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
+import { getMonthlyQuotaSnapshot } from '@/lib/security/monthly-quota'
 import { z } from 'zod'
 
 const MAX_GUIDANCE_CHARS = 1200
@@ -59,6 +61,7 @@ export async function GET() {
       select: {
         name: true,
         letterGuidanceDefault: true,
+        tier: true,
       },
     })
 
@@ -72,11 +75,27 @@ export async function GET() {
       )
     }
 
+    const generateLetterQuota = await getMonthlyQuotaSnapshot({
+      userId: user.id,
+      userTier: profile.tier,
+      usageType: UsageEventType.GENERATE_LETTER,
+    })
+
     return NextResponse.json({
       success: true,
       data: {
         name: profile.name ?? null,
         letterGuidanceDefault: profile.letterGuidanceDefault ?? null,
+        tier: profile.tier,
+        quotas: {
+          generateLetter: {
+            limit: generateLetterQuota.limit,
+            used: generateLetterQuota.used,
+            remaining: generateLetterQuota.remaining,
+            resetAt: generateLetterQuota.resetAt,
+            isExhausted: generateLetterQuota.isExhausted,
+          },
+        },
       },
     })
   } catch (error) {
