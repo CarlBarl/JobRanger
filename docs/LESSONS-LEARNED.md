@@ -15,6 +15,9 @@ Applied in `next.config.mjs` via webpack configuration.
 ### Prisma Client Must Be Generated Before Deploy
 The `@prisma/client did not initialize yet` error occurs when the Prisma client hasn't been generated. Fix: ensure `npx prisma generate` runs as part of the build step or `postinstall` script.
 
+### GitHub Actions Vercel Preview Requires Project Secrets
+For PR-based preview deployments via GitHub Actions, set `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` as repository secrets and run `vercel pull/build/deploy` in CI. Keep the workflow on `pull_request` (not `pull_request_target`) so untrusted fork code does not run with secrets.
+
 ## Arbetsformedlingen API
 
 ### Jobs Can Disappear
