@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "appName": "JobbJägaren",
     "signIn": "Sign In",
@@ -12,6 +12,7 @@
     "success": "Done!",
     "close": "Close",
     "navDashboard": "Dashboard",
+    "navCvStudio": "CV Studio",
     "navJobs": "Jobs",
     "navLetters": "Letters",
     "metaDescription": "An AI-powered job matching platform for Swedish job seekers. Upload a CV, search jobs, and generate cover letters."
@@ -520,6 +521,54 @@
       "jobsSaved": "{count} jobs saved",
       "searchJobs": "Search for jobs",
       "goToDashboard": "Go to dashboard"
+    }
+  },
+  "cvStudio": {
+    "title": "CV Studio",
+    "subtitle": "Upload your CV, target saved jobs, and get AI feedback with one-click rewrites.",
+    "proBadge": "PRO",
+    "freeBadge": "FREE",
+    "uploadTitle": "Upload a CV to start",
+    "uploadDescription": "Once a CV is available, you can generate feedback and apply AI edits.",
+    "currentCvTitle": "Current CV",
+    "cvUpdated": "Last updated",
+    "cvChars": "Characters",
+    "targetsTitle": "Target saved jobs",
+    "targetsDescription": "Pick one or more saved jobs to steer feedback toward those descriptions.",
+    "noSavedJobs": "No saved jobs yet. Feedback will run in generic improvement mode.",
+    "selectAllJobs": "Select all",
+    "clearJobs": "Clear",
+    "directivesLabel": "Optional direction",
+    "directivesPlaceholder": "Example: Prioritize logistics, customer communication, and measurable impact.",
+    "directivesHint": "You can leave this blank. Selected jobs are optional too.",
+    "lockTitle": "PRO feature",
+    "lockDescription": "FREE users can view this page but CV feedback and AI edits require PRO.",
+    "generateFeedback": "Generate feedback",
+    "generatingFeedback": "Generating feedback...",
+    "applyEdits": "Apply AI edits",
+    "applyingEdits": "Applying edits...",
+    "feedbackTitle": "CV feedback",
+    "targetedFeedback": "Targeted mode",
+    "genericFeedback": "Generic mode",
+    "strengthsTitle": "Strengths",
+    "improvementsTitle": "Improvements",
+    "noStrengths": "No strengths returned.",
+    "noImprovements": "No improvements returned.",
+    "priorityHigh": "High",
+    "priorityMedium": "Medium",
+    "priorityLow": "Low",
+    "selectedJobs": "Selected jobs: {count}",
+    "usedJobs": "Used jobs: {count}",
+    "warningsTitle": "Warnings",
+    "editResultTitle": "Edited CV result",
+    "changeLogTitle": "Change log",
+    "updatedCvTitle": "Updated CV",
+    "beforeLabel": "Before",
+    "afterLabel": "After",
+    "errors": {
+      "feedbackFailed": "Failed to generate CV feedback.",
+      "editFailed": "Failed to apply CV edits.",
+      "unexpectedResponse": "Unexpected response from server."
     }
   },
   "pricing": {

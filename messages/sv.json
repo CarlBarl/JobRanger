@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "appName": "JobbJägaren",
     "signIn": "Logga in",
@@ -12,6 +12,7 @@
     "success": "Klart!",
     "close": "Stäng",
     "navDashboard": "Översikt",
+    "navCvStudio": "CV-studio",
     "navJobs": "Jobb",
     "navLetters": "Brev",
     "metaDescription": "En AI-driven jobbtjänst för svenska jobbsökare. Ladda upp ett CV, sök jobb och generera personliga brev."
@@ -520,6 +521,54 @@
       "jobsSaved": "{count} jobb sparade",
       "searchJobs": "Sök efter jobb",
       "goToDashboard": "Gå till dashboard"
+    }
+  },
+  "cvStudio": {
+    "title": "CV-studio",
+    "subtitle": "Ladda upp ditt CV, rikta feedback mot sparade jobb och få AI-förbättringar med ett klick.",
+    "proBadge": "PRO",
+    "freeBadge": "FREE",
+    "uploadTitle": "Ladda upp ett CV för att starta",
+    "uploadDescription": "När ett CV finns kan du skapa feedback och tillämpa AI-redigeringar.",
+    "currentCvTitle": "Nuvarande CV",
+    "cvUpdated": "Senast uppdaterad",
+    "cvChars": "Tecken",
+    "targetsTitle": "Rikta mot sparade jobb",
+    "targetsDescription": "Välj ett eller flera sparade jobb för att styra feedback mot deras beskrivningar.",
+    "noSavedJobs": "Inga sparade jobb än. Feedback kör i generellt förbättringsläge.",
+    "selectAllJobs": "Välj alla",
+    "clearJobs": "Rensa",
+    "directivesLabel": "Valfri riktning",
+    "directivesPlaceholder": "Exempel: Prioritera logistik, kundkommunikation och mätbar effekt.",
+    "directivesHint": "Du kan lämna detta tomt. Valda jobb är också frivilligt.",
+    "lockTitle": "PRO-funktion",
+    "lockDescription": "FREE-användare kan visa sidan men CV-feedback och AI-redigeringar kräver PRO.",
+    "generateFeedback": "Generera feedback",
+    "generatingFeedback": "Genererar feedback...",
+    "applyEdits": "Tillämpa AI-redigeringar",
+    "applyingEdits": "Tillämpar redigeringar...",
+    "feedbackTitle": "CV-feedback",
+    "targetedFeedback": "Riktat läge",
+    "genericFeedback": "Generellt läge",
+    "strengthsTitle": "Styrkor",
+    "improvementsTitle": "Förbättringar",
+    "noStrengths": "Inga styrkor returnerades.",
+    "noImprovements": "Inga förbättringar returnerades.",
+    "priorityHigh": "Hög",
+    "priorityMedium": "Medel",
+    "priorityLow": "Låg",
+    "selectedJobs": "Valda jobb: {count}",
+    "usedJobs": "Använda jobb: {count}",
+    "warningsTitle": "Varningar",
+    "editResultTitle": "Resultat efter CV-redigering",
+    "changeLogTitle": "Ändringslogg",
+    "updatedCvTitle": "Uppdaterat CV",
+    "beforeLabel": "Före",
+    "afterLabel": "Efter",
+    "errors": {
+      "feedbackFailed": "Kunde inte generera CV-feedback.",
+      "editFailed": "Kunde inte tillämpa CV-redigeringar.",
+      "unexpectedResponse": "Oväntat svar från servern."
     }
   },
   "pricing": {

@@ -1,4 +1,4 @@
-# Lessons Learned
+﻿# Lessons Learned
 
 Continuously updated log of technical decisions, gotchas, and patterns discovered during development.
 
@@ -128,6 +128,9 @@ For AI endpoints, keep existing hourly in-memory anti-abuse limits (`consumeRate
 
 ### Surface Quota Snapshots for Proactive UI Feedback
 When an action is plan-gated (for example cover-letter generation), expose a quota snapshot (`limit`, `used`, `remaining`, `resetAt`, `isExhausted`) from a lightweight profile read endpoint so mobile/web clients can disable CTA buttons before the user taps. Keep server-side quota enforcement on the mutation endpoint as the final authority and fallback.
+
+### Keep Dedicated AI Model Settings Per Feature
+For higher-stakes CV rewrite workflows, use a dedicated model env var (`GEMINI_CV_MODEL`, default `gemini-3-flash-preview`) instead of the default lightweight model used by other features. Track usage with separate `UsageEventType` values (`CV_FEEDBACK`, `CV_EDIT`) so quotas can be tuned without affecting letter/skills flows.
 
 ### Normalize Blank Guidance Inputs Before Prompting
 For letter generation guidance fields, normalize missing/empty/whitespace inputs to `undefined` before building prompts. This avoids treating blank strings as explicit instructions and keeps "generate with no guidance" behavior reliable.

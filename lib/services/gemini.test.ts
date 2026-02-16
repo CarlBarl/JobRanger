@@ -13,7 +13,13 @@ vi.mock('@google/generative-ai', () => ({
   },
 }))
 
-import { extractSkillsFromCV, generateCoverLetter } from './gemini'
+import {
+  CV_STUDIO_MODEL,
+  extractSkillsFromCV,
+  generateCoverLetter,
+  generateCvFeedback,
+  rewriteCvWithChangelog,
+} from './gemini'
 
 const text = vi.fn()
 const generateContent = vi.fn()
@@ -58,6 +64,53 @@ describe('gemini client', () => {
         jobTitle: 'jt',
       })
     ).resolves.toBe('Hello')
+  })
+
+  it('generateCvFeedback parses JSON output and uses cv studio model', async () => {
+    text.mockReturnValue(
+      JSON.stringify({
+        overallSummary: 'Strong baseline CV.',
+        strengths: ['Clear timeline'],
+        improvements: [
+          {
+            title: 'Improve summary',
+            priority: 'high',
+            rationale: 'Current summary is too generic.',
+            actions: ['Add role focus', 'Quantify outcomes'],
+          },
+        ],
+      })
+    )
+    generateContent.mockResolvedValue({ response: { text } })
+
+    const result = await generateCvFeedback({
+      cvContent: 'cv',
+      directiveText: 'Focus logistics jobs',
+    })
+
+    expect(result).toEqual({
+      overallSummary: 'Strong baseline CV.',
+      strengths: ['Clear timeline'],
+      improvements: [
+        {
+          title: 'Improve summary',
+          priority: 'high',
+          rationale: 'Current summary is too generic.',
+          actions: ['Add role focus', 'Quantify outcomes'],
+        },
+      ],
+    })
+    expect(mocks.getGenerativeModel).toHaveBeenCalledWith({ model: CV_STUDIO_MODEL })
+  })
+
+  it('rewriteCvWithChangelog falls back when model output is non-json', async () => {
+    text.mockReturnValue('edited cv text')
+    generateContent.mockResolvedValue({ response: { text } })
+
+    await expect(rewriteCvWithChangelog({ cvContent: 'before' })).resolves.toEqual({
+      improvedCv: 'edited cv text',
+      changes: [],
+    })
   })
 
   it('escapes user input before embedding in prompt sections', async () => {
