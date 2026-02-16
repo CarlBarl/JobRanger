@@ -21,10 +21,11 @@ export default async function CvStudioPage() {
     redirect('/onboarding')
   }
 
-  const [cvDocument, savedJobs] = await Promise.all([
-    prisma.document.findFirst({
+  const [cvDocuments, savedJobs] = await Promise.all([
+    prisma.document.findMany({
       where: { userId: user.id, type: 'cv' },
       orderBy: { createdAt: 'desc' },
+      take: 5,
       select: {
         id: true,
         createdAt: true,
@@ -50,15 +51,11 @@ export default async function CvStudioPage() {
       <main className="container mx-auto space-y-5 px-4 py-6 sm:px-6 sm:py-8">
         <CvStudioClient
           userTier={user.tier}
-          initialCvDocument={
-            cvDocument
-              ? {
-                  id: cvDocument.id,
-                  createdAt: cvDocument.createdAt.toISOString(),
-                  parsedContent: cvDocument.parsedContent,
-                }
-              : null
-          }
+          initialCvDocuments={cvDocuments.map((doc) => ({
+            id: doc.id,
+            createdAt: doc.createdAt.toISOString(),
+            parsedContent: doc.parsedContent,
+          }))}
           savedJobs={savedJobs.map((job) => ({
             afJobId: job.afJobId,
             headline: job.headline || `Job ${job.afJobId}`,
