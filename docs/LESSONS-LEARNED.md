@@ -18,6 +18,9 @@ The `@prisma/client did not initialize yet` error occurs when the Prisma client 
 ### GitHub Actions Vercel Preview Requires Project Secrets
 For PR-based preview deployments via GitHub Actions, set `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` as repository secrets and run `vercel pull/build/deploy` in CI. Keep the workflow on `pull_request` (not `pull_request_target`) so untrusted fork code does not run with secrets.
 
+### Split Preview vs Production Deploy Pipelines
+When Vercel Git auto-deploy is disabled, use separate GitHub Actions workflows: one for PR preview (`--environment=preview`) and one for `main` production deploy (`--environment=production` + `--prod`). Keep production workflow bound to `push` on `main` and `environment: production` for optional approval gates.
+
 ## Arbetsformedlingen API
 
 ### Jobs Can Disappear
