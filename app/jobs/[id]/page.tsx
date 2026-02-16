@@ -2,6 +2,7 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { BackToJobsLink } from '@/components/jobs/BackToJobsLink'
 import { createClient } from '@/lib/supabase/server'
 import { getOrCreateUser } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 import { getJobById } from '@/lib/services/arbetsformedlingen'
 import { getTranslations } from 'next-intl/server'
 import { JobHeroCard } from '@/app/jobs/[id]/_components/JobHeroCard'
@@ -29,7 +30,15 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   const profile = user.email ? await getOrCreateUser(user.id, user.email) : null
 
   try {
-    const job = await getJobById(id)
+    const [job, existingLettersCount] = await Promise.all([
+      getJobById(id),
+      prisma.generatedLetter.count({
+        where: {
+          userId: user.id,
+          afJobId: id,
+        },
+      }),
+    ])
     const title = job.headline ?? t('card.untitledRole')
     const employerName = job.employer?.name ?? t('card.unknownEmployer')
     const description = job.description?.text ?? ''
@@ -74,6 +83,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                   applyUrl={applyUrl}
                   listingUrl={listingUrl}
                   defaultGuidance={profile?.letterGuidanceDefault ?? null}
+                  existingLettersCount={existingLettersCount}
                   labels={{
                     apply: t('detail.apply'),
                     viewListing: t('detail.viewListing'),

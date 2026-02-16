@@ -5,6 +5,7 @@ interface JobActionsCardProps {
   applyUrl: string | null
   listingUrl: string | null
   defaultGuidance: string | null
+  existingLettersCount: number
   labels: {
     apply: string
     viewListing: string
@@ -16,6 +17,7 @@ export function JobActionsCard({
   applyUrl,
   listingUrl,
   defaultGuidance,
+  existingLettersCount,
   labels,
 }: JobActionsCardProps) {
   return (
@@ -34,7 +36,11 @@ export function JobActionsCard({
         </a>
       ) : null}
 
-      <JobActions afJobId={jobId} defaultGuidance={defaultGuidance} />
+      <JobActions
+        afJobId={jobId}
+        defaultGuidance={defaultGuidance}
+        existingLettersCount={existingLettersCount}
+      />
 
       {listingUrl ? (
         <a

@@ -91,4 +91,28 @@ describe('LettersList', () => {
       expect(mockRefresh).toHaveBeenCalled()
     })
   })
+
+  it('shows filtered context and show-all link when activeJobId is provided', () => {
+    const letters: LetterListItem[] = [
+      {
+        id: 'l1',
+        afJobId: '123',
+        jobTitle: 'React Developer',
+        content: 'Hello',
+        createdAt: '2026-02-15T12:00:00.000Z',
+        savedJob: null,
+      },
+    ]
+
+    render(<LettersList initialLetters={letters} activeJobId="123" />)
+
+    expect(screen.getByText('Showing letters for job ID 123')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Show all letters' })).toHaveAttribute('href', '/letters')
+  })
+
+  it('shows filtered empty state message when job filter has no letters', () => {
+    render(<LettersList initialLetters={[]} activeJobId="123" />)
+
+    expect(screen.getByText('No letters generated for this job yet.')).toBeInTheDocument()
+  })
 })
