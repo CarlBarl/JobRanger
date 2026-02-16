@@ -19,6 +19,14 @@
 - Runtime DB schema must also be applied after Prisma model changes. If app pages/routes fail with Prisma `P2022` (missing column, e.g. `User.<field>`), run `npx prisma db push` (or deploy migrations) against the active database before re-testing.
 - For failed Vercel builds, use `npx vercel inspect <deployment-url> --logs` to get the exact failing file/line quickly.
 
+## Planned testing expansion (2026-02-17)
+- On February 17, 2026, expand GitHub Actions workflows so CI blocks merges/deploys unless critical checks pass.
+- Add/enable test stages for:
+  - full app test suite pass
+  - database-related tests (Prisma/Supabase paths)
+  - Upstash Redis-backed integration tests (rate-limit and related flows)
+- Goal: verify app logic + DB + Redis dependencies together so regressions fail fast in CI.
+
 ## Lessons Learned
 - **Read first:** Before starting any task, read `docs/LESSONS-LEARNED.md` for accumulated project knowledge (deployment gotchas, API quirks, design patterns, DB decisions).
 - **Write back:** When you discover something new that would save future time, add it to the relevant section in `docs/LESSONS-LEARNED.md`. If no section fits, create one.
