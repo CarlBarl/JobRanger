@@ -34,9 +34,6 @@ export async function DashboardHeader() {
               {user?.email ? (
                 <>
                   <GuideReplayControl />
-                  <span className="hidden max-w-[10rem] truncate text-[13px] text-muted-foreground/80 md:inline">
-                    {user.email}
-                  </span>
                   <SignOutButton />
                 </>
               ) : null}
