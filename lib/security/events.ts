@@ -2,7 +2,7 @@ import {
   Prisma,
   SecurityEventCategory,
   SecurityEventSeverity,
-} from '@prisma/client'
+} from '@/generated/prisma/client'
 import { prisma } from '@/lib/prisma'
 import { securityErrorLog } from '@/lib/security/logging'
 

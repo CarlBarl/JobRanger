@@ -2,17 +2,15 @@ import dotenv from 'dotenv'
 // Load .env.local first (higher priority), then .env as fallback
 dotenv.config({ path: '.env.local' })
 dotenv.config({ path: '.env' })
-import { PrismaClient, DocumentType } from '@prisma/client'
+import { PrismaClient, DocumentType } from '../generated/prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 import { createClient } from '@supabase/supabase-js'
 
 // Use DIRECT_URL to bypass connection pooler (PgBouncer) for seed operations
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DIRECT_URL || process.env.DATABASE_URL,
-    },
-  },
+const adapter = new PrismaPg({
+  connectionString: process.env.DIRECT_URL || process.env.DATABASE_URL!,
 })
+const prisma = new PrismaClient({ adapter })
 
 // Supabase client is created inside main() to ensure env vars are loaded
 function getSupabaseClient() {
