@@ -30,7 +30,7 @@ describe('db integration (RLS policies)', () => {
     await prisma.subscription.deleteMany({})
     await prisma.user.deleteMany({})
     await client.query('RESET ROLE')
-    await client.query("SELECT set_config('request.jwt.claim.sub', '', true)")
+    await client.query("SELECT set_config('request.jwt.claim.sub', '', false)")
   })
 
   it('limits document reads to auth.uid()', async () => {
@@ -53,7 +53,7 @@ describe('db integration (RLS policies)', () => {
     })
 
     await client.query('SET ROLE authenticated')
-    await client.query("SELECT set_config('request.jwt.claim.sub', $1, true)", [user1])
+    await client.query("SELECT set_config('request.jwt.claim.sub', $1, false)", [user1])
 
     const docs = await client.query<{ userId: string }>(
       'SELECT "userId" FROM "Document" ORDER BY "userId"'
@@ -75,7 +75,7 @@ describe('db integration (RLS policies)', () => {
     })
 
     await client.query('SET ROLE authenticated')
-    await client.query("SELECT set_config('request.jwt.claim.sub', $1, true)", [user1])
+    await client.query("SELECT set_config('request.jwt.claim.sub', $1, false)", [user1])
 
     await expect(
       client.query('UPDATE "User" SET tier = $1::"UserTier" WHERE id = $2', ['PRO', user1])
@@ -109,7 +109,7 @@ describe('db integration (RLS policies)', () => {
     })
 
     await client.query('SET ROLE authenticated')
-    await client.query("SELECT set_config('request.jwt.claim.sub', $1, true)", [user1])
+    await client.query("SELECT set_config('request.jwt.claim.sub', $1, false)", [user1])
 
     await expect(
       client.query(
@@ -119,4 +119,3 @@ describe('db integration (RLS policies)', () => {
     ).rejects.toThrow()
   })
 })
-
