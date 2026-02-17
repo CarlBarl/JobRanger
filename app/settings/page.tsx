@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { BillingProvider } from '@prisma/client'
+import { BillingProvider } from '@/generated/prisma/client'
 import { getTranslations } from 'next-intl/server'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'

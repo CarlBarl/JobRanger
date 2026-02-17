@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { NextResponse, type NextRequest } from 'next/server'
-import { Prisma, UsageEventType, UserTier } from '@prisma/client'
+import { UsageEventType, UserTier } from '@/generated/prisma/client'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
@@ -159,33 +159,15 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const createData: Prisma.GeneratedLetterUncheckedCreateInput = {
-      userId: user.id,
-      savedJobId: savedJob?.id,
-      afJobId,
-      content,
-    }
-
-    const generatedLetterModel = Prisma.dmmf.datamodel.models.find(
-      (model) => model.name === 'GeneratedLetter'
-    )
-    const supportsJobTitle = generatedLetterModel?.fields.some((field) => field.name === 'jobTitle')
-    const supportsGuidanceUsed = generatedLetterModel?.fields.some(
-      (field) => field.name === 'guidanceUsed'
-    )
-
-    if (supportsJobTitle) {
-      ;(createData as Prisma.GeneratedLetterUncheckedCreateInput & { jobTitle?: string | null })
-        .jobTitle = job.headline ?? null
-    }
-
-    if (supportsGuidanceUsed) {
-      ;(createData as Prisma.GeneratedLetterUncheckedCreateInput & { guidanceUsed?: string | null })
-        .guidanceUsed = resolvedGuidance ?? null
-    }
-
     const letter = await prisma.generatedLetter.create({
-      data: createData,
+      data: {
+        userId: user.id,
+        savedJobId: savedJob?.id,
+        afJobId,
+        content,
+        jobTitle: job.headline ?? null,
+        guidanceUsed: resolvedGuidance ?? null,
+      },
     })
 
     if (!guideBonusReserved) {
