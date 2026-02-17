@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server'
 import { UserTier } from '@/generated/prisma/client'
 import { getSavedJobsCount, getLettersCount } from '@/lib/data/dashboard-loaders'
 import { Briefcase, FileText, Settings, Sparkles, ArrowRight } from 'lucide-react'
+import { DismissibleUpgradeCard } from './DismissibleUpgradeCard'
 
 interface DashboardStatsSectionProps {
   userId: string
@@ -93,13 +94,16 @@ export async function DashboardStatsSection({ userId, userName, userEmail, userT
       </div>
 
       {userTier === 'FREE' && (
-        <div className="mt-4 overflow-hidden rounded-xl border border-amber-200/60 bg-gradient-to-br from-amber-50/80 via-amber-50/40 to-transparent">
-          <div className="flex flex-wrap items-center gap-4 p-4 sm:flex-nowrap sm:gap-5 sm:p-5">
+        <DismissibleUpgradeCard dismissLabel={t('upgradeCard.dismiss')}>
+          <div className="flex flex-wrap items-center gap-4 p-4 pr-20 sm:flex-nowrap sm:gap-5 sm:p-5 sm:pr-20">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100/80">
               <Sparkles className="h-[18px] w-[18px] text-amber-600" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-medium text-foreground">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-amber-600/80">
+                {t('upgradeCard.badge')}
+              </p>
+              <p className="mt-1 text-[13px] font-medium text-foreground">
                 {t('upgradeCard.included')}
               </p>
               <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
@@ -114,7 +118,7 @@ export async function DashboardStatsSection({ userId, userName, userEmail, userT
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
-        </div>
+        </DismissibleUpgradeCard>
       )}
     </div>
   )

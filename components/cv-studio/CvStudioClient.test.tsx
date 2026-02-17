@@ -34,7 +34,8 @@ describe('CvStudioClient', () => {
       />
     )
 
-    expect(screen.getByText('AI feedback and automatic CV edits are included with Pro.')).toBeInTheDocument()
+    expect(screen.getByText('Unlock CV Studio AI')).toBeInTheDocument()
+    expect(screen.getByText(/With Pro, AI reviews your CV against the jobs you're targeting/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Generate feedback' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Apply AI edits' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Show CV' })).toBeInTheDocument()
