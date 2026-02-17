@@ -128,6 +128,9 @@ Webhook processing should verify subscription `priceId` against an explicit allo
 ### ESLint v9 Script Mismatch
 Current `npm run lint` uses CLI flags (`--no-config-lookup`, `--parser-options`) that fail with the installed ESLint v9 CLI mode. In this repository, treat `npm run test` and `npx next build --webpack` as the reliable validation path until the lint script is modernized.
 
+### CI DB Integration Uses Plain Postgres + Supabase RLS Shim
+CI runs DB integration tests against an ephemeral Postgres service container and bootstraps a minimal Supabase-like `auth.uid()` function plus `anon`/`authenticated` roles via `prisma/ci-supabase-compat.sql` so `prisma/rls-policies.sql` can be validated. Storage RLS policies remain Supabase-only and are not validated in CI.
+
 ### Prisma Generate Can Fail While `next dev` Runs (Windows)
 If `npx prisma generate` fails with `EPERM ... query_engine-windows.dll.node`, a local Node process (commonly `npm run dev`) is locking the Prisma engine binary. Stop the dev server (and its child `next` processes), then rerun `npx prisma generate`.
 

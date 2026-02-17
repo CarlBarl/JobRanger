@@ -56,6 +56,7 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 DATABASE_URL=
+DIRECT_URL=                  # Optional but recommended (used by Prisma CLI when set)
 GEMINI_API_KEY=
 AF_API_KEY=                  # Optional
 NEXT_PUBLIC_APP_URL=
@@ -66,6 +67,23 @@ STRIPE_PRICE_ID_PRO_MONTHLY=
 STRIPE_ALLOWED_PRICE_IDS=      # Optional CSV allowlist (defaults to STRIPE_PRICE_ID_PRO_MONTHLY)
 UPSTASH_REDIS_REST_URL=        # Recommended for distributed rate limiting in production
 UPSTASH_REDIS_REST_TOKEN=
+```
+
+### Local Database (Docker)
+
+This repo includes a minimal Postgres container for local development and DB integration tests:
+
+```bash
+docker compose up -d
+npx prisma db push
+```
+
+To exercise RLS policies locally (optional), bootstrap Supabase-ish primitives and apply policies:
+
+```bash
+npx prisma db execute --file prisma/ci-supabase-compat.sql
+npx prisma db execute --file prisma/rls-policies.sql
+npm run test:integration
 ```
 
 ### Database Setup
@@ -124,6 +142,9 @@ npm run dev               # Dev server (localhost:3000)
 npm run build             # Production build
 npm run lint              # ESLint
 npm run test              # Vitest
+npm run test:integration  # Postgres-backed integration tests (Prisma + RLS sanity)
+npm run test:upstash      # Upstash Redis integration tests (requires secrets)
+npm run test:ci           # Unit tests + DB integration suite
 npm run test:watch        # Watch mode
 npm run test:coverage     # Coverage report
 npx next build --webpack  # Build validation used in this repo's sandbox workflow
