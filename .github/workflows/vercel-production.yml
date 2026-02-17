@@ -72,8 +72,8 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
       - run: npx prisma db push
-      - run: npx prisma db execute --file prisma/ci-supabase-compat.sql
-      - run: npx prisma db execute --file prisma/rls-policies.sql
+      - run: npx prisma db execute --file prisma/ci-supabase-compat.sql --schema prisma/schema.prisma
+      - run: npx prisma db execute --file prisma/rls-policies.sql --schema prisma/schema.prisma
       - run: npm run test:integration
 
   upstash_integration:
