@@ -47,6 +47,7 @@ export default async function DashboardPage() {
             userId={user.id}
             userName={user.name}
             userEmail={user.email}
+            userTier={user.tier}
           />
         </Suspense>
 
