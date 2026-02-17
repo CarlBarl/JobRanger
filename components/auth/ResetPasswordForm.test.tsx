@@ -2,16 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@/lib/test-utils'
 
-const updateUser = vi.fn()
+const mockUpdatePassword = vi.fn()
 const push = vi.fn()
 const refresh = vi.fn()
 
-vi.mock('@/lib/supabase/client', () => ({
-  createClient: () => ({
-    auth: {
-      updateUser,
-    },
-  }),
+vi.mock('@/app/auth/reset/actions', () => ({
+  updatePassword: (...args: unknown[]) => mockUpdatePassword(...args),
 }))
 
 vi.mock('next/navigation', () => ({
@@ -37,7 +33,7 @@ describe('ResetPasswordForm', () => {
     await user.click(screen.getByRole('button', { name: /update password/i }))
 
     expect(await screen.findByText(/passwords do not match/i)).toBeInTheDocument()
-    expect(updateUser).not.toHaveBeenCalled()
+    expect(mockUpdatePassword).not.toHaveBeenCalled()
   })
 
   it('shows an error when password is too short', async () => {
@@ -49,11 +45,11 @@ describe('ResetPasswordForm', () => {
     await user.click(screen.getByRole('button', { name: /update password/i }))
 
     expect(await screen.findByText(/at least 8 characters/i)).toBeInTheDocument()
-    expect(updateUser).not.toHaveBeenCalled()
+    expect(mockUpdatePassword).not.toHaveBeenCalled()
   })
 
   it('updates the password and redirects on success', async () => {
-    updateUser.mockResolvedValue({ data: {}, error: null })
+    mockUpdatePassword.mockResolvedValue({ success: true })
 
     const user = userEvent.setup()
     render(<ResetPasswordForm />)
@@ -62,8 +58,22 @@ describe('ResetPasswordForm', () => {
     await user.type(screen.getByLabelText(/confirm password/i), 'password123')
     await user.click(screen.getByRole('button', { name: /update password/i }))
 
-    expect(updateUser).toHaveBeenCalledWith({ password: 'password123' })
+    expect(mockUpdatePassword).toHaveBeenCalledWith('password123')
     expect(push).toHaveBeenCalledWith('/dashboard')
     expect(refresh).toHaveBeenCalled()
+  })
+
+  it('shows server error message on failure', async () => {
+    mockUpdatePassword.mockResolvedValue({ success: false, error: 'Session expired' })
+
+    const user = userEvent.setup()
+    render(<ResetPasswordForm />)
+
+    await user.type(screen.getByLabelText(/^password$/i), 'password123')
+    await user.type(screen.getByLabelText(/confirm password/i), 'password123')
+    await user.click(screen.getByRole('button', { name: /update password/i }))
+
+    expect(await screen.findByText('Session expired')).toBeInTheDocument()
+    expect(push).not.toHaveBeenCalled()
   })
 })
