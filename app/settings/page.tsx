@@ -1,13 +1,15 @@
 import { redirect } from 'next/navigation'
-import { BillingProvider } from '@/generated/prisma/client'
+import { BillingProvider, UserTier } from '@/generated/prisma/client'
 import { getTranslations } from 'next-intl/server'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
 import { LetterGuidanceSettings } from '@/components/dashboard/LetterGuidanceSettings'
 import { BillingSettings } from '@/components/settings/BillingSettings'
+import { UsageQuotaSection } from '@/components/settings/UsageQuotaSection'
 import { createClient } from '@/lib/supabase/server'
 import { getOrCreateUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getMonthlyQuotaSnapshot, USAGE_EVENT_TYPES } from '@/lib/security/monthly-quota'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -26,12 +28,46 @@ export default async function SettingsPage() {
     },
     select: {
       stripeCustomerId: true,
+      status: true,
     },
   })
 
   if (!user.onboardingCompleted) {
     redirect('/onboarding')
   }
+
+  const isFree = user.tier === UserTier.FREE
+
+  const quotaTypes = isFree
+    ? [
+        { labelKey: 'usageCoverLetters' as const, type: USAGE_EVENT_TYPES.GENERATE_LETTER },
+        { labelKey: 'usageSkillsExtract' as const, type: USAGE_EVENT_TYPES.SKILLS_EXTRACT },
+        { labelKey: 'usageSkillsBatch' as const, type: USAGE_EVENT_TYPES.SKILLS_BATCH },
+      ]
+    : [
+        { labelKey: 'usageCoverLetters' as const, type: USAGE_EVENT_TYPES.GENERATE_LETTER },
+        { labelKey: 'usageSkillsExtract' as const, type: USAGE_EVENT_TYPES.SKILLS_EXTRACT },
+        { labelKey: 'usageSkillsBatch' as const, type: USAGE_EVENT_TYPES.SKILLS_BATCH },
+        { labelKey: 'usageCvFeedback' as const, type: USAGE_EVENT_TYPES.CV_FEEDBACK },
+        { labelKey: 'usageCvEdit' as const, type: USAGE_EVENT_TYPES.CV_EDIT },
+      ]
+
+  const snapshots = await Promise.all(
+    quotaTypes.map(async ({ labelKey, type }) => ({
+      labelKey,
+      snapshot: await getMonthlyQuotaSnapshot({
+        userId: user.id,
+        userTier: user.tier,
+        usageType: type,
+      }),
+    }))
+  )
+
+  const resetDate = snapshots[0]?.snapshot.resetAt
+    ? new Intl.DateTimeFormat('sv-SE', { year: 'numeric', month: 'short', day: 'numeric' }).format(
+        new Date(snapshots[0].snapshot.resetAt)
+      )
+    : null
 
   const t = await getTranslations('settings')
 
@@ -57,8 +93,13 @@ export default async function SettingsPage() {
 
         <BillingSettings
           initialCountry={user.country ?? null}
-          hasBillingProfile={Boolean(stripeSubscription?.stripeCustomerId)}
+          hasBillingProfile={Boolean(
+            stripeSubscription?.stripeCustomerId &&
+            (stripeSubscription.status === 'active' || stripeSubscription.status === 'trialing')
+          )}
         />
+
+        <UsageQuotaSection quotas={snapshots} isFree={isFree} resetDate={resetDate} />
 
         <LetterGuidanceSettings initialValue={user.letterGuidanceDefault ?? null} />
       </main>

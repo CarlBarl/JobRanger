@@ -15,7 +15,9 @@
     "navCvStudio": "CV-studio",
     "navJobs": "Jobb",
     "navLetters": "Brev",
-    "metaDescription": "En AI-driven jobbtjänst för svenska jobbsökare. Ladda upp ett CV, sök jobb och generera personliga brev."
+    "metaDescription": "En AI-driven jobbtjänst för svenska jobbsökare. Ladda upp ett CV, sök jobb och generera personliga brev.",
+    "termsOfService": "Användarvillkor",
+    "privacyPolicy": "Integritetspolicy"
   },
   "landing": {
     "hero": "Automatisera ditt jobbletande",
@@ -106,6 +108,13 @@
     "quickLinkCvStudio": "CV-studio",
     "quickLinkLetters": "Brev",
     "quickLinkSettings": "Inställningar",
+    "upgradeCard": {
+      "badge": "Gratiskonto",
+      "included": "Din Free-plan inkluderar 1 personligt brev och 3 kompetensextraktioner per månad.",
+      "valueProp": "Med Pro kan du generera brev för varje jobb du söker, plus AI-driven CV-granskning och omskrivning.",
+      "cta": "Uppgradera till Pro",
+      "dismiss": "Inte nu"
+    },
     "recentSavedJobs": "Sparade jobb",
     "viewAllJobs": "Visa alla jobb",
     "noSavedJobsYet": "Inga sparade jobb ännu",
@@ -452,11 +461,12 @@
       "guidanceLabel": "Valfria instruktioner för ditt personliga brev (kan lämnas tomt)",
       "guidancePlaceholder": "Exempel: Håll tonen kort i det personliga brevet, lyft relevant erfarenhet och matcha annonsens krav.",
       "guidanceHelp": "Du behöver inte skriva något. Om du gör det används det bara i denna generering av ditt personliga brev.",
-      "quotaExceededTitle": "Månadens brevgräns är nådd",
+      "quotaExceededTitle": "Du har använt ditt fria brev den här månaden",
       "quotaUsage": "Använt {used}/{limit} brev den här månaden.",
       "quotaResetAt": "Nollställs {date}.",
       "quotaResetUnknown": "nästa månad",
-      "upgradeCta": "Uppgradera för fler brev"
+      "quotaValueProp": "Med Pro kan du generera ett skräddarsytt brev för varje jobb du hittar — upp till 200/månad.",
+      "upgradeCta": "Uppgradera till Pro"
     },
     "card": {
       "published": "Publicerad",
@@ -580,7 +590,9 @@
       "skillsFound": "{count} kompetenser hittade",
       "jobsSaved": "{count} jobb sparade",
       "searchJobs": "Sök efter jobb",
-      "goToDashboard": "Gå till dashboard"
+      "goToDashboard": "Gå till dashboard",
+      "freePlanNote": "Du har Free-planen — generera ditt första personliga brev och se magin. Vill du ha mer? Pro finns alltid här.",
+      "seeProPlans": "Se Pro-planer"
     }
   },
   "cvStudio": {
@@ -609,8 +621,9 @@
     "directivesLabel": "Valfri riktning",
     "directivesPlaceholder": "Exempel: Prioritera logistik, kundkommunikation och mätbar effekt.",
     "directivesHint": "Du kan lämna detta tomt. Valda jobb är också frivilligt.",
-    "lockTitle": "PRO-funktion",
-    "lockDescription": "FREE-användare kan visa sidan men CV-feedback och AI-redigeringar kräver PRO.",
+    "lockTitle": "Lås upp CV Studio AI",
+    "lockDescription": "Med Pro granskar AI ditt CV mot jobben du siktar på och föreslår konkreta förbättringar. Sen kan du tillämpa ändringarna med ett klick.",
+    "upgradeCta": "Uppgradera till Pro",
     "generateFeedback": "Generera feedback",
     "generatingFeedback": "Genererar feedback...",
     "applyEdits": "Tillämpa AI-redigeringar",
@@ -665,16 +678,28 @@
     }
   },
   "pricing": {
-    "title": "Välj plan",
-    "subtitle": "Uppgradera till Pro för mycket högre månatliga AI-gränser.",
+    "title": "Hitta jobb snabbare",
+    "subtitle": "Free kommer igång. Pro ger dig verktygen att sticka ut.",
     "swedenOnlyNote": "Endast tillgängligt i Sverige (SE).",
     "freeName": "Free",
+    "freeDescription": "Prova allt, med begränsad månatlig användning.",
     "proName": "Pro",
+    "proDescription": "Seriös med jobbsökandet? Få hela verktygslådan.",
     "proPriceLabel": "99 kr/månad (inkl. moms)",
     "monthlyQuotaLabel": "Månatlig AI-användning",
-    "generateLetterQuota": "Generering av personligt brev: {count}",
-    "skillsExtractQuota": "Kompetensextraktion: {count}",
-    "skillsBatchQuota": "Batch-extraktion av kompetenser från CV: {count}",
+    "generateLetterQuota": "{count} personliga brev / månad",
+    "generateLetterDesc": "AI skriver ett personligt brev för varje jobb, baserat på ditt CV och annonsen.",
+    "skillsExtractQuota": "{count} kompetensextraktioner / månad",
+    "skillsExtractDesc": "Vi läser ditt CV och plockar ut dina nyckelkompetenser så jobb kan matchas automatiskt.",
+    "skillsBatchQuota": "{count} batch-extraktioner / månad",
+    "skillsBatchDesc": "Extrahera kompetenser från alla dina CV:n på en gång när du laddar upp en ny version.",
+    "cvFeedbackQuota": "{count} CV-feedbackrapporter / månad",
+    "cvFeedbackDesc": "AI granskar ditt CV mot specifika jobbannonser och visar vad du kan förbättra.",
+    "cvEditQuota": "{count} AI-omskrivningar av CV / månad",
+    "cvEditDesc": "CV-förbättringar med ett klick — AI tillämpar de föreslagna ändringarna åt dig.",
+    "proExclusive": "Bara Pro",
+    "everythingInFree": "Allt i Free, plus:",
+    "proHighlight": "Populärast",
     "freeCta": "Börja gratis",
     "proCta": "Uppgradera till Pro",
     "manageSubscriptionCta": "Hantera abonnemang",
@@ -694,7 +719,103 @@
     "billingCountrySaveFailed": "Kunde inte uppdatera land för betalning.",
     "billingManageSubscription": "Hantera abonnemang",
     "guidesTitle": "Guider",
-    "guidesDescription": "Visa hela produktguiden eller onboarding igen när du behöver en repetition."
+    "guidesDescription": "Visa hela produktguiden eller onboarding igen när du behöver en repetition.",
+    "usageTitle": "Månatlig AI-användning",
+    "usageDescription": "Hur mycket av din månatliga AI-kvot du har använt hittills.",
+    "usageResetAt": "Nollställs {date}.",
+    "usageCoverLetters": "Genererade personliga brev",
+    "usageSkillsExtract": "CV-kompetensextraktioner",
+    "usageSkillsBatch": "Batch-kompetensuppdateringar",
+    "usageCvFeedback": "CV-feedbackrapporter",
+    "usageCvEdit": "AI-omskrivningar av CV",
+    "usageProNote": "Behöver du mer? Pro ger upp till 200 brev, 300 extraktioner och full CV Studio-åtkomst.",
+    "usageSeeProPlans": "Se Pro-planer"
+  },
+  "terms": {
+    "title": "Användarvillkor",
+    "effectiveDate": "Gäller från: 17 februari 2026",
+    "backToHome": "Tillbaka till startsidan",
+    "sections": {
+      "service": {
+        "title": "1. Vad tjänsten är",
+        "body": "JobbJägaren är en AI-driven jobbmatchningsplattform för svenska jobbsökare. Vi hjälper dig ladda upp CV:n, extrahera kompetenser, hitta matchande jobb från Arbetsförmedlingen och generera personliga brev med hjälp av AI."
+      },
+      "accounts": {
+        "title": "2. Kontoansvar",
+        "body": "Du ansvarar för att hålla dina inloggningsuppgifter säkra och för all aktivitet som sker under ditt konto. Du måste ange korrekt information när du skapar ditt konto. Du får inte använda tjänsten för olagliga ändamål."
+      },
+      "billing": {
+        "title": "3. Planer och betalning",
+        "body": "JobbJägaren erbjuder en Free-plan med begränsad månatlig användning och en Pro-plan för 99 kr/månad (inklusive moms). Pro-prenumerationer faktureras månadsvis via Stripe, förnyas automatiskt varje faktureringsperiod och kan avbrytas när som helst från dina kontoinställningar. Vid avbokning behåller du Pro-åtkomst till slutet av den aktuella faktureringsperioden. Återbetalning ges inte för delvis förbrukade perioder. Pro är för närvarande tillgängligt enbart för användare i Sverige."
+      },
+      "acceptableUse": {
+        "title": "4. Godtagbar användning",
+        "body": "Du får inte använda tjänsten för att skicka bedrägliga jobbansökningar, generera vilseledande innehåll, trakassera arbetsgivare eller andra användare, eller försöka kringgå användningsgränser. Automatiserad åtkomst eller skrapning av tjänsten är inte tillåten utan skriftligt samtycke."
+      },
+      "aiDisclaimer": {
+        "title": "5. AI-genererat innehåll",
+        "body": "Personliga brev, CV-feedback och andra AI-genererade resultat är enbart förslag. De garanteras inte vara korrekta, fullständiga eller lämpliga för något särskilt ändamål. Du ansvarar för att granska och redigera allt genererat innehåll innan användning. JobbJägaren garanterar inte att användning av tjänsten leder till anställning."
+      },
+      "thirdPartyData": {
+        "title": "6. Tredjepartsdata",
+        "body": "Jobbannonser hämtas från Arbetsförmedlingens publika API. Vi kontrollerar eller garanterar inte riktigheten, fullständigheten eller tillgängligheten av dessa data. Jobbannonser kan tas bort eller ändras av Arbetsförmedlingen när som helst utan förvarning."
+      },
+      "liability": {
+        "title": "7. Ansvarsbegränsning",
+        "body": "JobbJägaren tillhandahålls \"i befintligt skick\" utan garantier av något slag. I den utsträckning som lagen tillåter ansvarar vi inte för indirekta, oavsiktliga eller följdskador som uppstår från din användning av tjänsten, inklusive men inte begränsat till förlorade möjligheter, dataförlust eller felaktigheter i AI-genererat innehåll."
+      },
+      "changes": {
+        "title": "8. Ändringar av dessa villkor",
+        "body": "Vi kan uppdatera dessa villkor från tid till annan. Väsentliga ändringar kommuniceras via e-post eller ett meddelande i tjänsten. Fortsatt användning av tjänsten efter att ändringar träder i kraft innebär godkännande av de uppdaterade villkoren."
+      },
+      "contact": {
+        "title": "9. Kontakt",
+        "body": "För frågor om dessa villkor, kontakta oss på carlelelid@outlook.com. Företag: Carl Elelid Enskild Firma."
+      }
+    }
+  },
+  "privacy": {
+    "title": "Integritetspolicy",
+    "effectiveDate": "Gäller från: 17 februari 2026",
+    "backToHome": "Tillbaka till startsidan",
+    "sections": {
+      "dataCollected": {
+        "title": "1. Vilka uppgifter vi samlar in",
+        "body": "Vi samlar in följande personuppgifter: e-postadress och namn (vid registrering), uppladdade CV:n och personliga brev (dokumentinnehåll och extraherad text), extraherade kompetenser (tolkade från dina dokument), sparade jobbreferenser (Arbetsförmedlingens jobb-ID:n) samt AI-genererade personliga brev och CV-feedback."
+      },
+      "howWeUse": {
+        "title": "2. Hur vi använder dina uppgifter",
+        "body": "Dina uppgifter används för att: matcha dig med relevanta jobbannonser baserat på dina kompetenser, generera personliga brev och CV-feedback med hjälp av AI, hantera ditt konto och din prenumeration, samt förbättra tjänsten. Vi säljer inte dina personuppgifter till tredje part."
+      },
+      "thirdParty": {
+        "title": "3. Tredjepartsbehandlare",
+        "body": "Vi använder följande tredjepartstjänster för att driva JobbJägaren: Supabase (databashosting, autentisering och fillagring — EU-region), Google Gemini (AI-behandling för innehållsgenerering — din CV-text och jobbeskrivningar skickas till Googles API), Stripe (betalningshantering för Pro-prenumerationer — Stripe tar emot din e-post och betaluppgifter) och Arbetsförmedlingen (publikt API för jobbannonser — inga personuppgifter delas med dem)."
+      },
+      "retention": {
+        "title": "4. Lagring av data",
+        "body": "Dina uppgifter lagras så länge ditt konto är aktivt. Om du raderar ditt konto tas alla personuppgifter bort permanent, inklusive dokument, kompetenser, sparade jobb och genererade brev. Stripe kan behålla transaktionsuppgifter enligt lag."
+      },
+      "rights": {
+        "title": "5. Dina rättigheter (GDPR)",
+        "body": "Enligt EU:s dataskyddsförordning (GDPR) har du rätt att: få tillgång till dina personuppgifter, korrigera felaktiga uppgifter, begära radering av dina uppgifter, exportera dina uppgifter (dataportabilitet), invända mot behandling och när som helst återkalla samtycke. För att utöva dessa rättigheter, kontakta oss på carlelelid@outlook.com eller radera ditt konto från Inställningar."
+      },
+      "deletion": {
+        "title": "6. Radering av konto",
+        "body": "Du kan radera ditt konto och alla tillhörande uppgifter från Inställningar. Denna åtgärd är oåterkallelig och tar bort alla dina dokument, kompetenser, sparade jobb, genererade brev och kontoinformation."
+      },
+      "cookies": {
+        "title": "7. Cookies",
+        "body": "JobbJägaren använder enbart nödvändiga cookies för autentisering och sessionshantering. Vi använder inga spårningscookies, analyticscookies eller tredjepartsannonscookies."
+      },
+      "contact": {
+        "title": "8. Kontakt",
+        "body": "För integritetsrelaterade frågor eller för att utöva dina GDPR-rättigheter, kontakta oss på carlelelid@outlook.com. Företag: Carl Elelid Enskild Firma."
+      },
+      "changes": {
+        "title": "9. Ändringar av denna policy",
+        "body": "Vi kan uppdatera denna integritetspolicy från tid till annan. Väsentliga ändringar kommuniceras via e-post eller ett meddelande i tjänsten. Datumet överst på denna sida visar när policyn senast uppdaterades."
+      }
+    }
   },
   "upload": {
     "dropCV": "Klicka för att ladda upp CV (PDF, DOCX eller TXT)",

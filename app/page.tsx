@@ -233,10 +233,18 @@ export default async function HomePage() {
 
       {/* Footer */}
       <footer className="border-t py-8">
-        <div className="container mx-auto flex items-center justify-between px-6">
+        <div className="container mx-auto flex flex-wrap items-center justify-between gap-y-2 px-6">
           <span className="text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} {common('appName')}
           </span>
+          <div className="flex items-center gap-4">
+            <Link href="/terms" className="text-xs text-muted-foreground transition-colors hover:text-foreground">
+              {common('termsOfService')}
+            </Link>
+            <Link href="/privacy" className="text-xs text-muted-foreground transition-colors hover:text-foreground">
+              {common('privacyPolicy')}
+            </Link>
+          </div>
           <span className="text-xs text-muted-foreground">
             Stockholm, Sverige
           </span>

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
-import { Check, ChevronLeft } from 'lucide-react'
+import { Check, ChevronLeft, Lock, Star } from 'lucide-react'
 import { BillingProvider, UserTier } from '@/generated/prisma/client'
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
@@ -11,15 +11,33 @@ import { LanguageSwitcher } from '@/components/ui/language-switcher'
 import { BillingRedirectButton } from '@/components/billing/BillingRedirectButton'
 import { prisma } from '@/lib/prisma'
 
+type FeatureRow = {
+  quota: string
+  description: string
+  proExclusive?: boolean
+}
+
 type PlanCardProps = {
   name: string
-  quotaLabel: string
-  items: string[]
+  description: string
+  priceLabel?: string
+  badge?: string
+  features: FeatureRow[]
+  headerNote?: string
   cta: ReactNode
   highlighted?: boolean
 }
 
-function PlanCard({ name, quotaLabel, items, cta, highlighted = false }: PlanCardProps) {
+function PlanCard({
+  name,
+  description,
+  priceLabel,
+  badge,
+  features,
+  headerNote,
+  cta,
+  highlighted = false,
+}: PlanCardProps) {
   return (
     <article
       className={[
@@ -31,14 +49,60 @@ function PlanCard({ name, quotaLabel, items, cta, highlighted = false }: PlanCar
         <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full border border-primary/20 bg-primary/[0.08]" />
       ) : null}
 
-      <h2 className="text-lg font-semibold tracking-tight">{name}</h2>
-      <p className="mt-2 text-sm text-muted-foreground">{quotaLabel}</p>
+      <div className="flex items-start justify-between gap-2">
+        <h2 className="text-lg font-semibold tracking-tight">{name}</h2>
+        {badge ? (
+          <span className="inline-flex rounded-full border border-primary/30 bg-primary/[0.08] px-2.5 py-0.5 text-xs font-medium text-primary">
+            {badge}
+          </span>
+        ) : null}
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+      {priceLabel ? (
+        <p className="mt-2 text-sm font-medium text-foreground">{priceLabel}</p>
+      ) : null}
 
-      <ul className="mt-5 space-y-2.5 text-sm text-foreground/90">
-        {items.map((item) => (
-          <li key={item} className="flex items-start gap-2">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <span>{item}</span>
+      {headerNote ? (
+        <p className="mt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {headerNote}
+        </p>
+      ) : null}
+
+      <ul className={`${headerNote ? 'mt-2' : 'mt-5'} space-y-3 text-sm`}>
+        {features.map((feature) => (
+          <li key={feature.quota} className="flex items-start gap-2">
+            {feature.proExclusive && !highlighted ? (
+              <Lock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/50" />
+            ) : highlighted && feature.proExclusive ? (
+              <Star className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            ) : (
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            )}
+            <div className="min-w-0">
+              <span
+                className={
+                  feature.proExclusive && !highlighted
+                    ? 'font-medium text-muted-foreground/50'
+                    : 'font-medium text-foreground/90'
+                }
+              >
+                {feature.quota}
+              </span>
+              {feature.proExclusive && !highlighted ? (
+                <span className="ml-1.5 inline-flex rounded border border-muted-foreground/20 px-1.5 py-px text-[10px] font-medium uppercase text-muted-foreground/50">
+                  {feature.quota.includes('Pro') ? '' : 'Pro'}
+                </span>
+              ) : null}
+              <p
+                className={
+                  feature.proExclusive && !highlighted
+                    ? 'mt-0.5 text-xs leading-relaxed text-muted-foreground/40'
+                    : 'mt-0.5 text-xs leading-relaxed text-muted-foreground'
+                }
+              >
+                {feature.description}
+              </p>
+            </div>
           </li>
         ))}
       </ul>
@@ -65,22 +129,82 @@ export default async function PricingPage() {
         },
         select: {
           stripeCustomerId: true,
+          status: true,
         },
       })
     : null
-  const canManageSubscription = Boolean(stripeSubscription?.stripeCustomerId)
+  const isSubscriptionActive =
+    stripeSubscription?.status === 'active' || stripeSubscription?.status === 'trialing'
+  const canManageSubscription = Boolean(stripeSubscription?.stripeCustomerId && isSubscriptionActive)
   const isSweden = (profile?.country ?? '').trim().toUpperCase() === 'SE'
 
   const freeGenerateLimit = getMonthlyQuotaLimit(UserTier.FREE, USAGE_EVENT_TYPES.GENERATE_LETTER)
   const freeSkillsExtractLimit = getMonthlyQuotaLimit(UserTier.FREE, USAGE_EVENT_TYPES.SKILLS_EXTRACT)
   const freeSkillsBatchLimit = getMonthlyQuotaLimit(UserTier.FREE, USAGE_EVENT_TYPES.SKILLS_BATCH)
+  const freeCvFeedbackLimit = getMonthlyQuotaLimit(UserTier.FREE, USAGE_EVENT_TYPES.CV_FEEDBACK)
+  const freeCvEditLimit = getMonthlyQuotaLimit(UserTier.FREE, USAGE_EVENT_TYPES.CV_EDIT)
 
   const proGenerateLimit = getMonthlyQuotaLimit(UserTier.PRO, USAGE_EVENT_TYPES.GENERATE_LETTER)
   const proSkillsExtractLimit = getMonthlyQuotaLimit(UserTier.PRO, USAGE_EVENT_TYPES.SKILLS_EXTRACT)
   const proSkillsBatchLimit = getMonthlyQuotaLimit(UserTier.PRO, USAGE_EVENT_TYPES.SKILLS_BATCH)
+  const proCvFeedbackLimit = getMonthlyQuotaLimit(UserTier.PRO, USAGE_EVENT_TYPES.CV_FEEDBACK)
+  const proCvEditLimit = getMonthlyQuotaLimit(UserTier.PRO, USAGE_EVENT_TYPES.CV_EDIT)
 
   const freeCtaHref = isSignedIn ? '/dashboard' : '/auth/signin'
   const proSignInHref = `/auth/signin?next=${encodeURIComponent('/pricing?upgrade=1')}`
+
+  const sharedFeatures: FeatureRow[] = [
+    {
+      quota: t('generateLetterQuota', { count: freeGenerateLimit }),
+      description: t('generateLetterDesc'),
+    },
+    {
+      quota: t('skillsExtractQuota', { count: freeSkillsExtractLimit }),
+      description: t('skillsExtractDesc'),
+    },
+    {
+      quota: t('skillsBatchQuota', { count: freeSkillsBatchLimit }),
+      description: t('skillsBatchDesc'),
+    },
+  ]
+
+  const proExclusiveFeaturesFree: FeatureRow[] = [
+    {
+      quota: t('cvFeedbackQuota', { count: freeCvFeedbackLimit }),
+      description: t('cvFeedbackDesc'),
+      proExclusive: true,
+    },
+    {
+      quota: t('cvEditQuota', { count: freeCvEditLimit }),
+      description: t('cvEditDesc'),
+      proExclusive: true,
+    },
+  ]
+
+  const proFeatures: FeatureRow[] = [
+    {
+      quota: t('generateLetterQuota', { count: proGenerateLimit }),
+      description: t('generateLetterDesc'),
+    },
+    {
+      quota: t('skillsExtractQuota', { count: proSkillsExtractLimit }),
+      description: t('skillsExtractDesc'),
+    },
+    {
+      quota: t('skillsBatchQuota', { count: proSkillsBatchLimit }),
+      description: t('skillsBatchDesc'),
+    },
+    {
+      quota: t('cvFeedbackQuota', { count: proCvFeedbackLimit }),
+      description: t('cvFeedbackDesc'),
+      proExclusive: true,
+    },
+    {
+      quota: t('cvEditQuota', { count: proCvEditLimit }),
+      description: t('cvEditDesc'),
+      proExclusive: true,
+    },
+  ]
 
   return (
     <main className="min-h-screen bg-background">
@@ -117,12 +241,8 @@ export default async function PricingPage() {
           <section className="grid gap-4 md:grid-cols-2">
             <PlanCard
               name={t('freeName')}
-              quotaLabel={t('monthlyQuotaLabel')}
-              items={[
-                t('generateLetterQuota', { count: freeGenerateLimit }),
-                t('skillsExtractQuota', { count: freeSkillsExtractLimit }),
-                t('skillsBatchQuota', { count: freeSkillsBatchLimit }),
-              ]}
+              description={t('freeDescription')}
+              features={[...sharedFeatures, ...proExclusiveFeaturesFree]}
               cta={
                 <Button asChild className="w-full" variant="outline">
                   <Link href={freeCtaHref}>{t('freeCta')}</Link>
@@ -131,12 +251,11 @@ export default async function PricingPage() {
             />
             <PlanCard
               name={t('proName')}
-              quotaLabel={`${t('proPriceLabel')} · ${t('monthlyQuotaLabel')}`}
-              items={[
-                t('generateLetterQuota', { count: proGenerateLimit }),
-                t('skillsExtractQuota', { count: proSkillsExtractLimit }),
-                t('skillsBatchQuota', { count: proSkillsBatchLimit }),
-              ]}
+              description={t('proDescription')}
+              priceLabel={t('proPriceLabel')}
+              badge={t('proHighlight')}
+              headerNote={t('everythingInFree')}
+              features={proFeatures}
               cta={
                 !isSignedIn ? (
                   <Button asChild className="w-full">
@@ -161,6 +280,17 @@ export default async function PricingPage() {
           </section>
         </div>
       </section>
+
+      <footer className="border-t py-6">
+        <div className="container mx-auto flex items-center justify-center gap-4 px-4 sm:px-6">
+          <Link href="/terms" className="text-xs text-muted-foreground transition-colors hover:text-foreground">
+            {common('termsOfService')}
+          </Link>
+          <Link href="/privacy" className="text-xs text-muted-foreground transition-colors hover:text-foreground">
+            {common('privacyPolicy')}
+          </Link>
+        </div>
+      </footer>
     </main>
   )
 }

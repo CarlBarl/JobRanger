@@ -23,11 +23,12 @@ const messages = {
       guidanceLabel: 'Guidance',
       guidancePlaceholder: 'Write guidance',
       guidanceHelp: 'Optional tips',
-      quotaExceededTitle: 'Monthly letter limit reached',
+      quotaExceededTitle: 'Monthly limit reached',
       quotaUsage: 'Used {used}/{limit} this month.',
       quotaResetAt: 'Resets on {date}.',
       quotaResetUnknown: 'next month',
-      upgradeCta: 'Upgrade for more letters',
+      quotaValueProp: 'Pro includes 200 letters/month.',
+      upgradeCta: 'Upgrade to Pro',
     },
   },
 }
@@ -185,8 +186,8 @@ describe('JobActions', () => {
       expect(screen.getByRole('button', { name: 'Generate a letter' })).toBeDisabled()
     })
 
-    expect(screen.getByText('Monthly letter limit reached')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Upgrade for more letters' })).toHaveAttribute(
+    expect(screen.getByText('Monthly limit reached')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Upgrade to Pro' })).toHaveAttribute(
       'href',
       '/pricing'
     )
@@ -251,7 +252,7 @@ describe('JobActions', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Generate a letter' })).toBeDisabled()
     })
-    expect(screen.getByText('Monthly letter limit reached')).toBeInTheDocument()
+    expect(screen.getByText('Monthly limit reached')).toBeInTheDocument()
     expect(screen.queryByText('Could not generate')).not.toBeInTheDocument()
   })
 })
