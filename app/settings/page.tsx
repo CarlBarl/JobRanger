@@ -28,6 +28,7 @@ export default async function SettingsPage() {
     },
     select: {
       stripeCustomerId: true,
+      status: true,
     },
   })
 
@@ -92,7 +93,10 @@ export default async function SettingsPage() {
 
         <BillingSettings
           initialCountry={user.country ?? null}
-          hasBillingProfile={Boolean(stripeSubscription?.stripeCustomerId)}
+          hasBillingProfile={Boolean(
+            stripeSubscription?.stripeCustomerId &&
+            (stripeSubscription.status === 'active' || stripeSubscription.status === 'trialing')
+          )}
         />
 
         <UsageQuotaSection quotas={snapshots} isFree={isFree} resetDate={resetDate} />

@@ -467,7 +467,8 @@ export function CvStudioClient({
               <div className="mt-3 flex items-start gap-3 rounded-xl border border-amber-200/60 bg-gradient-to-r from-amber-50/60 to-transparent px-4 py-3">
                 <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
                 <div className="min-w-0">
-                  <p className="text-[13px] font-medium text-foreground">{t('lockDescription')}</p>
+                  <p className="text-[13px] font-semibold text-foreground">{t('lockTitle')}</p>
+                  <p className="mt-0.5 text-[13px] text-muted-foreground">{t('lockDescription')}</p>
                   <Link
                     href="/pricing"
                     className="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold text-amber-700 underline-offset-2 hover:underline"
