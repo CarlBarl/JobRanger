@@ -189,7 +189,11 @@ export async function consumeRateLimit(
   limit: number,
   windowMs: number
 ): Promise<RateLimitResult> {
-  if (process.env.NODE_ENV === 'test') {
+  const enableInTest =
+    process.env.RATE_LIMIT_ENABLE_IN_TEST === '1' ||
+    process.env.RATE_LIMIT_ENABLE_IN_TEST === 'true'
+
+  if (process.env.NODE_ENV === 'test' && !enableInTest) {
     return { allowed: true, remaining: limit, retryAfterSeconds: 0 }
   }
 

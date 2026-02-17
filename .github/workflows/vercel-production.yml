@@ -11,7 +11,113 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: anon
+      SUPABASE_SERVICE_ROLE_KEY: service
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/postgres?schema=public
+      GEMINI_API_KEY: gemini_dummy
+      STRIPE_SECRET_KEY: sk_test_dummy
+      STRIPE_WEBHOOK_SECRET: whsec_dummy
+      STRIPE_PRICE_ID_PRO_MONTHLY: price_dummy
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm test
+      - run: npx next build --webpack
+
+  db_integration:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: jobranger_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/jobranger_test?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/jobranger_test?schema=public
+      RLS_TEST_DATABASE_URL: postgresql://app_user:app@localhost:5432/jobranger_test?schema=public
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx prisma db push
+      - run: npx prisma db execute --file prisma/ci-supabase-compat.sql --schema prisma/schema.prisma
+      - run: npx prisma db execute --file prisma/rls-policies.sql --schema prisma/schema.prisma
+      - run: npm run test:integration
+
+  upstash_integration:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+      UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+      RATE_LIMIT_ENABLE_IN_TEST: "1"
+      NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: anon
+      SUPABASE_SERVICE_ROLE_KEY: service
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/postgres?schema=public
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Validate Upstash secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          for key in UPSTASH_REDIS_REST_URL UPSTASH_REDIS_REST_TOKEN; do
+            if [ -z "${!key:-}" ]; then
+              missing+=("$key")
+            fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error title=Missing GitHub Actions Secrets::Missing: ${missing[*]}"
+            exit 1
+          fi
+
+      - run: npm run test:upstash
+
   deploy-production:
+    needs: [validate, db_integration, upstash_integration]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:

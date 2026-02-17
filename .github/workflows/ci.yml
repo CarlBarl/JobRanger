@@ -1,20 +1,18 @@
-name: Vercel Preview
+name: CI
 
 on:
   pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - ready_for_review
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
-  group: vercel-preview-${{ github.event.pull_request.number || github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  validate:
+  unit:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -40,7 +38,6 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
       - run: npm test
-      - run: npx next build --webpack
 
   db_integration:
     runs-on: ubuntu-latest
@@ -79,16 +76,21 @@ jobs:
       - run: npx prisma db execute --file prisma/rls-policies.sql --schema prisma/schema.prisma
       - run: npm run test:integration
 
-  deploy-preview:
-    needs: [validate, db_integration]
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: anon
+      SUPABASE_SERVICE_ROLE_KEY: service
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/postgres?schema=public
+      GEMINI_API_KEY: gemini_dummy
+      STRIPE_SECRET_KEY: sk_test_dummy
+      STRIPE_WEBHOOK_SECRET: whsec_dummy
+      STRIPE_PRICE_ID_PRO_MONTHLY: price_dummy
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
 
@@ -98,46 +100,5 @@ jobs:
           cache: npm
 
       - run: npm ci
-
-      - name: Validate Vercel secrets
-        shell: bash
-        run: |
-          set -euo pipefail
-          missing=()
-          for key in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
-            if [ -z "${!key:-}" ]; then
-              missing+=("$key")
-            fi
-          done
-          if [ ${#missing[@]} -gt 0 ]; then
-            echo "::error title=Missing GitHub Actions Secrets::Missing: ${missing[*]}"
-            exit 1
-          fi
-          if ! whoami_output="$(npx vercel@50.15.1 whoami --token="$VERCEL_TOKEN" 2>&1)"; then
-            echo "::error title=Invalid Vercel Token::VERCEL_TOKEN is invalid or revoked. Create a new token in Vercel and update the GitHub secret."
-            echo "$whoami_output"
-            exit 1
-          fi
-          echo "Vercel auth OK: $whoami_output"
-
-      - run: npx vercel@50.15.1 pull --yes --environment=preview --token=$VERCEL_TOKEN
-
-      - run: npx vercel@50.15.1 build --token=$VERCEL_TOKEN
-
-      - id: deploy
-        shell: bash
-        run: |
-          set -euo pipefail
-          deploy_output="$(npx vercel@50.15.1 deploy --prebuilt --token=$VERCEL_TOKEN 2>&1)"
-          echo "$deploy_output"
-          deployment_url="$(echo "$deploy_output" | grep -Eo 'https://[A-Za-z0-9.-]+\.vercel\.app' | tail -n1)"
-          if [ -z "$deployment_url" ]; then
-            echo "Could not parse Vercel deployment URL from CLI output."
-            exit 1
-          fi
-          echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
-          {
-            echo "### Vercel Preview Deployment"
-            echo
-            echo "$deployment_url"
-          } >> "$GITHUB_STEP_SUMMARY"
+      - run: npx prisma generate
+      - run: npx next build --webpack
