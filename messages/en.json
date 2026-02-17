@@ -104,6 +104,11 @@
     "viewLetters": "View Letters",
     "jobsSaved": "jobs saved",
     "lettersGenerated": "letters generated",
+    "addName": "Add your name",
+    "namePlaceholder": "Your name",
+    "saveName": "Save",
+    "editName": "Edit name",
+    "savingName": "Saving...",
     "quickLinksTitle": "Quick links",
     "quickLinkCvStudio": "CV Studio",
     "quickLinkLetters": "Letters",
@@ -530,6 +535,7 @@
     "deleteFailed": "Failed to delete letter."
   },
   "onboarding": {
+    "skipForNow": "Skip for now",
     "welcome": {
       "greeting": "Hi! I'm your job search companion. Let's get you set up — it only takes a few minutes.",
       "namePrompt": "What should I call you?",
