@@ -59,9 +59,5 @@ export function resolveAppOrigin(fallbackOrigin: string) {
     }
   }
 
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('NEXT_PUBLIC_APP_URL or VERCEL_URL is required in production')
-  }
-
   return fallbackOrigin
 }
