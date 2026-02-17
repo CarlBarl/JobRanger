@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { BillingProvider, Prisma, UserTier } from '@prisma/client'
+import { BillingProvider, Prisma, UserTier } from '@/generated/prisma/client'
 import type Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import {
