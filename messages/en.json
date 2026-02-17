@@ -729,7 +729,21 @@
     "usageCvFeedback": "CV feedback reports",
     "usageCvEdit": "AI CV rewrites",
     "usageProNote": "Need more? Pro gives you up to 200 letters, 300 extractions, and full CV Studio access.",
-    "usageSeeProPlans": "See Pro plans"
+    "usageSeeProPlans": "See Pro plans",
+    "dangerZoneTitle": "Danger zone",
+    "dangerZoneDescription": "Delete your account and permanently remove your data.",
+    "deleteAccountTitle": "Delete account",
+    "deleteAccountDescription": "This permanently deletes your account, documents, saved jobs, and generated letters.",
+    "deleteAccountBlockedTitle": "Subscription active",
+    "deleteAccountBlockedBody": "Please cancel your subscription first to avoid being billed after deleting your account.",
+    "deleteAccountButton": "Delete account",
+    "deleteAccountConfirmTitle": "Delete your account?",
+    "deleteAccountConfirmBody": "This action is irreversible. It will delete your account and all associated data.",
+    "deleteAccountConfirmLabel": "Type DELETE to confirm",
+    "deleteAccountConfirmPlaceholder": "DELETE",
+    "deleteAccountConfirmHint": "This action cannot be undone.",
+    "deleteAccountConfirmButton": "Delete permanently",
+    "deleteAccountRequestFailed": "Failed to delete account."
   },
   "terms": {
     "title": "Terms of Service",
