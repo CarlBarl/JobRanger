@@ -108,6 +108,8 @@ describe('/api/billing/checkout', () => {
         mode: 'subscription',
         customer: 'cus_123',
         line_items: [{ price: 'price_pro_monthly', quantity: 1 }],
+        success_url: 'http://localhost/billing/success?checkout=success&session_id={CHECKOUT_SESSION_ID}',
+        cancel_url: 'http://localhost/pricing?checkout=cancel',
       })
     )
   })
