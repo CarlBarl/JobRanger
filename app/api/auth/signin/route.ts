@@ -26,12 +26,12 @@ export async function POST(request: NextRequest) {
     const { email, password } = RequestSchema.parse(body)
     const clientIp = getClientIp(request)
 
-    const ipLimit = consumeRateLimit('signin-ip', clientIp, 20, 15 * 60 * 1000)
+    const ipLimit = await consumeRateLimit('signin-ip', clientIp, 20, 15 * 60 * 1000)
     if (!ipLimit.allowed) {
       return rateLimitResponse('Too many sign-in attempts. Please try again later.', ipLimit.retryAfterSeconds)
     }
 
-    const emailLimit = consumeRateLimit(
+    const emailLimit = await consumeRateLimit(
       'signin-email',
       email.toLowerCase(),
       8,

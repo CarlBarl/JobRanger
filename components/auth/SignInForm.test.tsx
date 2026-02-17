@@ -153,7 +153,7 @@ describe('SignInForm', () => {
       expect(signInWithOtp).toHaveBeenCalledWith({
         email: 'test@example.com',
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/dashboard')}`,
         },
       })
 

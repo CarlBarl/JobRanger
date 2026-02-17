@@ -72,6 +72,20 @@ describe('GET /api/jobs', () => {
     })
   })
 
+  it('returns 400 when q is too long', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
+    const longQuery = 'a'.repeat(121)
+
+    const req = new NextRequest(`http://localhost/api/jobs?q=${longQuery}`)
+    const res = await GET(req)
+
+    expect(res.status).toBe(400)
+    await expect(res.json()).resolves.toMatchObject({
+      success: false,
+      error: { code: 'BAD_REQUEST' },
+    })
+  })
+
   it('passes through region when provided', async () => {
     mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
     mocks.searchJobs.mockResolvedValue({ total: { value: 0 }, hits: [] })

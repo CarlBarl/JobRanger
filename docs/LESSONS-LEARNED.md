@@ -15,6 +15,12 @@ Applied in `next.config.mjs` via webpack configuration.
 ### Prisma Client Must Be Generated Before Deploy
 The `@prisma/client did not initialize yet` error occurs when the Prisma client hasn't been generated. Fix: ensure `npx prisma generate` runs as part of the build step or `postinstall` script.
 
+### GitHub Actions Vercel Preview Requires Project Secrets
+For PR-based preview deployments via GitHub Actions, set `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` as repository secrets and run `vercel pull/build/deploy` in CI. Keep the workflow on `pull_request` (not `pull_request_target`) so untrusted fork code does not run with secrets.
+
+### Split Preview vs Production Deploy Pipelines
+When Vercel Git auto-deploy is disabled, use separate GitHub Actions workflows: one for PR preview (`--environment=preview`) and one for `main` production deploy (`--environment=production` + `--prod`). Keep production workflow bound to `push` on `main` and `environment: production` for optional approval gates.
+
 ## Arbetsformedlingen API
 
 ### Jobs Can Disappear
@@ -108,6 +114,15 @@ In multi-system account deletion (Auth + DB + Storage), do not return success if
 ### Admin Routes Gated by DEBUG_EMAIL
 The `/admin` page and `/api/admin/*` routes are restricted to the email in `DEBUG_EMAIL` env var. Same pattern as the debug chat on the dashboard. Non-admin users get redirected to `/dashboard` (page) or receive a 403 (API). The admin delete endpoint reuses the same 3-step deletion logic as `/api/account/delete` (Auth → Storage → Prisma cascade).
 
+### User Tier Must Be Server-Managed (RLS Column Privileges)
+The `User.tier` field is an entitlement and must not be client-writable. RLS policies can't restrict columns, so tighten privileges: `REVOKE UPDATE` on `"User"` for `anon`/`authenticated` and `GRANT UPDATE` only on safe profile columns (for example `name`, `letterGuidanceDefault`, `country`) in `prisma/rls-policies.sql`.
+
+### Admin Access Should Be DB Role-Based (Not `DEBUG_EMAIL`)
+Use `User.role` (`USER` / `ADMIN`) as the authorization source for `/admin` and `/api/admin/*`. Environment-based single-email admin gates are brittle and make role changes operationally risky. Keep role assignment explicit via SQL (`prisma/admin-role.sql`) and enforce admin checks server-side.
+
+### Stripe Entitlements Should Use Price Allowlist
+Webhook processing should verify subscription `priceId` against an explicit allowlist (`STRIPE_ALLOWED_PRICE_IDS`, fallback to `STRIPE_PRICE_ID_PRO_MONTHLY`). If a disallowed price appears, cancel the subscription and keep the user on `FREE` to prevent accidental entitlement escalation.
+
 ## Tooling
 
 ### ESLint v9 Script Mismatch
@@ -121,6 +136,31 @@ When creating a separate worktree for parallel agent work, that folder may not h
 
 ### Webpack Build Check May Need Prisma Generate First
 In this repository we validate builds with `npx next build --webpack` (not `npm run build`). That command does not run `prisma generate`, so a fresh/stale worktree can fail with Prisma type errors (for example missing enum exports like `UserTier`). Run `npx prisma generate` before the webpack build check when this happens.
+
+### Distributed Rate Limiting Needs External State in Production
+In-memory rate limits reset on restart and can be bypassed across multiple instances. For production deployments, use an external backend (for example Upstash Redis via `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`) and keep in-memory fallback only for local dev/test.
+
+## Billing / Stripe
+
+### Stripe v20: Subscription period fields moved to items
+Stripe Node SDK v20 types no longer expose `Subscription.current_period_end` / `current_period_start`. If you need a "current period end" timestamp (for example for entitlement UI), use `subscription.items.data[].current_period_end` (take the max when multiple items exist).
+
+### Webhook Idempotency Should Allow Retries
+When storing webhook events for idempotency, track a `processedAt` timestamp and only short-circuit duplicates after successful processing. If processing fails, return a 5xx so Stripe retries.
+
+### Local Billing Testing Requires Webhook Forwarding
+When Stripe webhooks are configured to a production domain (for example `jobbijagaren.se`), local development won't receive events. For local tests, use the Stripe CLI to forward webhooks to your dev server:
+- `stripe login`
+- `stripe listen --forward-to http://localhost:3000/api/billing/webhook`
+
+The CLI prints a local `whsec_...` signing secret. Use that in `.env.local` as `STRIPE_WEBHOOK_SECRET`. Do not reuse the production `whsec_...` locally.
+
+Also ensure environments match:
+- Local: `sk_test_...` + test `price_...` + CLI `whsec_...`
+- Production: `sk_live_...` + live `price_...` + production webhook `whsec_...`
+
+### Portal CTA Should Depend on Billing Profile, Not Tier Alone
+Legacy/stale `User.tier='PRO'` can exist without a `Subscription` row. Showing "Manage subscription" based only on tier causes `/api/billing/portal` 404 ("No subscription found"). Gate portal CTAs by presence of a Stripe billing profile (`subscription.stripeCustomerId`) and allow checkout when missing.
 
 ## Refactoring Patterns
 

@@ -1,22 +1,25 @@
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { Check, ChevronLeft } from 'lucide-react'
-import { UserTier } from '@prisma/client'
+import { BillingProvider, UserTier } from '@prisma/client'
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { getOrCreateUser } from '@/lib/auth'
 import { getMonthlyQuotaLimit, USAGE_EVENT_TYPES } from '@/lib/security/monthly-quota'
 import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
+import { BillingRedirectButton } from '@/components/billing/BillingRedirectButton'
+import { prisma } from '@/lib/prisma'
 
 type PlanCardProps = {
   name: string
   quotaLabel: string
   items: string[]
-  ctaLabel: string
-  ctaHref: string
+  cta: ReactNode
   highlighted?: boolean
 }
 
-function PlanCard({ name, quotaLabel, items, ctaLabel, ctaHref, highlighted = false }: PlanCardProps) {
+function PlanCard({ name, quotaLabel, items, cta, highlighted = false }: PlanCardProps) {
   return (
     <article
       className={[
@@ -40,9 +43,7 @@ function PlanCard({ name, quotaLabel, items, ctaLabel, ctaHref, highlighted = fa
         ))}
       </ul>
 
-      <Button asChild className="mt-6 w-full" variant={highlighted ? 'default' : 'outline'}>
-        <Link href={ctaHref}>{ctaLabel}</Link>
-      </Button>
+      <div className="mt-6">{cta}</div>
     </article>
   )
 }
@@ -55,7 +56,20 @@ export default async function PricingPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  const isSignedIn = !!user
+  const isSignedIn = !!user?.email
+  const profile = user?.email ? await getOrCreateUser(user.id, user.email) : null
+  const stripeSubscription = profile
+    ? await prisma.subscription.findUnique({
+        where: {
+          userId_provider: { userId: profile.id, provider: BillingProvider.STRIPE },
+        },
+        select: {
+          stripeCustomerId: true,
+        },
+      })
+    : null
+  const canManageSubscription = Boolean(stripeSubscription?.stripeCustomerId)
+  const isSweden = (profile?.country ?? '').trim().toUpperCase() === 'SE'
 
   const freeGenerateLimit = getMonthlyQuotaLimit(UserTier.FREE, USAGE_EVENT_TYPES.GENERATE_LETTER)
   const freeSkillsExtractLimit = getMonthlyQuotaLimit(UserTier.FREE, USAGE_EVENT_TYPES.SKILLS_EXTRACT)
@@ -66,7 +80,7 @@ export default async function PricingPage() {
   const proSkillsBatchLimit = getMonthlyQuotaLimit(UserTier.PRO, USAGE_EVENT_TYPES.SKILLS_BATCH)
 
   const freeCtaHref = isSignedIn ? '/dashboard' : '/auth/signin'
-  const proCtaHref = isSignedIn ? '/dashboard?intent=upgrade' : '/auth/signin?plan=pro'
+  const proSignInHref = `/auth/signin?next=${encodeURIComponent('/pricing?upgrade=1')}`
 
   return (
     <main className="min-h-screen bg-background">
@@ -95,6 +109,9 @@ export default async function PricingPage() {
             <p className="mx-auto max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
               {t('subtitle')}
             </p>
+            <p className="mx-auto max-w-2xl text-xs text-muted-foreground">
+              {t('swedenOnlyNote')}
+            </p>
           </header>
 
           <section className="grid gap-4 md:grid-cols-2">
@@ -106,19 +123,39 @@ export default async function PricingPage() {
                 t('skillsExtractQuota', { count: freeSkillsExtractLimit }),
                 t('skillsBatchQuota', { count: freeSkillsBatchLimit }),
               ]}
-              ctaLabel={t('freeCta')}
-              ctaHref={freeCtaHref}
+              cta={
+                <Button asChild className="w-full" variant="outline">
+                  <Link href={freeCtaHref}>{t('freeCta')}</Link>
+                </Button>
+              }
             />
             <PlanCard
               name={t('proName')}
-              quotaLabel={t('monthlyQuotaLabel')}
+              quotaLabel={`${t('proPriceLabel')} · ${t('monthlyQuotaLabel')}`}
               items={[
                 t('generateLetterQuota', { count: proGenerateLimit }),
                 t('skillsExtractQuota', { count: proSkillsExtractLimit }),
                 t('skillsBatchQuota', { count: proSkillsBatchLimit }),
               ]}
-              ctaLabel={t('proCta')}
-              ctaHref={proCtaHref}
+              cta={
+                !isSignedIn ? (
+                  <Button asChild className="w-full">
+                    <Link href={proSignInHref}>{t('proCta')}</Link>
+                  </Button>
+                ) : canManageSubscription ? (
+                  <BillingRedirectButton
+                    action="portal"
+                    label={t('manageSubscriptionCta')}
+                    className="w-full"
+                  />
+                ) : isSweden ? (
+                  <BillingRedirectButton action="checkout" label={t('proCta')} className="w-full" />
+                ) : (
+                  <Button asChild className="w-full">
+                    <Link href="/settings">{t('setSwedenCta')}</Link>
+                  </Button>
+                )
+              }
               highlighted
             />
           </section>

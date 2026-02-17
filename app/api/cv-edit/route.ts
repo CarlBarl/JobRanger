@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const rateLimit = consumeRateLimit('cv-edit-user', appUser.id, 20, 60 * 60 * 1000)
+    const rateLimit = await consumeRateLimit('cv-edit-user', appUser.id, 20, 60 * 60 * 1000)
     if (!rateLimit.allowed) {
       return rateLimitResponse(
         'CV edit rate limit exceeded. Please try again later.',

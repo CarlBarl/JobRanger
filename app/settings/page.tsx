@@ -1,10 +1,13 @@
 import { redirect } from 'next/navigation'
+import { BillingProvider } from '@prisma/client'
 import { getTranslations } from 'next-intl/server'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
 import { LetterGuidanceSettings } from '@/components/dashboard/LetterGuidanceSettings'
+import { BillingSettings } from '@/components/settings/BillingSettings'
 import { createClient } from '@/lib/supabase/server'
 import { getOrCreateUser } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -17,6 +20,14 @@ export default async function SettingsPage() {
   }
 
   const user = await getOrCreateUser(authUser.id, authUser.email)
+  const stripeSubscription = await prisma.subscription.findUnique({
+    where: {
+      userId_provider: { userId: user.id, provider: BillingProvider.STRIPE },
+    },
+    select: {
+      stripeCustomerId: true,
+    },
+  })
 
   if (!user.onboardingCompleted) {
     redirect('/onboarding')
@@ -43,6 +54,11 @@ export default async function SettingsPage() {
             <LanguageSwitcher />
           </div>
         </section>
+
+        <BillingSettings
+          initialCountry={user.country ?? null}
+          hasBillingProfile={Boolean(stripeSubscription?.stripeCustomerId)}
+        />
 
         <LetterGuidanceSettings initialValue={user.letterGuidanceDefault ?? null} />
       </main>

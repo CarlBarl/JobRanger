@@ -1,6 +1,8 @@
 import { isValidAfJobId } from '@/lib/security/sanitize'
 
 const AF_BASE_URL = 'https://jobsearch.api.jobtechdev.se'
+const AF_TIMEOUT_MS = 8_000
+const AF_RETRY_ATTEMPTS = 1
 
 type WorkplaceAddress = {
   municipality?: string | null
@@ -81,13 +83,39 @@ function getApiKeyHeader(): Record<string, string> {
   return apiKey ? { 'api-key': apiKey } : {}
 }
 
+async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+  let lastError: unknown = null
+
+  for (let attempt = 0; attempt <= AF_RETRY_ATTEMPTS; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        ...init,
+        signal: AbortSignal.timeout(AF_TIMEOUT_MS),
+      })
+
+      if (response.status >= 500 && response.status < 600 && attempt < AF_RETRY_ATTEMPTS) {
+        continue
+      }
+
+      return response
+    } catch (error) {
+      lastError = error
+      if (attempt >= AF_RETRY_ATTEMPTS) {
+        throw error
+      }
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error('AF API request failed')
+}
+
 export async function searchJobs(options: SearchJobsOptions): Promise<AFSearchResponse> {
   const params = new URLSearchParams()
   params.set('q', buildSearchQuery(options.query, options.region))
   params.set('limit', String(options.limit ?? 20))
   params.set('offset', String(options.offset ?? 0))
 
-  const response = await fetch(`${AF_BASE_URL}/search?${params.toString()}`, {
+  const response = await fetchWithTimeout(`${AF_BASE_URL}/search?${params.toString()}`, {
     headers: {
       accept: 'application/json',
       ...getApiKeyHeader(),
@@ -106,7 +134,7 @@ export async function getJobById(id: string): Promise<AFJobAd> {
     throw new Error('Invalid AF job ID format')
   }
 
-  const response = await fetch(`${AF_BASE_URL}/ad/${id}`, {
+  const response = await fetchWithTimeout(`${AF_BASE_URL}/ad/${id}`, {
     headers: {
       accept: 'application/json',
       ...getApiKeyHeader(),

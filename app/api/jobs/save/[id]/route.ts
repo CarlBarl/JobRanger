@@ -25,7 +25,7 @@ export async function DELETE(
     )
   }
 
-  const writeLimit = consumeRateLimit('saved-job-delete-user', user.id, 120, 60 * 60 * 1000)
+  const writeLimit = await consumeRateLimit('saved-job-delete-user', user.id, 120, 60 * 60 * 1000)
   if (!writeLimit.allowed) {
     return rateLimitResponse(
       'Delete saved job rate limit exceeded. Please try again later.',

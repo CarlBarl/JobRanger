@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const lettersLimit = consumeRateLimit('letters-list-user', user.id, 120, 60 * 60 * 1000)
+  const lettersLimit = await consumeRateLimit('letters-list-user', user.id, 120, 60 * 60 * 1000)
   if (!lettersLimit.allowed) {
     return rateLimitResponse('Rate limit exceeded.', lettersLimit.retryAfterSeconds)
   }

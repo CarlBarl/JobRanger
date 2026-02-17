@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const docLimit = consumeRateLimit('documents-list-user', user.id, 120, 60 * 60 * 1000)
+  const docLimit = await consumeRateLimit('documents-list-user', user.id, 120, 60 * 60 * 1000)
   if (!docLimit.allowed) {
     return rateLimitResponse('Rate limit exceeded.', docLimit.retryAfterSeconds)
   }
