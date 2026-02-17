@@ -729,7 +729,21 @@
     "usageCvFeedback": "CV-feedbackrapporter",
     "usageCvEdit": "AI-omskrivningar av CV",
     "usageProNote": "Behöver du mer? Pro ger upp till 200 brev, 300 extraktioner och full CV Studio-åtkomst.",
-    "usageSeeProPlans": "Se Pro-planer"
+    "usageSeeProPlans": "Se Pro-planer",
+    "dangerZoneTitle": "Riskzon",
+    "dangerZoneDescription": "Ta bort ditt konto och radera din data permanent.",
+    "deleteAccountTitle": "Ta bort konto",
+    "deleteAccountDescription": "Detta tar bort ditt konto, dokument, sparade jobb och genererade brev permanent.",
+    "deleteAccountBlockedTitle": "Abonnemang aktivt",
+    "deleteAccountBlockedBody": "Avsluta ditt abonnemang först för att undvika att bli debiterad efter att kontot har tagits bort.",
+    "deleteAccountButton": "Ta bort konto",
+    "deleteAccountConfirmTitle": "Ta bort ditt konto?",
+    "deleteAccountConfirmBody": "Den här åtgärden kan inte ångras. Den tar bort ditt konto och all tillhörande data.",
+    "deleteAccountConfirmLabel": "Skriv DELETE för att bekräfta",
+    "deleteAccountConfirmPlaceholder": "DELETE",
+    "deleteAccountConfirmHint": "Åtgärden kan inte ångras.",
+    "deleteAccountConfirmButton": "Ta bort permanent",
+    "deleteAccountRequestFailed": "Kunde inte ta bort kontot."
   },
   "terms": {
     "title": "Användarvillkor",
