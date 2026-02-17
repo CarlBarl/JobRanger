@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { Check, ChevronLeft } from 'lucide-react'
-import { BillingProvider, UserTier } from '@prisma/client'
+import { BillingProvider, UserTier } from '@/generated/prisma/client'
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { getOrCreateUser } from '@/lib/auth'

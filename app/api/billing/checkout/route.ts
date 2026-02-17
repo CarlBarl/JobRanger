@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { BillingProvider } from '@prisma/client'
+import { BillingProvider } from '@/generated/prisma/client'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'

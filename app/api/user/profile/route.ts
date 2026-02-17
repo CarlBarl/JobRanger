@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { UsageEventType } from '@prisma/client'
+import { UsageEventType } from '@/generated/prisma/client'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { enforceCsrfProtection } from '@/lib/security/csrf'

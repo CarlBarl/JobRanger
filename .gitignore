@@ -39,6 +39,9 @@ env.local
 *.tsbuildinfo
 next-env.d.ts
 
+# prisma generated client
+/generated
+
 # browser testing artifacts
 *.png
 *.jpg

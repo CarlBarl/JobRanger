@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from 'next/server'
-import { UserTier, UsageEventType } from '@prisma/client'
+import { UserTier, UsageEventType } from '@/generated/prisma/client'
 import { prisma } from '@/lib/prisma'
 
 export type AppUsageEventType = UsageEventType | 'CV_FEEDBACK' | 'CV_EDIT'
