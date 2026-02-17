@@ -168,6 +168,9 @@ Legacy/stale `User.tier='PRO'` can exist without a `Subscription` row. Showing "
 ### Checkout Should Recover From Stale Stripe Customer IDs
 After Stripe mode/account migrations, a stored `Subscription.stripeCustomerId` may no longer exist in the active Stripe account (`No such customer: 'cus_...'`). In checkout flow, treat Stripe `resource_missing` on `customer` as recoverable: create a new Stripe customer, persist it, and retry checkout session creation once.
 
+### Post-Checkout UX Should Use a Dedicated Success Page
+Returning Stripe checkout success to a dedicated in-app route (for example `/billing/success`) avoids ambiguity on the pricing page and gives users a clear confirmation + next steps while webhook-driven tier activation finishes.
+
 ## Refactoring Patterns
 
 ### Keep Route Handlers Thin with Local `_lib` Modules
