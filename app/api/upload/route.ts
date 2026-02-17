@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     return csrfError
   }
 
-  const ipLimit = consumeRateLimit('upload-ip', getClientIp(request), 30, 60 * 60 * 1000)
+  const ipLimit = await consumeRateLimit('upload-ip', getClientIp(request), 30, 60 * 60 * 1000)
   if (!ipLimit.allowed) {
     logger.info('request.rejected.rate_limit', { retryAfterSeconds: ipLimit.retryAfterSeconds })
     return rateLimitResponse(

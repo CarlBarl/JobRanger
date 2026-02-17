@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     const user = await getOrCreateUser(authUser.id, authUser.email)
-    const writeLimit = consumeRateLimit('saved-job-write-user', user.id, 120, 60 * 60 * 1000)
+    const writeLimit = await consumeRateLimit('saved-job-write-user', user.id, 120, 60 * 60 * 1000)
     if (!writeLimit.allowed) {
       return rateLimitResponse(
         'Save job rate limit exceeded. Please try again later.',

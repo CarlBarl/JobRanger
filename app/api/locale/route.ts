@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   const csrfError = enforceCsrfProtection(request)
   if (csrfError) return csrfError
 
-  const localeLimit = consumeRateLimit('locale-write-ip', getClientIp(request), 120, 60 * 60 * 1000)
+  const localeLimit = await consumeRateLimit('locale-write-ip', getClientIp(request), 120, 60 * 60 * 1000)
   if (!localeLimit.allowed) {
     return rateLimitResponse('Too many locale change requests. Please try again later.', localeLimit.retryAfterSeconds)
   }

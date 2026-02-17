@@ -42,6 +42,17 @@ vi.mock('@/lib/security/rate-limit', () => ({
   rateLimitResponse: () => null,
 }))
 
+vi.mock('@/lib/security/events', () => ({
+  recordSecurityEvent: vi.fn(),
+  SecurityEventCategory: {
+    AUTH: 'AUTH',
+  },
+  SecurityEventSeverity: {
+    WARN: 'WARN',
+    ERROR: 'ERROR',
+  },
+}))
+
 import { DELETE } from './route'
 
 function makeRequest() {

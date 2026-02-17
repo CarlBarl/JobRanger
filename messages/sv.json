@@ -667,14 +667,18 @@
   "pricing": {
     "title": "Välj plan",
     "subtitle": "Uppgradera till Pro för mycket högre månatliga AI-gränser.",
+    "swedenOnlyNote": "Endast tillgängligt i Sverige (SE).",
     "freeName": "Free",
     "proName": "Pro",
+    "proPriceLabel": "99 kr/månad (inkl. moms)",
     "monthlyQuotaLabel": "Månatlig AI-användning",
     "generateLetterQuota": "Generering av personligt brev: {count}",
     "skillsExtractQuota": "Kompetensextraktion: {count}",
     "skillsBatchQuota": "Batch-extraktion av kompetenser från CV: {count}",
     "freeCta": "Börja gratis",
     "proCta": "Uppgradera till Pro",
+    "manageSubscriptionCta": "Hantera abonnemang",
+    "setSwedenCta": "Bekräfta Sverige i inställningar",
     "backToJobs": "Tillbaka till jobb"
   },
   "settings": {
@@ -682,6 +686,13 @@
     "subtitle": "Hantera språk och standardval för generering.",
     "languageTitle": "Språk",
     "languageDescription": "Byt gränssnittsspråk för ditt konto.",
+    "billingTitle": "Betalning",
+    "billingDescription": "Hantera ditt Pro-abonnemang och behörighet.",
+    "billingCountryToggleLabel": "Växla Sverige-behörighet",
+    "billingCountryLabel": "Jag bor i Sverige (SE)",
+    "billingCountryHint": "Krävs för att köpa Pro under Sverige-lanseringen.",
+    "billingCountrySaveFailed": "Kunde inte uppdatera land för betalning.",
+    "billingManageSubscription": "Hantera abonnemang",
     "guidesTitle": "Guider",
     "guidesDescription": "Visa hela produktguiden eller onboarding igen när du behöver en repetition."
   },

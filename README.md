@@ -60,6 +60,12 @@ GEMINI_API_KEY=
 AF_API_KEY=                  # Optional
 NEXT_PUBLIC_APP_URL=
 DEBUG_EMAIL=                 # Optional - enables debug chat
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PRICE_ID_PRO_MONTHLY=
+STRIPE_ALLOWED_PRICE_IDS=      # Optional CSV allowlist (defaults to STRIPE_PRICE_ID_PRO_MONTHLY)
+UPSTASH_REDIS_REST_URL=        # Recommended for distributed rate limiting in production
+UPSTASH_REDIS_REST_TOKEN=
 ```
 
 ### Database Setup
@@ -67,6 +73,9 @@ DEBUG_EMAIL=                 # Optional - enables debug chat
 After `prisma db push`, apply RLS policies in Supabase SQL Editor:
 - `prisma/rls-policies.sql` (app tables)
 - `prisma/storage-rls-policies.sql` (Storage bucket)
+
+To grant admin access with RBAC, run:
+- `prisma/admin-role.sql` (replace the placeholder email first)
 
 ## Project Structure
 
@@ -132,7 +141,7 @@ npx next build --webpack  # Build validation used in this repo's sandbox workflo
 - Quotas are tier-aware and monthly (UTC calendar month), backed by DB usage events.
 - Current defaults:
   - `FREE`: 1 letter/month, 3 single skill extractions/month, 1 batch extraction/month
-  - `PRO` (`carlelelid@outlook.com`): 200 letters/month, 300 single skill extractions/month, 50 batch extractions/month
+  - `PRO`: 200 letters/month, 300 single skill extractions/month, 50 batch extractions/month (set via Stripe subscription)
 - Existing hourly rate limiting remains active for anti-abuse protection.
 
 ## API Integrations
@@ -142,6 +151,7 @@ npx next build --webpack  # Build validation used in this repo's sandbox workflo
 | Arbetsformedlingen | `https://jobsearch.api.jobtechdev.se` | Optional `api-key` header |
 | Gemini AI | `@google/generative-ai` | `GEMINI_API_KEY` env var |
 | Supabase | Project URL in env | `SUPABASE_SERVICE_ROLE_KEY` |
+| Stripe Billing | Stripe API | `STRIPE_SECRET_KEY` + webhooks |
 
 ## License
 

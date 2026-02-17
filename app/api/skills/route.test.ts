@@ -46,7 +46,7 @@ vi.mock('@/lib/security/monthly-quota', () => ({
   recordUsageEvent: (...args: unknown[]) => mocks.recordUsageEvent(...args),
 }))
 
-import { POST } from './route'
+import { PATCH, POST } from './route'
 
 describe('POST /api/skills', () => {
   beforeEach(() => {
@@ -164,6 +164,47 @@ describe('POST /api/skills', () => {
     await expect(res.json()).resolves.toMatchObject({
       success: false,
       error: { code: 'QUOTA_EXCEEDED' },
+    })
+  })
+})
+
+describe('PATCH /api/skills', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('returns 400 when skills array is too large', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
+    const tooManySkills = Array.from({ length: 101 }, (_, index) => `skill-${index}`)
+
+    const req = new NextRequest('http://localhost/api/skills', {
+      method: 'PATCH',
+      body: JSON.stringify({ documentId: 'doc-1', skills: tooManySkills }),
+    })
+
+    const res = await PATCH(req)
+    expect(res.status).toBe(400)
+    await expect(res.json()).resolves.toMatchObject({
+      success: false,
+      error: { code: 'BAD_REQUEST' },
+    })
+  })
+
+  it('updates skills when payload is valid', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
+    mocks.findFirst.mockResolvedValue({ id: 'doc-1', userId: 'u1', type: 'cv' })
+    mocks.update.mockResolvedValue({ id: 'doc-1', skills: ['React', 'TypeScript'] })
+
+    const req = new NextRequest('http://localhost/api/skills', {
+      method: 'PATCH',
+      body: JSON.stringify({ documentId: 'doc-1', skills: ['React', 'TypeScript'] }),
+    })
+
+    const res = await PATCH(req)
+    expect(res.status).toBe(200)
+    await expect(res.json()).resolves.toMatchObject({
+      success: true,
+      data: { skills: ['React', 'TypeScript'] },
     })
   })
 })

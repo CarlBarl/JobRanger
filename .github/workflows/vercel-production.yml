@@ -1,0 +1,76 @@
+name: Vercel Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: vercel-production
+  cancel-in-progress: false
+
+jobs:
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    permissions:
+      contents: read
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Validate Vercel secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          for key in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            if [ -z "${!key:-}" ]; then
+              missing+=("$key")
+            fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error title=Missing GitHub Actions Secrets::Missing: ${missing[*]}"
+            exit 1
+          fi
+          if ! whoami_output="$(npx vercel@50.15.1 whoami --token="$VERCEL_TOKEN" 2>&1)"; then
+            echo "::error title=Invalid Vercel Token::VERCEL_TOKEN is invalid or revoked. Create a new token in Vercel and update the GitHub secret."
+            echo "$whoami_output"
+            exit 1
+          fi
+          echo "Vercel auth OK: $whoami_output"
+
+      - run: npx vercel@50.15.1 pull --yes --environment=production --token=$VERCEL_TOKEN
+
+      - run: npx vercel@50.15.1 build --prod --token=$VERCEL_TOKEN
+
+      - id: deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          deploy_output="$(npx vercel@50.15.1 deploy --prebuilt --prod --token=$VERCEL_TOKEN 2>&1)"
+          echo "$deploy_output"
+          deployment_url="$(echo "$deploy_output" | grep -Eo 'https://[A-Za-z0-9.-]+\.vercel\.app' | tail -n1)"
+          if [ -z "$deployment_url" ]; then
+            echo "Could not parse Vercel deployment URL from CLI output."
+            exit 1
+          fi
+          echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Vercel Production Deployment"
+            echo
+            echo "$deployment_url"
+          } >> "$GITHUB_STEP_SUMMARY"

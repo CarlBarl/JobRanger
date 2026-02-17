@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
-  const debugLimit = consumeRateLimit('debug-chat-user', user.id, 60, 60 * 60 * 1000)
+  const debugLimit = await consumeRateLimit('debug-chat-user', user.id, 60, 60 * 60 * 1000)
   if (!debugLimit.allowed) {
     return rateLimitResponse(
       'Debug chat rate limit exceeded. Please try again later.',

@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const batchLimit = consumeRateLimit('skills-batch-user', user.id, 5, 60 * 60 * 1000)
+    const batchLimit = await consumeRateLimit('skills-batch-user', user.id, 5, 60 * 60 * 1000)
     if (!batchLimit.allowed) {
       return rateLimitResponse(
         'Batch extraction limit reached. Please try again later.',
