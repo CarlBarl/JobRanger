@@ -111,4 +111,35 @@ describe('/api/billing/checkout', () => {
       })
     )
   })
+
+  it('recovers when stored stripe customer does not exist', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'u1@example.com' } } })
+    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com', tier: 'FREE', country: 'SE' })
+    mocks.findSubscription.mockResolvedValue({ stripeCustomerId: 'cus_stale', status: 'pending' })
+    mocks.stripeCustomersCreate.mockResolvedValue({ id: 'cus_fresh' })
+    mocks.stripeCheckoutCreate
+      .mockRejectedValueOnce({ code: 'resource_missing', param: 'customer', message: "No such customer: 'cus_stale'" })
+      .mockResolvedValueOnce({ url: 'https://stripe.test/checkout-retry' })
+
+    const request = new NextRequest('http://localhost/api/billing/checkout', { method: 'POST' })
+    const response = await POST(request)
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual({
+      success: true,
+      data: { url: 'https://stripe.test/checkout-retry' },
+    })
+
+    expect(mocks.stripeCustomersCreate).toHaveBeenCalledTimes(1)
+    expect(mocks.upsertSubscription).toHaveBeenCalledTimes(1)
+    expect(mocks.stripeCheckoutCreate).toHaveBeenCalledTimes(2)
+    expect(mocks.stripeCheckoutCreate).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ customer: 'cus_stale' })
+    )
+    expect(mocks.stripeCheckoutCreate).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ customer: 'cus_fresh' })
+    )
+  })
 })
