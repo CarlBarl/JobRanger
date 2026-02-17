@@ -61,12 +61,15 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const rateLimit = await consumeRateLimit('billing-checkout', authUser.id, 10, 60 * 60 * 1000)
+  const authUserId = authUser.id
+  const authUserEmail = authUser.email
+
+  const rateLimit = await consumeRateLimit('billing-checkout', authUserId, 10, 60 * 60 * 1000)
   if (!rateLimit.allowed) {
     return rateLimitResponse('Upgrade attempts limit reached. Please try again later.', rateLimit.retryAfterSeconds)
   }
 
-  const appUser = await getOrCreateUser(authUser.id, authUser.email)
+  const appUser = await getOrCreateUser(authUserId, authUserEmail)
   const country = normalizeCountry(appUser.country)
 
   if (country !== 'SE') {
@@ -112,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     async function createAndPersistCustomer() {
       const customer = await stripe.customers.create({
-        email: authUser.email,
+        email: authUserEmail,
         metadata: { userId: appUser.id },
       })
 
@@ -139,6 +142,9 @@ export async function POST(request: NextRequest) {
 
     if (!stripeCustomerId) {
       await createAndPersistCustomer()
+    }
+    if (!stripeCustomerId) {
+      throw new Error('Failed to create Stripe customer')
     }
 
     const checkoutPayload = {
