@@ -165,6 +165,9 @@ Also ensure environments match:
 ### Portal CTA Should Depend on Billing Profile, Not Tier Alone
 Legacy/stale `User.tier='PRO'` can exist without a `Subscription` row. Showing "Manage subscription" based only on tier causes `/api/billing/portal` 404 ("No subscription found"). Gate portal CTAs by presence of a Stripe billing profile (`subscription.stripeCustomerId`) and allow checkout when missing.
 
+### Checkout Should Recover From Stale Stripe Customer IDs
+After Stripe mode/account migrations, a stored `Subscription.stripeCustomerId` may no longer exist in the active Stripe account (`No such customer: 'cus_...'`). In checkout flow, treat Stripe `resource_missing` on `customer` as recoverable: create a new Stripe customer, persist it, and retry checkout session creation once.
+
 ## Refactoring Patterns
 
 ### Keep Route Handlers Thin with Local `_lib` Modules
