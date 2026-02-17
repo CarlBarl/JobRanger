@@ -15,7 +15,9 @@
     "navCvStudio": "CV Studio",
     "navJobs": "Jobs",
     "navLetters": "Letters",
-    "metaDescription": "An AI-powered job matching platform for Swedish job seekers. Upload a CV, search jobs, and generate cover letters."
+    "metaDescription": "An AI-powered job matching platform for Swedish job seekers. Upload a CV, search jobs, and generate cover letters.",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy"
   },
   "landing": {
     "hero": "Automate your job search",
@@ -108,9 +110,10 @@
     "quickLinkSettings": "Settings",
     "upgradeCard": {
       "badge": "Free account",
-      "included": "1 cover letter/month, 3 skill extractions.",
-      "valueProp": "Pro unlocks 200 cover letters/month, CV Studio AI feedback, and more.",
-      "cta": "Upgrade to Pro"
+      "included": "Your Free plan includes 1 cover letter and 3 skill extractions per month.",
+      "valueProp": "Pro lets you generate letters for every job you apply to, plus AI-powered CV reviews and rewrites.",
+      "cta": "Upgrade to Pro",
+      "dismiss": "Not now"
     },
     "recentSavedJobs": "Saved jobs",
     "viewAllJobs": "View all jobs",
@@ -458,11 +461,11 @@
       "guidanceLabel": "Optional pointers for your cover letter (can be left blank)",
       "guidancePlaceholder": "Example: Keep the cover letter concise, highlight relevant experience, and mirror the job ad’s requirements.",
       "guidanceHelp": "You don’t need to add anything. If you do, it’s only used for this cover letter generation.",
-      "quotaExceededTitle": "Monthly limit reached",
+      "quotaExceededTitle": "You've used your free letter this month",
       "quotaUsage": "Used {used}/{limit} letters this month.",
       "quotaResetAt": "Resets on {date}.",
       "quotaResetUnknown": "next month",
-      "quotaValueProp": "Pro includes 200 letters/month.",
+      "quotaValueProp": "With Pro, you can generate a tailored letter for every job you find — up to 200/month.",
       "upgradeCta": "Upgrade to Pro"
     },
     "card": {
@@ -588,7 +591,7 @@
       "jobsSaved": "{count} jobs saved",
       "searchJobs": "Search for jobs",
       "goToDashboard": "Go to dashboard",
-      "freePlanNote": "You're on the Free plan — 1 cover letter per month included.",
+      "freePlanNote": "You're on the Free plan — generate your first cover letter and see the magic. Want more? Pro is always here.",
       "seeProPlans": "See Pro plans"
     }
   },
@@ -618,8 +621,8 @@
     "directivesLabel": "Optional direction",
     "directivesPlaceholder": "Example: Prioritize logistics, customer communication, and measurable impact.",
     "directivesHint": "You can leave this blank. Selected jobs are optional too.",
-    "lockTitle": "Pro feature",
-    "lockDescription": "AI feedback and automatic CV edits are included with Pro.",
+    "lockTitle": "Unlock CV Studio AI",
+    "lockDescription": "With Pro, AI reviews your CV against the jobs you're targeting and suggests concrete improvements. Then apply those changes with one click.",
     "upgradeCta": "Upgrade to Pro",
     "generateFeedback": "Generate feedback",
     "generatingFeedback": "Generating feedback...",
@@ -675,16 +678,28 @@
     }
   },
   "pricing": {
-    "title": "Choose your plan",
-    "subtitle": "Upgrade to Pro to unlock much higher monthly AI limits.",
+    "title": "Find work faster",
+    "subtitle": "Free gets you started. Pro gives you the tools to stand out.",
     "swedenOnlyNote": "Available in Sweden only (SE).",
     "freeName": "Free",
+    "freeDescription": "Try everything, with limited monthly usage.",
     "proName": "Pro",
+    "proDescription": "Serious about your job search? Get the full toolkit.",
     "proPriceLabel": "SEK 99 / month (incl. VAT)",
     "monthlyQuotaLabel": "Monthly AI usage",
-    "generateLetterQuota": "Cover letter generation: {count}",
-    "skillsExtractQuota": "Skills extraction: {count}",
-    "skillsBatchQuota": "Batch CV skill extraction: {count}",
+    "generateLetterQuota": "{count} cover letters / month",
+    "generateLetterDesc": "AI writes a personalized cover letter for each job, using your CV and the listing.",
+    "skillsExtractQuota": "{count} skill extractions / month",
+    "skillsExtractDesc": "We read your CV and pull out your key skills so jobs can be matched automatically.",
+    "skillsBatchQuota": "{count} batch extractions / month",
+    "skillsBatchDesc": "Re-extract skills from all your CVs at once when you upload a new version.",
+    "cvFeedbackQuota": "{count} CV feedback reports / month",
+    "cvFeedbackDesc": "AI reviews your CV against specific job listings and shows what to improve.",
+    "cvEditQuota": "{count} AI CV rewrites / month",
+    "cvEditDesc": "One-click CV improvements — AI applies the suggested changes for you.",
+    "proExclusive": "Pro only",
+    "everythingInFree": "Everything in Free, plus:",
+    "proHighlight": "Most popular",
     "freeCta": "Start free",
     "proCta": "Upgrade to Pro",
     "manageSubscriptionCta": "Manage subscription",
@@ -705,16 +720,102 @@
     "billingManageSubscription": "Manage subscription",
     "guidesTitle": "Guides",
     "guidesDescription": "Replay the full product guide or onboarding whenever you need a refresher.",
-    "usageTitle": "Monthly Usage",
-    "usageDescription": "Your current AI usage for this billing period.",
+    "usageTitle": "Monthly AI Usage",
+    "usageDescription": "How much of your monthly AI quota you've used so far.",
     "usageResetAt": "Resets on {date}.",
-    "usageCoverLetters": "Cover letters",
-    "usageSkillsExtract": "Skills extraction",
-    "usageSkillsBatch": "Batch skill extraction",
-    "usageCvFeedback": "CV feedback",
-    "usageCvEdit": "CV edits",
-    "usageProNote": "Pro includes higher limits.",
+    "usageCoverLetters": "Cover letters generated",
+    "usageSkillsExtract": "CV skill extractions",
+    "usageSkillsBatch": "Batch skill refreshes",
+    "usageCvFeedback": "CV feedback reports",
+    "usageCvEdit": "AI CV rewrites",
+    "usageProNote": "Need more? Pro gives you up to 200 letters, 300 extractions, and full CV Studio access.",
     "usageSeeProPlans": "See Pro plans"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "effectiveDate": "Effective: February 17, 2026",
+    "backToHome": "Back to home",
+    "sections": {
+      "service": {
+        "title": "1. What the Service Is",
+        "body": "JobbJägaren is an AI-powered job matching platform for Swedish job seekers. We help you upload CVs, extract skills, find matching jobs from Arbetsförmedlingen (the Swedish Employment Agency), and generate personalized cover letters using AI."
+      },
+      "accounts": {
+        "title": "2. Account Responsibility",
+        "body": "You are responsible for maintaining the security of your account credentials and for all activity that occurs under your account. You must provide accurate information when creating your account. You may not use the service for any unlawful purpose."
+      },
+      "billing": {
+        "title": "3. Plans and Billing",
+        "body": "JobbJägaren offers a Free plan with limited monthly usage and a Pro plan at SEK 99/month (including VAT). Pro subscriptions are billed monthly through Stripe, auto-renew each billing cycle, and can be cancelled at any time from your account settings. Upon cancellation, you retain Pro access until the end of the current billing period. Refunds are not provided for partial billing periods. Pro is currently available to users in Sweden only."
+      },
+      "acceptableUse": {
+        "title": "4. Acceptable Use",
+        "body": "You may not use the service to submit fraudulent job applications, generate misleading content, harass employers or other users, or attempt to circumvent usage limits. Automated access or scraping of the service is not permitted without prior written consent."
+      },
+      "aiDisclaimer": {
+        "title": "5. AI-Generated Content",
+        "body": "Cover letters, CV feedback, and other AI-generated outputs are suggestions only. They are not guaranteed to be accurate, complete, or suitable for any particular purpose. You are responsible for reviewing and editing all generated content before use. JobbJägaren does not guarantee that using the service will result in employment."
+      },
+      "thirdPartyData": {
+        "title": "6. Third-Party Data",
+        "body": "Job listings are sourced from Arbetsförmedlingen's public API. We do not control or guarantee the accuracy, completeness, or availability of this data. Job listings may be removed or changed by Arbetsförmedlingen at any time without notice."
+      },
+      "liability": {
+        "title": "7. Limitation of Liability",
+        "body": "JobbJägaren is provided \"as is\" without warranties of any kind. To the maximum extent permitted by law, we are not liable for any indirect, incidental, or consequential damages arising from your use of the service, including but not limited to lost opportunities, data loss, or inaccuracies in AI-generated content."
+      },
+      "changes": {
+        "title": "8. Changes to These Terms",
+        "body": "We may update these terms from time to time. Material changes will be communicated via email or a notice within the service. Continued use of the service after changes take effect constitutes acceptance of the updated terms."
+      },
+      "contact": {
+        "title": "9. Contact",
+        "body": "For questions about these terms, contact us at carlelelid@outlook.com. Business entity: Carl Elelid Enskild Firma."
+      }
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "effectiveDate": "Effective: February 17, 2026",
+    "backToHome": "Back to home",
+    "sections": {
+      "dataCollected": {
+        "title": "1. What Data We Collect",
+        "body": "We collect the following personal data: email address and name (at sign-up), uploaded CVs and personal letters (document content and extracted text), extracted skills (parsed from your documents), saved job references (Arbetsförmedlingen job IDs), and AI-generated cover letters and CV feedback."
+      },
+      "howWeUse": {
+        "title": "2. How We Use Your Data",
+        "body": "Your data is used to: match you with relevant job listings based on your skills, generate personalized cover letters and CV feedback using AI, manage your account and subscription, and improve the service. We do not sell your personal data to third parties."
+      },
+      "thirdParty": {
+        "title": "3. Third-Party Processors",
+        "body": "We use the following third-party services to operate JobbJägaren: Supabase (database hosting, authentication, and file storage — EU region), Google Gemini (AI processing for content generation — your CV text and job descriptions are sent to Google's API), Stripe (payment processing for Pro subscriptions — Stripe receives your email and payment details), and Arbetsförmedlingen (public job listings API — no personal data is shared with them)."
+      },
+      "retention": {
+        "title": "4. Data Retention",
+        "body": "Your data is retained as long as your account is active. If you delete your account, all personal data including documents, skills, saved jobs, and generated letters are permanently removed. Stripe may retain transaction records as required by law."
+      },
+      "rights": {
+        "title": "5. Your Rights (GDPR)",
+        "body": "Under the EU General Data Protection Regulation, you have the right to: access your personal data, correct inaccurate data, request deletion of your data, export your data (data portability), object to processing, and withdraw consent at any time. To exercise these rights, contact us at carlelelid@outlook.com or delete your account from the Settings page."
+      },
+      "deletion": {
+        "title": "6. Account Deletion",
+        "body": "You can delete your account and all associated data from the Settings page. This action is irreversible and removes all your documents, skills, saved jobs, generated letters, and account information."
+      },
+      "cookies": {
+        "title": "7. Cookies",
+        "body": "JobbJägaren uses only essential cookies required for authentication and session management. We do not use tracking cookies, analytics cookies, or third-party advertising cookies."
+      },
+      "contact": {
+        "title": "8. Contact",
+        "body": "For privacy-related questions or to exercise your GDPR rights, contact us at carlelelid@outlook.com. Business entity: Carl Elelid Enskild Firma."
+      },
+      "changes": {
+        "title": "9. Changes to This Policy",
+        "body": "We may update this privacy policy from time to time. Material changes will be communicated via email or a notice within the service. The effective date at the top of this page indicates when the policy was last updated."
+      }
+    }
   },
   "upload": {
     "dropCV": "Click to upload CV (PDF, DOCX, or TXT)",
