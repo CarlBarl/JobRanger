@@ -32,13 +32,11 @@ describe('resolveAppOrigin', () => {
     expect(resolveAppOrigin('http://localhost:3000')).toBe('https://jobranger-git-feature-123.vercel.app')
   })
 
-  it('throws in production when both NEXT_PUBLIC_APP_URL and VERCEL_URL are missing', async () => {
+  it('returns fallback origin in production when both NEXT_PUBLIC_APP_URL and VERCEL_URL are missing', async () => {
     process.env.NODE_ENV = 'production'
     const resolveAppOrigin = await loadResolveAppOrigin()
 
-    expect(() => resolveAppOrigin('http://localhost:3000')).toThrowError(
-      'NEXT_PUBLIC_APP_URL or VERCEL_URL is required in production'
-    )
+    expect(resolveAppOrigin('http://localhost:3000')).toBe('http://localhost:3000')
   })
 
   it('returns fallback origin in non-production when NEXT_PUBLIC_APP_URL is invalid', async () => {

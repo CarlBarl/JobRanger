@@ -165,6 +165,12 @@ Also ensure environments match:
 - Local: `sk_test_...` + test `price_...` + CLI `whsec_...`
 - Production: `sk_live_...` + live `price_...` + production webhook `whsec_...`
 
+### Vercel Deployment Protection Blocks Stripe Webhooks
+Vercel's Deployment Protection (SSO/password) intercepts requests at the platform level before they reach Next.js. Stripe webhooks get a 401 or 307 redirect instead of reaching the route handler. Fix: add a Protection Bypass for Automation secret in Vercel Project Settings → Deployment Protection, then append `?x-vercel-protection-bypass=<SECRET>` to the Stripe webhook URL. Do **not** include `x-vercel-set-bypass-cookie=true` — that triggers a 307 redirect to set a browser cookie, which Stripe won't follow. Also use a stable project URL (custom domain or project alias), not a per-deployment preview URL, since preview URLs change on every push.
+
+### Middleware Should Exclude API Routes
+The middleware matcher in `middleware.ts` should exclude `/api/*` routes via a negative lookahead (`api/` in the regex). API routes handle their own auth and don't need middleware session refresh. Without this exclusion, the Supabase auth middleware runs unnecessarily on every API call, and future middleware changes could accidentally redirect or block webhooks.
+
 ### Portal CTA Should Depend on Billing Profile, Not Tier Alone
 Legacy/stale `User.tier='PRO'` can exist without a `Subscription` row. Showing "Manage subscription" based only on tier causes `/api/billing/portal` 404 ("No subscription found"). Gate portal CTAs by presence of a Stripe billing profile (`subscription.stripeCustomerId`) and allow checkout when missing.
 
