@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { createClient } from '@/lib/supabase/client'
+import { updatePassword } from '@/app/auth/reset/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -40,16 +40,13 @@ export function ResetPasswordForm() {
     }
 
     setLoading(true)
-    const supabase = createClient()
 
-    const { error: updateError } = await supabase.auth.updateUser({
-      password,
-    })
+    const result = await updatePassword(password)
 
     setLoading(false)
 
-    if (updateError) {
-      setError(updateError.message)
+    if (!result.success) {
+      setError(result.error ?? 'Something went wrong')
       return
     }
 
