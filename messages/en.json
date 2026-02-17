@@ -106,6 +106,12 @@
     "quickLinkCvStudio": "CV Studio",
     "quickLinkLetters": "Letters",
     "quickLinkSettings": "Settings",
+    "upgradeCard": {
+      "badge": "Free account",
+      "included": "1 cover letter/month, 3 skill extractions.",
+      "valueProp": "Pro unlocks 200 cover letters/month, CV Studio AI feedback, and more.",
+      "cta": "Upgrade to Pro"
+    },
     "recentSavedJobs": "Saved jobs",
     "viewAllJobs": "View all jobs",
     "noSavedJobsYet": "No saved jobs yet",
@@ -452,11 +458,12 @@
       "guidanceLabel": "Optional pointers for your cover letter (can be left blank)",
       "guidancePlaceholder": "Example: Keep the cover letter concise, highlight relevant experience, and mirror the job ad’s requirements.",
       "guidanceHelp": "You don’t need to add anything. If you do, it’s only used for this cover letter generation.",
-      "quotaExceededTitle": "Monthly letter limit reached",
+      "quotaExceededTitle": "Monthly limit reached",
       "quotaUsage": "Used {used}/{limit} letters this month.",
       "quotaResetAt": "Resets on {date}.",
       "quotaResetUnknown": "next month",
-      "upgradeCta": "Upgrade for more letters"
+      "quotaValueProp": "Pro includes 200 letters/month.",
+      "upgradeCta": "Upgrade to Pro"
     },
     "card": {
       "published": "Published",
@@ -580,7 +587,9 @@
       "skillsFound": "{count} skills found",
       "jobsSaved": "{count} jobs saved",
       "searchJobs": "Search for jobs",
-      "goToDashboard": "Go to dashboard"
+      "goToDashboard": "Go to dashboard",
+      "freePlanNote": "You're on the Free plan — 1 cover letter per month included.",
+      "seeProPlans": "See Pro plans"
     }
   },
   "cvStudio": {
@@ -609,8 +618,9 @@
     "directivesLabel": "Optional direction",
     "directivesPlaceholder": "Example: Prioritize logistics, customer communication, and measurable impact.",
     "directivesHint": "You can leave this blank. Selected jobs are optional too.",
-    "lockTitle": "PRO feature",
-    "lockDescription": "FREE users can view this page but CV feedback and AI edits require PRO.",
+    "lockTitle": "Pro feature",
+    "lockDescription": "AI feedback and automatic CV edits are included with Pro.",
+    "upgradeCta": "Upgrade to Pro",
     "generateFeedback": "Generate feedback",
     "generatingFeedback": "Generating feedback...",
     "applyEdits": "Apply AI edits",
@@ -694,7 +704,17 @@
     "billingCountrySaveFailed": "Could not update billing country.",
     "billingManageSubscription": "Manage subscription",
     "guidesTitle": "Guides",
-    "guidesDescription": "Replay the full product guide or onboarding whenever you need a refresher."
+    "guidesDescription": "Replay the full product guide or onboarding whenever you need a refresher.",
+    "usageTitle": "Monthly Usage",
+    "usageDescription": "Your current AI usage for this billing period.",
+    "usageResetAt": "Resets on {date}.",
+    "usageCoverLetters": "Cover letters",
+    "usageSkillsExtract": "Skills extraction",
+    "usageSkillsBatch": "Batch skill extraction",
+    "usageCvFeedback": "CV feedback",
+    "usageCvEdit": "CV edits",
+    "usageProNote": "Pro includes higher limits.",
+    "usageSeeProPlans": "See Pro plans"
   },
   "upload": {
     "dropCV": "Click to upload CV (PDF, DOCX, or TXT)",

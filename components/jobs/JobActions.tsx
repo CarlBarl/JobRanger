@@ -334,22 +334,35 @@ export function JobActions({
         </Link>
       ) : null}
       {generateQuotaExhausted ? (
-        <div className="rounded-md border border-border bg-muted/35 px-3 py-2 text-xs text-foreground">
-          <p className="font-medium">{t('actions.quotaExceededTitle')}</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            {t('actions.quotaUsage', {
-              used: generateLetterQuota?.used ?? 0,
-              limit: generateLetterQuota?.limit ?? 1,
-            })}
-          </p>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            {t('actions.quotaResetAt', { date: resetAtLabel })}
-          </p>
+        <div className="overflow-hidden rounded-xl border border-amber-200/60 bg-gradient-to-br from-amber-50/80 via-amber-50/40 to-transparent p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100/80">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-amber-600">
+                <path d="M7 1L8.5 5H12.5L9.25 7.5L10.5 12L7 9.25L3.5 12L4.75 7.5L1.5 5H5.5L7 1Z" fill="currentColor" />
+              </svg>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-semibold text-foreground">{t('actions.quotaExceededTitle')}</p>
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                {t('actions.quotaUsage', {
+                  used: generateLetterQuota?.used ?? 0,
+                  limit: generateLetterQuota?.limit ?? 1,
+                })}{' '}
+                {t('actions.quotaResetAt', { date: resetAtLabel })}
+              </p>
+              <p className="mt-2 text-[13px] text-foreground/70">
+                {t('actions.quotaValueProp')}
+              </p>
+            </div>
+          </div>
           <Link
             href="/pricing"
-            className="mt-2 inline-flex items-center text-[11px] font-medium text-primary underline-offset-2 hover:underline"
+            className="pro-cta mt-3 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold text-white shadow-sm"
           >
             {t('actions.upgradeCta')}
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M5 3L9 7L5 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </Link>
         </div>
       ) : null}

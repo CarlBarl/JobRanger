@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { CheckCircle2, Search, LayoutDashboard } from 'lucide-react'
+import { CheckCircle2, Search, LayoutDashboard, Sparkles } from 'lucide-react'
 
 interface CompletionStepProps {
   name: string
@@ -71,6 +71,17 @@ export function CompletionStep({ name, skillsCount, savedJobsCount }: Completion
           <li>{t('tips.saveJobs')}</li>
           <li>{t('tips.generateLetters')}</li>
         </ul>
+      </div>
+
+      {/* Free plan note */}
+      <div className="flex w-full max-w-sm items-center gap-2.5 rounded-xl border border-amber-200/50 bg-amber-50/50 px-4 py-2.5">
+        <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+        <p className="text-[12px] leading-relaxed text-stone-500">
+          {t('freePlanNote')}{' '}
+          <a href="/pricing" className="font-semibold text-amber-700 underline-offset-2 hover:underline">
+            {t('seeProPlans')}
+          </a>
+        </p>
       </div>
 
       {/* Action buttons */}

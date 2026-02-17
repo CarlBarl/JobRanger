@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { FileUpload } from '@/components/upload/FileUpload'
@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 type UserTier = 'FREE' | 'PRO'
@@ -463,9 +464,20 @@ export function CvStudioClient({
             <p className="mt-1 text-xs text-muted-foreground">{t('directivesHint')}</p>
 
             {!isPro ? (
-              <div className="mt-3 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-                <p className="font-medium text-foreground">{t('lockTitle')}</p>
-                <p className="mt-1">{t('lockDescription')}</p>
+              <div className="mt-3 flex items-start gap-3 rounded-xl border border-amber-200/60 bg-gradient-to-r from-amber-50/60 to-transparent px-4 py-3">
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-foreground">{t('lockDescription')}</p>
+                  <Link
+                    href="/pricing"
+                    className="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold text-amber-700 underline-offset-2 hover:underline"
+                  >
+                    {t('upgradeCta')}
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="mt-px">
+                      <path d="M4.5 2.5L8 6L4.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </Link>
+                </div>
               </div>
             ) : null}
 
