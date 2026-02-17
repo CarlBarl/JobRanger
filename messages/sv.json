@@ -104,6 +104,11 @@
     "viewLetters": "Visa Brev",
     "jobsSaved": "jobb sparade",
     "lettersGenerated": "brev genererade",
+    "addName": "Lägg till ditt namn",
+    "namePlaceholder": "Ditt namn",
+    "saveName": "Spara",
+    "editName": "Redigera namn",
+    "savingName": "Sparar...",
     "quickLinksTitle": "Snabblänkar",
     "quickLinkCvStudio": "CV-studio",
     "quickLinkLetters": "Brev",
@@ -530,6 +535,7 @@
     "deleteFailed": "Det gick inte att ta bort brevet."
   },
   "onboarding": {
+    "skipForNow": "Hoppa över just nu",
     "welcome": {
       "greeting": "Hej! Jag är din jobbsökarkompis. Låt oss komma igång — det tar bara några minuter.",
       "namePrompt": "Vad ska jag kalla dig?",
@@ -704,7 +710,30 @@
     "proCta": "Uppgradera till Pro",
     "manageSubscriptionCta": "Hantera abonnemang",
     "setSwedenCta": "Bekräfta Sverige i inställningar",
-    "backToJobs": "Tillbaka till jobb"
+    "backToJobs": "Tillbaka till jobb",
+    "checkoutCanceledTitle": "Betalning avbruten",
+    "checkoutCanceledDescription": "Ingen fara - betalningen genomfördes inte. Du kan försöka igen när du vill."
+  },
+  "billingSuccess": {
+    "title": "Välkommen till Pro",
+    "subtitle": "Din betalning är klar och din Pro-plan är aktiv.",
+    "featuresTitle": "Dina Pro-funktioner",
+    "featureLetters": "{count} personliga brev per månad",
+    "featureSkills": "{count} kompetensextraktioner per månad",
+    "featureCvFeedback": "{count} CV-feedbackrapporter per månad",
+    "featureCvEdit": "{count} AI-omskrivningar av CV per månad",
+    "guideTitle": "Kom igång i 3 steg",
+    "guideStep1": "Öppna CV-studio och skapa en första feedbackrapport.",
+    "guideStep2": "Tillämpa AI-redigeringar och spara ditt förbättrade CV.",
+    "guideStep3": "Generera skräddarsydda brev för dina sparade jobb.",
+    "goDashboard": "Gå till dashboard",
+    "openCvStudio": "Öppna CV-studio",
+    "manageBilling": "Hantera abonnemang",
+    "pendingTitle": "Betalning mottagen — aktiverar Pro",
+    "pendingDescription": "Ditt konto uppgraderas just nu.",
+    "pendingHint": "Detta tar oftast bara några sekunder. Uppdatera sidan för att se aktuell status.",
+    "refreshStatus": "Uppdatera status",
+    "sessionReference": "Referens: {sessionId}"
   },
   "settings": {
     "title": "Inställningar",

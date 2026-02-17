@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server'
 import { UserTier } from '@/generated/prisma/client'
 import { getSavedJobsCount, getLettersCount } from '@/lib/data/dashboard-loaders'
 import { Briefcase, FileText, Settings, Sparkles, ArrowRight } from 'lucide-react'
+import { DashboardNameEditor } from './DashboardNameEditor'
 import { DismissibleUpgradeCard } from './DismissibleUpgradeCard'
 
 interface DashboardStatsSectionProps {
@@ -25,14 +26,7 @@ export async function DashboardStatsSection({ userId, userName, userEmail, userT
       data-guide-id="dashboard-stats"
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-lg font-semibold tracking-[-0.02em] text-foreground sm:text-xl">
-            {userName || userEmail}
-          </h1>
-          {userName && (
-            <p className="mt-0.5 text-[13px] text-muted-foreground/60">{userEmail}</p>
-          )}
-        </div>
+        <DashboardNameEditor userName={userName} userEmail={userEmail} userTier={userTier} />
         <div className="flex gap-2 sm:gap-3">
           <Link
             href="/jobs"
