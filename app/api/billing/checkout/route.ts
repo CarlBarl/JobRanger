@@ -29,6 +29,22 @@ function isActiveLike(status: string) {
   return status === 'active' || status === 'trialing'
 }
 
+function isMissingStripeCustomerError(error: unknown) {
+  if (!error || typeof error !== 'object') return false
+
+  const maybeStripeError = error as {
+    code?: string
+    param?: string
+    message?: string
+  }
+
+  if (maybeStripeError.code === 'resource_missing' && maybeStripeError.param === 'customer') {
+    return true
+  }
+
+  return typeof maybeStripeError.message === 'string' && maybeStripeError.message.includes('No such customer')
+}
+
 export async function POST(request: NextRequest) {
   const csrfError = enforceCsrfProtection(request)
   if (csrfError) return csrfError
@@ -94,7 +110,7 @@ export async function POST(request: NextRequest) {
     const stripe = getStripe()
     const priceId = getProMonthlyPriceId()
 
-    if (!stripeCustomerId) {
+    async function createAndPersistCustomer() {
       const customer = await stripe.customers.create({
         email: authUser.email,
         metadata: { userId: appUser.id },
@@ -117,22 +133,28 @@ export async function POST(request: NextRequest) {
           priceId,
         },
       })
+
+      return stripeCustomerId
     }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
+    if (!stripeCustomerId) {
+      await createAndPersistCustomer()
+    }
+
+    const checkoutPayload = {
+      mode: 'subscription' as const,
       customer: stripeCustomerId,
       client_reference_id: appUser.id,
       metadata: { userId: appUser.id },
       subscription_data: {
         metadata: { userId: appUser.id },
       },
-      billing_address_collection: 'required',
+      billing_address_collection: 'required' as const,
       customer_update: {
-        address: 'auto',
+        address: 'auto' as const,
       },
       consent_collection: {
-        terms_of_service: 'required',
+        terms_of_service: 'required' as const,
       },
       line_items: [
         {
@@ -142,8 +164,23 @@ export async function POST(request: NextRequest) {
       ],
       success_url: `${origin}/pricing?checkout=success`,
       cancel_url: `${origin}/pricing?checkout=cancel`,
-      locale: 'auto',
-    })
+      locale: 'auto' as const,
+    }
+
+    let session
+    try {
+      session = await stripe.checkout.sessions.create(checkoutPayload)
+    } catch (error) {
+      if (!stripeCustomerId || !isMissingStripeCustomerError(error)) {
+        throw error
+      }
+
+      await createAndPersistCustomer()
+      session = await stripe.checkout.sessions.create({
+        ...checkoutPayload,
+        customer: stripeCustomerId,
+      })
+    }
 
     if (!session.url) {
       return NextResponse.json<CheckoutResponse>(
