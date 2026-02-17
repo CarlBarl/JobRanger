@@ -81,8 +81,8 @@ npx prisma db push
 To exercise RLS policies locally (optional), bootstrap Supabase-ish primitives and apply policies:
 
 ```bash
-npx prisma db execute --file prisma/ci-supabase-compat.sql
-npx prisma db execute --file prisma/rls-policies.sql
+npx prisma db execute --file prisma/ci-supabase-compat.sql --schema prisma/schema.prisma
+npx prisma db execute --file prisma/rls-policies.sql --schema prisma/schema.prisma
 npm run test:integration
 ```
 
