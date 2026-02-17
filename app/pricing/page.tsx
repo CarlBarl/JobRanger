@@ -28,6 +28,16 @@ type PlanCardProps = {
   highlighted?: boolean
 }
 
+type PricingSearchParams = {
+  checkout?: string | string[]
+}
+
+function readSearchParam(value: string | string[] | undefined): string | null {
+  if (typeof value === 'string' && value.length > 0) return value
+  if (Array.isArray(value) && value[0]) return value[0]
+  return null
+}
+
 function PlanCard({
   name,
   description,
@@ -112,9 +122,16 @@ function PlanCard({
   )
 }
 
-export default async function PricingPage() {
+export default async function PricingPage({
+  searchParams,
+}: {
+  searchParams?: Promise<PricingSearchParams>
+}) {
   const t = await getTranslations('pricing')
   const common = await getTranslations('common')
+  const params = (await searchParams) ?? {}
+  const checkoutState = readSearchParam(params.checkout)
+  const showCheckoutCanceled = checkoutState === 'cancel'
 
   const supabase = await createClient()
   const {
@@ -237,6 +254,13 @@ export default async function PricingPage() {
               {t('swedenOnlyNote')}
             </p>
           </header>
+
+          {showCheckoutCanceled ? (
+            <div className="rounded-lg border border-border bg-card p-4">
+              <p className="text-sm font-medium text-foreground">{t('checkoutCanceledTitle')}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t('checkoutCanceledDescription')}</p>
+            </div>
+          ) : null}
 
           <section className="grid gap-4 md:grid-cols-2">
             <PlanCard

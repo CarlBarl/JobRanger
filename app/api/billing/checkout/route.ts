@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `${origin}/pricing?checkout=success`,
+      success_url: `${origin}/billing/success?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing?checkout=cancel`,
       locale: 'auto' as const,
     }
