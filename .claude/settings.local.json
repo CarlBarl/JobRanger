@@ -85,7 +85,9 @@
       "Bash(cmd /c \"taskkill /PID 3268 /F\")",
       "Bash(cmd /c \"del /f C:\\\\Users\\\\Calle\\\\Dev\\\\JobRanger\\\\.next\\\\dev\\\\lock 2>nul\")",
       "Bash(cat:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx next dev:*)"
     ]
   }
 }

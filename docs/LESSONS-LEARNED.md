@@ -145,6 +145,9 @@ In-memory rate limits reset on restart and can be bypassed across multiple insta
 
 ## Billing / Stripe
 
+### Billing Return URLs Should Fallback to `VERCEL_URL` in Preview
+`NODE_ENV` is `production` on Vercel previews, so strict `NEXT_PUBLIC_APP_URL` checks can fail and break checkout/portal routes. Resolve app origin in this order: `NEXT_PUBLIC_APP_URL` (if set) -> `VERCEL_URL` (prepend `https://` when host-only) -> throw only when both are missing in production.
+
 ### Stripe v20: Subscription period fields moved to items
 Stripe Node SDK v20 types no longer expose `Subscription.current_period_end` / `current_period_start`. If you need a "current period end" timestamp (for example for entitlement UI), use `subscription.items.data[].current_period_end` (take the max when multiple items exist).
 
@@ -167,6 +170,9 @@ Legacy/stale `User.tier='PRO'` can exist without a `Subscription` row. Showing "
 
 ### Checkout Should Recover From Stale Stripe Customer IDs
 After Stripe mode/account migrations, a stored `Subscription.stripeCustomerId` may no longer exist in the active Stripe account (`No such customer: 'cus_...'`). In checkout flow, treat Stripe `resource_missing` on `customer` as recoverable: create a new Stripe customer, persist it, and retry checkout session creation once.
+
+### Post-Checkout UX Should Use a Dedicated Success Page
+Returning Stripe checkout success to a dedicated in-app route (for example `/billing/success`) avoids ambiguity on the pricing page and gives users a clear confirmation + next steps while webhook-driven tier activation finishes.
 
 ## Refactoring Patterns
 

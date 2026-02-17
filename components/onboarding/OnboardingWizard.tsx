@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { WizardOrb } from './WizardOrb'
 import { WizardProgress } from './WizardProgress'
@@ -22,8 +23,10 @@ const TOTAL_STEPS = 5
 
 export function OnboardingWizard({ userName, isReplay, existingCvDocumentId }: OnboardingWizardProps) {
   const t = useTranslations('onboarding')
+  const router = useRouter()
 
   const [step, setStep] = useState(0)
+  const [skipping, setSkipping] = useState(false)
   const [orbState, setOrbState] = useState<OrbState>('idle')
   const [transitioning, setTransitioning] = useState(false)
 
@@ -32,6 +35,25 @@ export function OnboardingWizard({ userName, isReplay, existingCvDocumentId }: O
   const [cvDocumentId, setCvDocumentId] = useState<string | null>(null)
   const [skills, setSkills] = useState<string[]>([])
   const [savedJobsCount, setSavedJobsCount] = useState(0)
+
+  const handleSkip = useCallback(async () => {
+    if (skipping) return
+    setSkipping(true)
+    try {
+      const res = await fetch('/api/user/onboarding', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completed: true }),
+      })
+      if (res.ok) {
+        router.push('/dashboard')
+      }
+    } catch {
+      // Allow retry
+    } finally {
+      setSkipping(false)
+    }
+  }, [skipping, router])
 
   const goToStep = (nextStep: number) => {
     setTransitioning(true)
@@ -149,6 +171,16 @@ export function OnboardingWizard({ userName, isReplay, existingCvDocumentId }: O
             />
           )}
         </div>
+
+        {step < 4 && (
+          <button
+            onClick={handleSkip}
+            disabled={skipping}
+            className="mt-6 text-[13px] text-muted-foreground/50 transition-colors hover:text-muted-foreground/80 disabled:opacity-50"
+          >
+            {t('skipForNow')}
+          </button>
+        )}
       </div>
     </div>
   )

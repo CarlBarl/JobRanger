@@ -104,6 +104,11 @@
     "viewLetters": "View Letters",
     "jobsSaved": "jobs saved",
     "lettersGenerated": "letters generated",
+    "addName": "Add your name",
+    "namePlaceholder": "Your name",
+    "saveName": "Save",
+    "editName": "Edit name",
+    "savingName": "Saving...",
     "quickLinksTitle": "Quick links",
     "quickLinkCvStudio": "CV Studio",
     "quickLinkLetters": "Letters",
@@ -530,6 +535,7 @@
     "deleteFailed": "Failed to delete letter."
   },
   "onboarding": {
+    "skipForNow": "Skip for now",
     "welcome": {
       "greeting": "Hi! I'm your job search companion. Let's get you set up — it only takes a few minutes.",
       "namePrompt": "What should I call you?",
@@ -704,7 +710,30 @@
     "proCta": "Upgrade to Pro",
     "manageSubscriptionCta": "Manage subscription",
     "setSwedenCta": "Confirm Sweden in Settings",
-    "backToJobs": "Back to jobs"
+    "backToJobs": "Back to jobs",
+    "checkoutCanceledTitle": "Checkout canceled",
+    "checkoutCanceledDescription": "No worries - your payment was not completed. You can try again whenever you're ready."
+  },
+  "billingSuccess": {
+    "title": "Welcome to Pro",
+    "subtitle": "Your payment is complete and your Pro plan is active.",
+    "featuresTitle": "Your Pro features",
+    "featureLetters": "{count} cover letters per month",
+    "featureSkills": "{count} skill extractions per month",
+    "featureCvFeedback": "{count} CV feedback reports per month",
+    "featureCvEdit": "{count} AI CV rewrites per month",
+    "guideTitle": "Get started in 3 steps",
+    "guideStep1": "Open CV Studio and generate a first feedback report.",
+    "guideStep2": "Apply AI edits and save your improved CV.",
+    "guideStep3": "Generate tailored letters for your saved jobs.",
+    "goDashboard": "Go to dashboard",
+    "openCvStudio": "Open CV Studio",
+    "manageBilling": "Manage subscription",
+    "pendingTitle": "Payment received — activating Pro",
+    "pendingDescription": "Your account is being upgraded right now.",
+    "pendingHint": "This usually takes a few seconds. Refresh to check your current status.",
+    "refreshStatus": "Refresh status",
+    "sessionReference": "Reference: {sessionId}"
   },
   "settings": {
     "title": "Settings",

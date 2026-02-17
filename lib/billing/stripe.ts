@@ -1,5 +1,5 @@
 import Stripe from 'stripe'
-import { readCsvEnv, requireEnv, requireEnvInProduction } from '@/lib/config/env'
+import { readCsvEnv, readEnv, requireEnv } from '@/lib/config/env'
 
 let cachedStripe: Stripe | null = null
 
@@ -31,14 +31,37 @@ export function getAllowedStripePriceIds() {
 }
 
 export function resolveAppOrigin(fallbackOrigin: string) {
-  const configured = requireEnvInProduction('NEXT_PUBLIC_APP_URL', fallbackOrigin)
-
-  try {
-    return new URL(configured).origin
-  } catch {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('NEXT_PUBLIC_APP_URL must be a valid absolute URL in production')
+  const configured = readEnv('NEXT_PUBLIC_APP_URL')
+  if (configured) {
+    try {
+      return new URL(configured).origin
+    } catch {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('NEXT_PUBLIC_APP_URL must be a valid absolute URL in production')
+      }
+      return fallbackOrigin
     }
-    return fallbackOrigin
   }
+
+  const vercelUrl = readEnv('VERCEL_URL')
+  if (vercelUrl) {
+    const candidate = vercelUrl.startsWith('http://') || vercelUrl.startsWith('https://')
+      ? vercelUrl
+      : `https://${vercelUrl}`
+
+    try {
+      return new URL(candidate).origin
+    } catch {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('VERCEL_URL must be a valid host or absolute URL in production')
+      }
+      return fallbackOrigin
+    }
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('NEXT_PUBLIC_APP_URL or VERCEL_URL is required in production')
+  }
+
+  return fallbackOrigin
 }

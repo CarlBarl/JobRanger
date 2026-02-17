@@ -155,7 +155,8 @@ export async function POST(request: Request) {
   }
 
   let event: Stripe.Event
-  const payload = await request.text()
+  // Stripe signature verification requires the exact raw bytes as received.
+  const payload = Buffer.from(await request.arrayBuffer())
 
   try {
     const stripe = getStripe()
