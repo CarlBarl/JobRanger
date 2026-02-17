@@ -29,8 +29,6 @@ describe('db integration (RLS policies)', () => {
     await prisma.usageEvent.deleteMany({})
     await prisma.subscription.deleteMany({})
     await prisma.user.deleteMany({})
-    await client.query('RESET ROLE')
-    await client.query("SELECT set_config('request.jwt.claim.sub', '', false)")
   })
 
   it('limits document reads to auth.uid()', async () => {
@@ -52,12 +50,15 @@ describe('db integration (RLS policies)', () => {
       ],
     })
 
-    await client.query('SET ROLE authenticated')
-    await client.query("SELECT set_config('request.jwt.claim.sub', $1, false)", [user1])
+    await client.query('BEGIN')
+    await client.query('SET LOCAL ROLE authenticated')
+    await client.query("SELECT set_config('request.jwt.claim.sub', $1, true)", [user1])
 
     const docs = await client.query<{ userId: string }>(
       'SELECT "userId" FROM "Document" ORDER BY "userId"'
     )
+
+    await client.query('ROLLBACK')
 
     expect(docs.rows.length).toBe(2)
     expect(new Set(docs.rows.map((row) => row.userId))).toEqual(new Set([user1]))
@@ -74,23 +75,30 @@ describe('db integration (RLS policies)', () => {
       ],
     })
 
-    await client.query('SET ROLE authenticated')
-    await client.query("SELECT set_config('request.jwt.claim.sub', $1, false)", [user1])
+    await client.query('BEGIN')
+    await client.query('SET LOCAL ROLE authenticated')
+    await client.query("SELECT set_config('request.jwt.claim.sub', $1, true)", [user1])
 
+    // Tier update should throw (column privilege revocation) — use savepoint to keep txn alive
+    await client.query('SAVEPOINT sp1')
     await expect(
       client.query('UPDATE "User" SET tier = $1::"UserTier" WHERE id = $2', ['PRO', user1])
     ).rejects.toThrow()
+    await client.query('ROLLBACK TO SAVEPOINT sp1')
 
     const updateOwnName = await client.query(
       'UPDATE "User" SET name = $1 WHERE id = $2',
       ['Alice', user1]
     )
-    expect(updateOwnName.rowCount).toBe(1)
 
     const updateOther = await client.query(
       'UPDATE "User" SET name = $1 WHERE id = $2',
       ['Mallory', user2]
     )
+
+    await client.query('COMMIT')
+
+    expect(updateOwnName.rowCount).toBe(1)
     expect(updateOther.rowCount).toBe(0)
 
     const refreshed = await prisma.user.findUnique({ where: { id: user1 } })
@@ -108,8 +116,9 @@ describe('db integration (RLS policies)', () => {
       ],
     })
 
-    await client.query('SET ROLE authenticated')
-    await client.query("SELECT set_config('request.jwt.claim.sub', $1, false)", [user1])
+    await client.query('BEGIN')
+    await client.query('SET LOCAL ROLE authenticated')
+    await client.query("SELECT set_config('request.jwt.claim.sub', $1, true)", [user1])
 
     await expect(
       client.query(
@@ -117,5 +126,7 @@ describe('db integration (RLS policies)', () => {
         [user2, 'cv']
       )
     ).rejects.toThrow()
+
+    await client.query('ROLLBACK')
   })
 })
