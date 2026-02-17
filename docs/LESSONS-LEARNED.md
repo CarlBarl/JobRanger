@@ -145,6 +145,9 @@ In-memory rate limits reset on restart and can be bypassed across multiple insta
 
 ## Billing / Stripe
 
+### Billing Return URLs Should Fallback to `VERCEL_URL` in Preview
+`NODE_ENV` is `production` on Vercel previews, so strict `NEXT_PUBLIC_APP_URL` checks can fail and break checkout/portal routes. Resolve app origin in this order: `NEXT_PUBLIC_APP_URL` (if set) -> `VERCEL_URL` (prepend `https://` when host-only) -> throw only when both are missing in production.
+
 ### Stripe v20: Subscription period fields moved to items
 Stripe Node SDK v20 types no longer expose `Subscription.current_period_end` / `current_period_start`. If you need a "current period end" timestamp (for example for entitlement UI), use `subscription.items.data[].current_period_end` (take the max when multiple items exist).
 
