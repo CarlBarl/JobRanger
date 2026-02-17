@@ -1,9 +1,13 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { X, Plus, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSkillsEditor } from '@/components/dashboard/hooks/useSkillsEditor'
+import { BatchSkillsButton } from '@/components/dashboard/BatchSkillsButton'
+import { BatchResultsModal } from '@/components/dashboard/BatchResultsModal'
+import { useBatchSkillsRegeneration } from '@/components/dashboard/hooks/useBatchSkillsRegeneration'
 
 interface SkillsEditorProps {
   skills: string[]
@@ -19,6 +23,7 @@ export function SkillsEditor({
   className,
 }: SkillsEditorProps) {
   const t = useTranslations('dashboard')
+  const router = useRouter()
   const {
     skills,
     newSkill,
@@ -33,9 +38,17 @@ export function SkillsEditor({
     handleInputKeyDown,
   } = useSkillsEditor({ initialSkills, documentId, onSkillsChange })
 
+  const {
+    batchModalOpen,
+    setBatchModalOpen,
+    batchLoading,
+    batchResults,
+    handleBatchRegenerate,
+  } = useBatchSkillsRegeneration()
+
   return (
     <div className={cn('card-elevated rounded-xl border bg-card p-5', className)}>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h2 className="text-[13px] font-medium text-foreground/70">{t('skills.title')}</h2>
         <div className="flex items-center gap-3">
           {isSaving ? (
@@ -138,7 +151,22 @@ export function SkillsEditor({
             </button>
           )}
         </div>
+
+        {documentId ? (
+          <div className="mt-3 flex justify-end">
+            <BatchSkillsButton onTrigger={handleBatchRegenerate} loading={batchLoading} disabled={isSaving} />
+          </div>
+        ) : null}
       </div>
+
+      <BatchResultsModal
+        open={batchModalOpen}
+        onClose={() => {
+          setBatchModalOpen(false)
+          router.refresh()
+        }}
+        results={batchResults}
+      />
     </div>
   )
 }

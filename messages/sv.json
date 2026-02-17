@@ -106,6 +106,12 @@
     "quickLinkCvStudio": "CV-studio",
     "quickLinkLetters": "Brev",
     "quickLinkSettings": "Inställningar",
+    "upgradeCard": {
+      "badge": "Gratiskonto",
+      "included": "1 personligt brev/månad, 3 kompetensextraktioner.",
+      "valueProp": "Pro ger 200 personliga brev/månad, CV Studio AI-feedback och mer.",
+      "cta": "Uppgradera till Pro"
+    },
     "recentSavedJobs": "Sparade jobb",
     "viewAllJobs": "Visa alla jobb",
     "noSavedJobsYet": "Inga sparade jobb ännu",
@@ -452,11 +458,12 @@
       "guidanceLabel": "Valfria instruktioner för ditt personliga brev (kan lämnas tomt)",
       "guidancePlaceholder": "Exempel: Håll tonen kort i det personliga brevet, lyft relevant erfarenhet och matcha annonsens krav.",
       "guidanceHelp": "Du behöver inte skriva något. Om du gör det används det bara i denna generering av ditt personliga brev.",
-      "quotaExceededTitle": "Månadens brevgräns är nådd",
+      "quotaExceededTitle": "Månadsgränsen är nådd",
       "quotaUsage": "Använt {used}/{limit} brev den här månaden.",
       "quotaResetAt": "Nollställs {date}.",
       "quotaResetUnknown": "nästa månad",
-      "upgradeCta": "Uppgradera för fler brev"
+      "quotaValueProp": "Pro inkluderar 200 brev/månad.",
+      "upgradeCta": "Uppgradera till Pro"
     },
     "card": {
       "published": "Publicerad",
@@ -580,7 +587,9 @@
       "skillsFound": "{count} kompetenser hittade",
       "jobsSaved": "{count} jobb sparade",
       "searchJobs": "Sök efter jobb",
-      "goToDashboard": "Gå till dashboard"
+      "goToDashboard": "Gå till dashboard",
+      "freePlanNote": "Du har Free-planen — 1 personligt brev per månad ingår.",
+      "seeProPlans": "Se Pro-planer"
     }
   },
   "cvStudio": {
@@ -609,8 +618,9 @@
     "directivesLabel": "Valfri riktning",
     "directivesPlaceholder": "Exempel: Prioritera logistik, kundkommunikation och mätbar effekt.",
     "directivesHint": "Du kan lämna detta tomt. Valda jobb är också frivilligt.",
-    "lockTitle": "PRO-funktion",
-    "lockDescription": "FREE-användare kan visa sidan men CV-feedback och AI-redigeringar kräver PRO.",
+    "lockTitle": "Pro-funktion",
+    "lockDescription": "AI-feedback och automatiska CV-redigeringar ingår i Pro.",
+    "upgradeCta": "Uppgradera till Pro",
     "generateFeedback": "Generera feedback",
     "generatingFeedback": "Genererar feedback...",
     "applyEdits": "Tillämpa AI-redigeringar",
@@ -694,7 +704,17 @@
     "billingCountrySaveFailed": "Kunde inte uppdatera land för betalning.",
     "billingManageSubscription": "Hantera abonnemang",
     "guidesTitle": "Guider",
-    "guidesDescription": "Visa hela produktguiden eller onboarding igen när du behöver en repetition."
+    "guidesDescription": "Visa hela produktguiden eller onboarding igen när du behöver en repetition.",
+    "usageTitle": "Månatlig användning",
+    "usageDescription": "Din nuvarande AI-användning för den här faktureringsperioden.",
+    "usageResetAt": "Nollställs {date}.",
+    "usageCoverLetters": "Personliga brev",
+    "usageSkillsExtract": "Kompetensextraktion",
+    "usageSkillsBatch": "Batch-kompetensextraktion",
+    "usageCvFeedback": "CV-feedback",
+    "usageCvEdit": "CV-redigeringar",
+    "usageProNote": "Pro inkluderar högre gränser.",
+    "usageSeeProPlans": "Se Pro-planer"
   },
   "upload": {
     "dropCV": "Klicka för att ladda upp CV (PDF, DOCX eller TXT)",

@@ -2,15 +2,11 @@
 
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { DocumentPreviewDialog } from '@/components/dashboard/DocumentPreviewDialog'
 import { UploadDialog } from '@/components/dashboard/UploadDialog'
-import { BatchSkillsButton } from '@/components/dashboard/BatchSkillsButton'
-import { BatchResultsModal } from '@/components/dashboard/BatchResultsModal'
 import { CvDocumentCard } from '@/components/dashboard/document-cards/CvDocumentCard'
 import { PersonalLetterCard } from '@/components/dashboard/document-cards/PersonalLetterCard'
-import { useBatchSkillsRegeneration } from '@/components/dashboard/hooks/useBatchSkillsRegeneration'
 
 interface DocumentData {
   id: string
@@ -34,19 +30,10 @@ export function DashboardClient({
   personalLetterUploadComponent,
 }: DashboardClientProps) {
   const t = useTranslations('dashboard')
-  const router = useRouter()
   const [cvDialogOpen, setCvDialogOpen] = useState(false)
   const [letterDialogOpen, setLetterDialogOpen] = useState(false)
   const [cvUploadDialogOpen, setCvUploadDialogOpen] = useState(false)
   const [letterUploadDialogOpen, setLetterUploadDialogOpen] = useState(false)
-
-  const {
-    batchModalOpen,
-    setBatchModalOpen,
-    batchLoading,
-    batchResults,
-    handleBatchRegenerate,
-  } = useBatchSkillsRegeneration()
 
   return (
     <>
@@ -75,12 +62,6 @@ export function DashboardClient({
           onOpenUpload={() => setLetterUploadDialogOpen(true)}
         />
       </div>
-
-      {cvDocument ? (
-        <div className="mt-3 flex justify-end">
-          <BatchSkillsButton onTrigger={handleBatchRegenerate} loading={batchLoading} />
-        </div>
-      ) : null}
 
       {cvDocument ? (
         <DocumentPreviewDialog
@@ -115,14 +96,6 @@ export function DashboardClient({
         open={letterUploadDialogOpen}
         onOpenChange={setLetterUploadDialogOpen}
         documentType="personal_letter"
-      />
-      <BatchResultsModal
-        open={batchModalOpen}
-        onClose={() => {
-          setBatchModalOpen(false)
-          router.refresh()
-        }}
-        results={batchResults}
       />
     </>
   )
