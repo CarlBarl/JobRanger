@@ -26,8 +26,13 @@ export async function DashboardStatsSection({ userId, userName, userEmail, userT
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-lg font-semibold tracking-[-0.02em] text-foreground sm:text-xl">
-            {userName || userEmail}
+          <h1 className="flex items-center gap-2 text-lg font-semibold tracking-[-0.02em] text-foreground sm:text-xl">
+            <span>{userName || userEmail}</span>
+            {userTier === 'PRO' ? (
+              <span className="inline-flex rounded-full border border-primary/30 bg-primary/[0.08] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                PRO
+              </span>
+            ) : null}
           </h1>
           {userName && (
             <p className="mt-0.5 text-[13px] text-muted-foreground/60">{userEmail}</p>
