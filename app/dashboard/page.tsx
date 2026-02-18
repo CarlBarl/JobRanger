@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getOrCreateUser } from '@/lib/auth'
 import { DebugChat } from '@/components/dashboard/DebugChat'
 import { GEMINI_MODEL } from '@/lib/services/gemini'
+import { getProOnboardingProgress } from '@/lib/pro-onboarding'
 
 const DEBUG_EMAIL = process.env.DEBUG_EMAIL
 
@@ -36,6 +37,17 @@ export default async function DashboardPage() {
     dashboardGuideCompletedAt: user.dashboardGuideCompletedAt?.toISOString() ?? null,
     dashboardGuideDismissedAt: user.dashboardGuideDismissedAt?.toISOString() ?? null,
   }
+  const proOnboardingProgress = await getProOnboardingProgress(
+    {
+      id: user.id,
+      tier: user.tier,
+      proActivatedAt: user.proActivatedAt,
+      proOnboardingDismissedAt: user.proOnboardingDismissedAt,
+      proOnboardingCompletedAt: user.proOnboardingCompletedAt,
+      proOnboardingCvStudioVisitedAt: user.proOnboardingCvStudioVisitedAt,
+    },
+    { syncCompletion: true }
+  )
 
   return (
     <div className="min-h-screen bg-background">
@@ -48,6 +60,7 @@ export default async function DashboardPage() {
             userName={user.name}
             userEmail={user.email}
             userTier={user.tier}
+            proOnboardingProgress={proOnboardingProgress}
           />
         </Suspense>
 
