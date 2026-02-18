@@ -1,54 +1,30 @@
 import { z } from 'zod'
 import { NextResponse, type NextRequest } from 'next/server'
 import { UsageEventType } from '@/generated/prisma/client'
-import { createClient } from '@/lib/supabase/server'
-import { prisma } from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth'
-import { extractSkillsFromCV } from '@/lib/services/gemini'
-import { fetchSkillCatalog } from '@/lib/services/jobtech-enrichments'
-import { buildCatalogIndex, mapSkillsToCatalogWithIndex } from '@/lib/skills/catalog-map'
-import { DEFAULT_JOB_SKILL_CATALOG } from '@/lib/scoring'
+import { jsonBadRequest, jsonInternal, jsonNotFound, jsonSuccess } from '@/lib/api/errors'
+import { requireSupabaseUser, requireSupabaseUserWithEmail } from '@/lib/api/route-guards'
 import { enforceCsrfProtection } from '@/lib/security/csrf'
 import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { enforceMonthlyQuota, recordUsageEvent } from '@/lib/security/monthly-quota'
-
-const RequestSchema = z.object({
-  documentId: z.string().min(1),
-})
-
-const UpdateSkillsSchema = z.object({
-  documentId: z.string().min(1),
-  skills: z.array(z.string().trim().min(1).max(100)).max(100),
-})
+import { RequestSchema, UpdateSkillsSchema } from './_lib/schemas'
+import {
+  extractAndStoreSkills,
+  findDocumentSkillsForUser,
+  findLatestCvSkillsForUser,
+  updateDocumentSkills,
+} from './_lib/service'
 
 export async function POST(request: NextRequest) {
   const csrfError = enforceCsrfProtection(request)
   if (csrfError) return csrfError
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
-      },
-      { status: 401 }
-    )
+  const authResult = await requireSupabaseUserWithEmail()
+  if (authResult instanceof Response) {
+    return authResult
   }
 
-  if (!user.email) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: { code: 'BAD_REQUEST', message: 'Missing email for authenticated user' },
-      },
-      { status: 400 }
-    )
-  }
+  const { user, email } = authResult
 
   const extractLimit = await consumeRateLimit('skills-extract-user', user.id, 30, 60 * 60 * 1000)
   if (!extractLimit.allowed) {
@@ -58,7 +34,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const appUser = await getOrCreateUser(user.id, user.email)
+  const appUser = await getOrCreateUser(user.id, email)
   const monthlyQuotaError = await enforceMonthlyQuota({
     userId: appUser.id,
     userTier: appUser.tier,
@@ -73,47 +49,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { documentId } = RequestSchema.parse(body)
 
-    const document = await prisma.document.findFirst({
-      where: { id: documentId, userId: appUser.id, type: 'cv' },
-    })
-
-    if (!document) {
-      return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Document not found' } },
-        { status: 404 }
-      )
+    const result = await extractAndStoreSkills({ documentId, userId: appUser.id })
+    if (result.kind === 'not_found') {
+      return jsonNotFound('Document not found')
     }
-
-    if (!document.parsedContent) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: { code: 'BAD_REQUEST', message: 'Document has no parsed content' },
-        },
-        { status: 400 }
-      )
+    if (result.kind === 'missing_parsed_content') {
+      return jsonBadRequest('Document has no parsed content')
     }
-
-    const extractedSkills = await extractSkillsFromCV(document.parsedContent)
-
-    let catalog: string[] = []
-    try {
-      catalog = await fetchSkillCatalog()
-    } catch {
-      catalog = []
-    }
-
-    if (catalog.length === 0) {
-      catalog = Array.from(DEFAULT_JOB_SKILL_CATALOG)
-    }
-
-    const catalogIndex = buildCatalogIndex(catalog)
-    const { skillsToStore } = mapSkillsToCatalogWithIndex(extractedSkills, catalogIndex)
-
-    await prisma.document.update({
-      where: { id: documentId },
-      data: { skills: skillsToStore },
-    })
 
     try {
       await recordUsageEvent(appUser.id, UsageEventType.SKILLS_EXTRACT)
@@ -124,26 +66,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ success: true, data: { skills: skillsToStore } })
+    return jsonSuccess({ skills: result.skills })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: { code: 'BAD_REQUEST', message: error.issues[0]?.message ?? 'Invalid body' },
-        },
-        { status: 400 }
-      )
+      return jsonBadRequest(error.issues[0]?.message ?? 'Invalid body')
     }
 
     console.error('Skills extraction error:', error instanceof Error ? error.message : error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: { code: 'INTERNAL_ERROR', message: 'Failed to extract skills' },
-      },
-      { status: 500 }
-    )
+    return jsonInternal('Failed to extract skills')
   }
 }
 
@@ -152,20 +82,11 @@ export async function PATCH(request: NextRequest) {
   const csrfError = enforceCsrfProtection(request)
   if (csrfError) return csrfError
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
-      },
-      { status: 401 }
-    )
+  const authResult = await requireSupabaseUser()
+  if (authResult instanceof Response) {
+    return authResult
   }
+  const { user } = authResult
 
   const updateLimit = await consumeRateLimit('skills-update-user', user.id, 120, 60 * 60 * 1000)
   if (!updateLimit.allowed) {
@@ -179,97 +100,62 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json()
     const { documentId, skills } = UpdateSkillsSchema.parse(body)
 
-    const document = await prisma.document.findFirst({
-      where: { id: documentId, userId: user.id, type: 'cv' },
+    const didUpdate = await updateDocumentSkills({
+      documentId,
+      userId: user.id,
+      skills,
     })
-
-    if (!document) {
-      return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Document not found' } },
-        { status: 404 }
-      )
+    if (!didUpdate) {
+      return jsonNotFound('Document not found')
     }
 
-    await prisma.document.update({
-      where: { id: documentId },
-      data: { skills },
-    })
-
-    return NextResponse.json({ success: true, data: { skills } })
+    return jsonSuccess({ skills })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: { code: 'BAD_REQUEST', message: error.issues[0]?.message ?? 'Invalid body' },
-        },
-        { status: 400 }
-      )
+      return jsonBadRequest(error.issues[0]?.message ?? 'Invalid body')
     }
 
     console.error('Skills update error:', error instanceof Error ? error.message : error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: { code: 'INTERNAL_ERROR', message: 'Failed to update skills' },
-      },
-      { status: 500 }
-    )
+    return jsonInternal('Failed to update skills')
   }
 }
 
 // GET: Get skills for a document
 export async function GET(request: NextRequest) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
-      },
-      { status: 401 }
-    )
+  const authResult = await requireSupabaseUser()
+  if (authResult instanceof Response) {
+    return authResult
   }
+  const { user } = authResult
 
   const { searchParams } = new URL(request.url)
   const documentId = searchParams.get('documentId')
 
   if (!documentId) {
     // Return all CV skills for the user
-    const cvDocument = await prisma.document.findFirst({
-      where: { userId: user.id, type: 'cv' },
-      orderBy: { createdAt: 'desc' },
-      select: { id: true, skills: true },
-    })
+    const cvDocument = await findLatestCvSkillsForUser(user.id)
 
     if (!cvDocument) {
-      return NextResponse.json({ success: true, data: { skills: [], documentId: null } })
+      return jsonSuccess({ skills: [], documentId: null })
     }
 
-    return NextResponse.json({
-      success: true,
-      data: { skills: cvDocument.skills || [], documentId: cvDocument.id },
+    return jsonSuccess({
+      skills: cvDocument.skills,
+      documentId: cvDocument.documentId,
     })
   }
 
-  const document = await prisma.document.findFirst({
-    where: { id: documentId, userId: user.id },
-    select: { id: true, skills: true },
+  const document = await findDocumentSkillsForUser({
+    documentId,
+    userId: user.id,
   })
 
   if (!document) {
-    return NextResponse.json(
-      { success: false, error: { code: 'NOT_FOUND', message: 'Document not found' } },
-      { status: 404 }
-    )
+    return jsonNotFound('Document not found')
   }
 
-  return NextResponse.json({
-    success: true,
-    data: { skills: document.skills || [], documentId: document.id },
+  return jsonSuccess({
+    skills: document.skills,
+    documentId: document.documentId,
   })
 }

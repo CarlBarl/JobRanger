@@ -87,6 +87,9 @@ When making an entire card clickable but keeping nested buttons functional, use 
 ### SavedJob Stores Only References
 The `SavedJob` model intentionally stores only `afJobId` (not full job data) to keep the database lightweight and always show fresh data from the AF API. Trade-off: jobs that are delisted become unavailable.
 
+### Prisma JSON Columns Need Runtime Narrowing
+Fields like `Document.skills` are stored as JSON and can be typed as `Prisma.JsonValue` (not `string[]`) in server code. When a service/API contract expects `string[]`, normalize with an array-of-strings guard before returning typed data.
+
 ### Supabase RLS Policies
 Row Level Security policies must be applied manually via SQL after `prisma db push`. Files: `prisma/rls-policies.sql` and `prisma/storage-rls-policies.sql`.
 When adding new app tables (for example quota tracking like `UsageEvent`), update `prisma/rls-policies.sql` immediately; otherwise Supabase client-side access can be unintentionally unrestricted.
