@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { CvStudioMiniGuide } from '@/components/cv-studio/CvStudioMiniGuide'
@@ -32,6 +33,24 @@ export function CvStudioClient({
     t,
     onRefresh: () => router.refresh(),
   })
+
+  useEffect(() => {
+    if (userTier !== 'PRO') return
+
+    const markVisited = async () => {
+      try {
+        await fetch('/api/user/guides', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ action: 'markProOnboardingCvStudioVisited' }),
+        })
+      } catch {
+        // Best-effort analytics/state update.
+      }
+    }
+
+    void markVisited()
+  }, [userTier])
 
   return (
     <div className="space-y-5">

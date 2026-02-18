@@ -3,17 +3,26 @@ import { getTranslations } from 'next-intl/server'
 import { UserTier } from '@/generated/prisma/client'
 import { getSavedJobsCount, getLettersCount } from '@/lib/data/dashboard-loaders'
 import { Briefcase, FileText, Settings, Sparkles, ArrowRight } from 'lucide-react'
+import type { ProOnboardingProgress } from '@/lib/pro-onboarding'
 import { DashboardNameEditor } from './DashboardNameEditor'
 import { DismissibleUpgradeCard } from './DismissibleUpgradeCard'
+import { DismissibleProWelcomeCard } from './DismissibleProWelcomeCard'
 
 interface DashboardStatsSectionProps {
   userId: string
   userName: string | null
   userEmail: string
   userTier: UserTier
+  proOnboardingProgress: ProOnboardingProgress
 }
 
-export async function DashboardStatsSection({ userId, userName, userEmail, userTier }: DashboardStatsSectionProps) {
+export async function DashboardStatsSection({
+  userId,
+  userName,
+  userEmail,
+  userTier,
+  proOnboardingProgress,
+}: DashboardStatsSectionProps) {
   const t = await getTranslations('dashboard')
   const [savedJobsCount, lettersCount] = await Promise.all([
     getSavedJobsCount(userId),
@@ -114,6 +123,93 @@ export async function DashboardStatsSection({ userId, userName, userEmail, userT
           </div>
         </DismissibleUpgradeCard>
       )}
+
+      {userTier === 'PRO' &&
+        proOnboardingProgress.isEligible &&
+        !proOnboardingProgress.isCompleted && (
+          <DismissibleProWelcomeCard
+            dismissLabel={t('proWelcome.dismiss')}
+            initialDismissed={Boolean(proOnboardingProgress.dismissedAt)}
+          >
+            <div className="flex flex-wrap items-center gap-4 p-4 pr-20 sm:flex-nowrap sm:gap-5 sm:p-5 sm:pr-20">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100/80">
+                <Sparkles className="h-[18px] w-[18px] text-emerald-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-emerald-700/80">
+                  {t('proWelcome.badge')}
+                </p>
+                <p className="mt-1 text-[13px] font-medium text-foreground">
+                  {t('proWelcome.title')}
+                </p>
+                <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
+                  {t('proWelcome.progress', {
+                    completed: proOnboardingProgress.completedSteps,
+                    total: proOnboardingProgress.totalSteps,
+                  })}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span
+                    className={
+                      proOnboardingProgress.steps.visitCvStudio
+                        ? 'inline-flex items-center rounded-full border border-emerald-300/70 bg-emerald-100/70 px-2 py-0.5 text-[11px] font-medium text-emerald-700'
+                        : 'inline-flex items-center rounded-full border border-border/70 bg-card px-2 py-0.5 text-[11px] font-medium text-muted-foreground'
+                    }
+                  >
+                    {t('proWelcome.stepVisitCvStudio')}
+                  </span>
+                  <span
+                    className={
+                      proOnboardingProgress.steps.useCvAi
+                        ? 'inline-flex items-center rounded-full border border-emerald-300/70 bg-emerald-100/70 px-2 py-0.5 text-[11px] font-medium text-emerald-700'
+                        : 'inline-flex items-center rounded-full border border-border/70 bg-card px-2 py-0.5 text-[11px] font-medium text-muted-foreground'
+                    }
+                  >
+                    {t('proWelcome.stepUseCvAi')}
+                  </span>
+                  <span
+                    className={
+                      proOnboardingProgress.steps.generateLetter
+                        ? 'inline-flex items-center rounded-full border border-emerald-300/70 bg-emerald-100/70 px-2 py-0.5 text-[11px] font-medium text-emerald-700'
+                        : 'inline-flex items-center rounded-full border border-border/70 bg-card px-2 py-0.5 text-[11px] font-medium text-muted-foreground'
+                    }
+                  >
+                    {t('proWelcome.stepGenerateLetter')}
+                  </span>
+                </div>
+              </div>
+              <div className="flex shrink-0 flex-col gap-2">
+                <Link
+                  href={proOnboardingProgress.nextHref}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-4 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700"
+                >
+                  {t('proWelcome.continueCta')}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+                <div className="flex items-center gap-1.5">
+                  <Link
+                    href="/cv-studio"
+                    className="inline-flex h-8 items-center rounded-lg border border-border/70 bg-card px-2.5 text-[12px] font-medium text-foreground transition-colors hover:bg-muted/40"
+                  >
+                    {t('quickLinkCvStudio')}
+                  </Link>
+                  <Link
+                    href="/jobs"
+                    className="inline-flex h-8 items-center rounded-lg border border-border/70 bg-card px-2.5 text-[12px] font-medium text-foreground transition-colors hover:bg-muted/40"
+                  >
+                    {t('proWelcome.quickJobs')}
+                  </Link>
+                  <Link
+                    href="/letters"
+                    className="inline-flex h-8 items-center rounded-lg border border-border/70 bg-card px-2.5 text-[12px] font-medium text-foreground transition-colors hover:bg-muted/40"
+                  >
+                    {t('proWelcome.quickLetters')}
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </DismissibleProWelcomeCard>
+        )}
     </div>
   )
 }

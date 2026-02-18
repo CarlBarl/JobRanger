@@ -23,6 +23,10 @@ model User {
   dashboardGuideBonusGenerateLetterUsedAt DateTime?
   onboardingGuideResetAt    DateTime?
   onboardingGuideLastCompletedAt DateTime?
+  proActivatedAt DateTime?
+  proOnboardingDismissedAt DateTime?
+  proOnboardingCompletedAt DateTime?
+  proOnboardingCvStudioVisitedAt DateTime?
   letterGuidanceDefault     String?  @db.Text
   createdAt           DateTime @default(now())
 
