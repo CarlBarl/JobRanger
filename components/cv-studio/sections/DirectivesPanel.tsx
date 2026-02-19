@@ -37,6 +37,16 @@ export function DirectivesPanel({
       />
       <p className="mt-1 text-xs text-muted-foreground">{t('directivesHint')}</p>
 
+      {isPro ? (
+        <div className="mt-3 rounded-xl border border-emerald-200/70 bg-emerald-50/50 px-4 py-3">
+          <p className="text-[13px] font-semibold text-foreground">{t('proUnlockedTitle')}</p>
+          <ul className="mt-1 space-y-1 text-[13px] text-muted-foreground">
+            <li>{t('proUnlockedFeedback')}</li>
+            <li>{t('proUnlockedEdits')}</li>
+          </ul>
+        </div>
+      ) : null}
+
       {!isPro ? (
         <div className="mt-3 flex items-start gap-3 rounded-xl border border-amber-200/60 bg-gradient-to-r from-amber-50/60 to-transparent px-4 py-3">
           <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
@@ -72,6 +82,11 @@ export function DirectivesPanel({
         >
           {isFeedbackLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           {isFeedbackLoading ? t('generatingFeedback') : t('generateFeedback')}
+          {!isPro ? (
+            <span className="rounded-full border border-amber-300/70 bg-amber-100/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+              {t('proFeatureBadge')}
+            </span>
+          ) : null}
         </Button>
 
         <Button
@@ -83,6 +98,11 @@ export function DirectivesPanel({
         >
           {isEditLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           {isEditLoading ? t('applyingEdits') : t('applyEdits')}
+          {!isPro ? (
+            <span className="rounded-full border border-amber-300/70 bg-amber-100/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+              {t('proFeatureBadge')}
+            </span>
+          ) : null}
         </Button>
       </div>
     </section>
