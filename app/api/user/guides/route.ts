@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { getProOnboardingProgress } from '@/lib/pro-onboarding'
 import { enforceCsrfProtection } from '@/lib/security/csrf'
 import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
@@ -14,28 +15,45 @@ const UpdateGuidesSchema = z.object({
     'restartDashboardGuide',
     'restartOnboardingGuide',
     'markOnboardingGuideCompleted',
+    'markProOnboardingCvStudioVisited',
+    'markProOnboardingDismissed',
+    'markProOnboardingCompleted',
   ]),
 })
 
 type GuideStateRecord = {
+  id: string
+  tier: 'FREE' | 'PRO'
   dashboardGuidePromptedAt: Date | null
   dashboardGuideCompletedAt: Date | null
   dashboardGuideDismissedAt: Date | null
   onboardingGuideResetAt: Date | null
   onboardingGuideLastCompletedAt: Date | null
   onboardingCompleted: boolean
+  proActivatedAt: Date | null
+  proOnboardingDismissedAt: Date | null
+  proOnboardingCompletedAt: Date | null
+  proOnboardingCvStudioVisitedAt: Date | null
 }
 
 const guideStateSelect = {
+  id: true,
+  tier: true,
   dashboardGuidePromptedAt: true,
   dashboardGuideCompletedAt: true,
   dashboardGuideDismissedAt: true,
   onboardingGuideResetAt: true,
   onboardingGuideLastCompletedAt: true,
   onboardingCompleted: true,
+  proActivatedAt: true,
+  proOnboardingDismissedAt: true,
+  proOnboardingCompletedAt: true,
+  proOnboardingCvStudioVisitedAt: true,
 } as const
 
-function serializeGuideState(record: GuideStateRecord) {
+async function serializeGuideState(record: GuideStateRecord) {
+  const proOnboarding = await getProOnboardingProgress(record, { syncCompletion: true })
+
   return {
     dashboardGuidePromptedAt: record.dashboardGuidePromptedAt?.toISOString() ?? null,
     dashboardGuideCompletedAt: record.dashboardGuideCompletedAt?.toISOString() ?? null,
@@ -43,6 +61,20 @@ function serializeGuideState(record: GuideStateRecord) {
     onboardingGuideResetAt: record.onboardingGuideResetAt?.toISOString() ?? null,
     onboardingGuideLastCompletedAt: record.onboardingGuideLastCompletedAt?.toISOString() ?? null,
     onboardingCompleted: record.onboardingCompleted,
+    proActivatedAt: record.proActivatedAt?.toISOString() ?? null,
+    proOnboardingDismissedAt: record.proOnboardingDismissedAt?.toISOString() ?? null,
+    proOnboardingCompletedAt: proOnboarding.completedAt,
+    proOnboardingCvStudioVisitedAt: record.proOnboardingCvStudioVisitedAt?.toISOString() ?? null,
+    proOnboarding: {
+      isEligible: proOnboarding.isEligible,
+      isCompleted: proOnboarding.isCompleted,
+      isDismissed: !!proOnboarding.dismissedAt,
+      completedSteps: proOnboarding.completedSteps,
+      totalSteps: proOnboarding.totalSteps,
+      nextStepId: proOnboarding.nextStepId,
+      nextHref: proOnboarding.nextHref,
+      steps: proOnboarding.steps,
+    },
   }
 }
 
@@ -91,7 +123,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ success: true, data: serializeGuideState(user) })
+    return NextResponse.json({ success: true, data: await serializeGuideState(user) })
   } catch (error) {
     console.error('Guide state read error:', error instanceof Error ? error.message : error)
     return NextResponse.json(
@@ -170,6 +202,20 @@ export async function POST(request: NextRequest) {
             onboardingGuideLastCompletedAt: now,
             onboardingGuideResetAt: null,
           }
+        case 'markProOnboardingCvStudioVisited':
+          return {
+            proOnboardingCvStudioVisitedAt: now,
+            proOnboardingDismissedAt: null,
+          }
+        case 'markProOnboardingDismissed':
+          return {
+            proOnboardingDismissedAt: now,
+          }
+        case 'markProOnboardingCompleted':
+          return {
+            proOnboardingCompletedAt: now,
+            proOnboardingDismissedAt: null,
+          }
       }
     })()
 
@@ -179,7 +225,7 @@ export async function POST(request: NextRequest) {
       select: guideStateSelect,
     })
 
-    return NextResponse.json({ success: true, data: serializeGuideState(user) })
+    return NextResponse.json({ success: true, data: await serializeGuideState(user) })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -70,6 +70,9 @@ Prisma returns `Date` objects. When passing to client components, serialize with
 ### Keep Mobile Top Navigation Minimal
 Authenticated top nav works best with only primary destinations (Dashboard + Jobs). Move secondary controls (language, feature shortcuts, guide replay) into dashboard/settings surfaces to avoid overflow and tap-density issues on small screens.
 
+### Pro Activation UX Works Best as Step Tracking (Not Just Success Copy)
+For post-checkout Pro onboarding, static success messaging is not enough. Track activation progress against concrete first-value actions (visit CV Studio, run CV AI, generate first letter) and surface the same progress in both `/billing/success` and dashboard to reduce drop-off.
+
 ### Card Elevation Over Flat Borders
 Subtle box-shadows (`0 1px 2px` range) make cards feel more intentional than border-only cards. Combined with a hover shadow increase, this creates a tactile feel without being decorative.
 

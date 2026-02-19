@@ -31,6 +31,10 @@ export async function syncSubscription({
   cancelAtPeriodEnd: boolean
 }) {
   const tier = isProStatus(status) ? UserTier.PRO : UserTier.FREE
+  const previousUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { tier: true },
+  })
 
   await prisma.subscription.upsert({
     where: {
@@ -56,8 +60,25 @@ export async function syncSubscription({
     },
   })
 
+  const userUpdateData: {
+    tier: UserTier
+    proActivatedAt?: Date
+    proOnboardingDismissedAt?: null
+    proOnboardingCompletedAt?: null
+    proOnboardingCvStudioVisitedAt?: null
+  } = {
+    tier,
+  }
+
+  if (tier === UserTier.PRO && previousUser?.tier !== UserTier.PRO) {
+    userUpdateData.proActivatedAt = new Date()
+    userUpdateData.proOnboardingDismissedAt = null
+    userUpdateData.proOnboardingCompletedAt = null
+    userUpdateData.proOnboardingCvStudioVisitedAt = null
+  }
+
   await prisma.user.update({
     where: { id: userId },
-    data: { tier },
+    data: userUpdateData,
   })
 }

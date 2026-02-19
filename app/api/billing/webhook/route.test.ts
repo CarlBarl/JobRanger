@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   billingEventUpdate: vi.fn(),
   subscriptionFindFirst: vi.fn(),
   subscriptionUpsert: vi.fn(),
+  userFindUnique: vi.fn(),
   userUpdate: vi.fn(),
 }))
 
@@ -46,6 +47,7 @@ vi.mock('@/lib/prisma', () => ({
       upsert: mocks.subscriptionUpsert,
     },
     user: {
+      findUnique: mocks.userFindUnique,
       update: mocks.userUpdate,
     },
   },
@@ -59,6 +61,7 @@ describe('/api/billing/webhook', () => {
     mocks.billingEventCreate.mockResolvedValue({})
     mocks.billingEventUpdate.mockResolvedValue({})
     mocks.subscriptionUpsert.mockResolvedValue({})
+    mocks.userFindUnique.mockResolvedValue({ tier: 'FREE' })
     mocks.userUpdate.mockResolvedValue({})
   })
 
@@ -121,10 +124,18 @@ describe('/api/billing/webhook', () => {
       })
     )
 
-    expect(mocks.userUpdate).toHaveBeenCalledWith({
-      where: { id: 'u1' },
-      data: { tier: 'PRO' },
-    })
+    expect(mocks.userUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'u1' },
+        data: expect.objectContaining({
+          tier: 'PRO',
+          proActivatedAt: expect.any(Date),
+          proOnboardingDismissedAt: null,
+          proOnboardingCompletedAt: null,
+          proOnboardingCvStudioVisitedAt: null,
+        }),
+      })
+    )
   })
 
   it('cancels and downgrades when checkout completes with non-SE country', async () => {
@@ -171,10 +182,12 @@ describe('/api/billing/webhook', () => {
     expect(response.status).toBe(200)
 
     expect(mocks.stripeCancelSubscription).toHaveBeenCalledWith('sub_2')
-    expect(mocks.userUpdate).toHaveBeenCalledWith({
-      where: { id: 'u2' },
-      data: { tier: 'FREE' },
-    })
+    expect(mocks.userUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'u2' },
+        data: expect.objectContaining({ tier: 'FREE' }),
+      })
+    )
   })
 
   it('cancels and downgrades when checkout uses disallowed price', async () => {
@@ -221,9 +234,11 @@ describe('/api/billing/webhook', () => {
     expect(response.status).toBe(200)
 
     expect(mocks.stripeCancelSubscription).toHaveBeenCalledWith('sub_3')
-    expect(mocks.userUpdate).toHaveBeenCalledWith({
-      where: { id: 'u3' },
-      data: { tier: 'FREE' },
-    })
+    expect(mocks.userUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'u3' },
+        data: expect.objectContaining({ tier: 'FREE' }),
+      })
+    )
   })
 })
