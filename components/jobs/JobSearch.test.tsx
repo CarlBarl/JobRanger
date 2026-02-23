@@ -1277,6 +1277,163 @@ describe('JobSearch', () => {
     })
   })
 
+  it('filters out expired jobs when deadline filter is open', async () => {
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-01T12:00:00.000Z'))
+    try {
+      const user = userEvent.setup()
+
+      vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+        const url = typeof input === 'string' ? input : input.toString()
+
+        if (url === '/api/documents') {
+          return Promise.resolve(
+            jsonResponse({
+              success: true,
+              data: [{ id: 'doc-1', type: 'cv', skills: [] }],
+            })
+          )
+        }
+
+        if (url.startsWith('/api/skills/catalog')) {
+          return Promise.resolve(jsonResponse({ success: true, data: [] }))
+        }
+
+        if (url === '/api/jobs/save') {
+          return Promise.resolve(jsonResponse({ success: true, data: [] }))
+        }
+
+        if (url.startsWith('/api/jobs?')) {
+          const query = new URL(url, 'http://localhost').searchParams.get('q') ?? ''
+          if (query === 'developer') {
+            return Promise.resolve(
+              jsonResponse({
+                success: true,
+                data: {
+                  hits: [
+                    {
+                      id: 'job-expired',
+                      headline: 'Expired Developer',
+                      publication_date: '2026-01-20T10:00:00.000Z',
+                      application_deadline: '2026-01-25T10:00:00.000Z',
+                      workplace_address: { region: 'Stockholm' },
+                    },
+                    {
+                      id: 'job-open',
+                      headline: 'Open Developer',
+                      publication_date: '2026-01-20T10:00:00.000Z',
+                      application_deadline: '2026-03-01T10:00:00.000Z',
+                      workplace_address: { region: 'Stockholm' },
+                    },
+                  ],
+                },
+              })
+            )
+          }
+        }
+
+        return Promise.reject(new Error(`Unexpected fetch: ${url}`))
+      })
+
+      render(<JobSearch />)
+
+      const searchInput = await screen.findByPlaceholderText(/search by job title/i)
+      await user.type(searchInput, 'developer')
+      await user.click(screen.getByRole('button', { name: /^search$/i }))
+
+      expect(await screen.findByRole('link', { name: /expired developer/i })).toBeInTheDocument()
+      expect(await screen.findByRole('link', { name: /open developer/i })).toBeInTheDocument()
+
+      await user.click(screen.getByRole('button', { name: /filters/i }))
+      await user.click(screen.getByRole('combobox', { name: /deadline/i }))
+      await user.click(await screen.findByRole('option', { name: /open \(not expired\)/i }))
+      await user.keyboard('{Escape}')
+
+      await waitFor(() => {
+        expect(screen.queryByRole('link', { name: /expired developer/i })).not.toBeInTheDocument()
+      })
+      expect(screen.getByRole('link', { name: /open developer/i })).toBeInTheDocument()
+    } finally {
+      nowSpy.mockRestore()
+    }
+  })
+
+  it('filters jobs by working hours type', async () => {
+    const user = userEvent.setup()
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+      const url = typeof input === 'string' ? input : input.toString()
+
+      if (url === '/api/documents') {
+        return Promise.resolve(
+          jsonResponse({
+            success: true,
+            data: [{ id: 'doc-1', type: 'cv', skills: [] }],
+          })
+        )
+      }
+
+      if (url.startsWith('/api/skills/catalog')) {
+        return Promise.resolve(jsonResponse({ success: true, data: [] }))
+      }
+
+      if (url === '/api/jobs/save') {
+        return Promise.resolve(jsonResponse({ success: true, data: [] }))
+      }
+
+      if (url.startsWith('/api/jobs?')) {
+        const query = new URL(url, 'http://localhost').searchParams.get('q') ?? ''
+        if (query === 'developer') {
+          return Promise.resolve(
+            jsonResponse({
+              success: true,
+              data: {
+                hits: [
+                  {
+                    id: 'job-full',
+                    headline: 'Full-time Developer',
+                    publication_date: '2026-01-20T10:00:00.000Z',
+                    application_deadline: '2026-03-01T10:00:00.000Z',
+                    working_hours_type: { label: 'Heltid' },
+                    workplace_address: { region: 'Stockholm' },
+                  },
+                  {
+                    id: 'job-part',
+                    headline: 'Part-time Developer',
+                    publication_date: '2026-01-20T10:00:00.000Z',
+                    application_deadline: '2026-03-01T10:00:00.000Z',
+                    working_hours_type: { label: 'Deltid' },
+                    workplace_address: { region: 'Stockholm' },
+                  },
+                ],
+              },
+            })
+          )
+        }
+      }
+
+      return Promise.reject(new Error(`Unexpected fetch: ${url}`))
+    })
+
+    render(<JobSearch />)
+
+    const searchInput = await screen.findByPlaceholderText(/search by job title/i)
+    await user.type(searchInput, 'developer')
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
+
+    expect(await screen.findByRole('link', { name: /full-time developer/i })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /part-time developer/i })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /filters/i }))
+    await user.click(screen.getByRole('combobox', { name: /working hours/i }))
+    await user.click(await screen.findByRole('option', { name: /full-time/i }))
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => {
+      expect(screen.queryByRole('link', { name: /part-time developer/i })).not.toBeInTheDocument()
+    })
+    expect(screen.getByRole('link', { name: /full-time developer/i })).toBeInTheDocument()
+  })
+
   it('aborts in-flight text search on unmount', async () => {
     const user = userEvent.setup()
     let requestAborted = false

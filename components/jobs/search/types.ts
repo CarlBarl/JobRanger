@@ -25,12 +25,18 @@ export type JobsSearchPhase = 'idle' | 'searching' | 'complete'
 
 export type JobsSortOrder = 'bestMatch' | 'newest'
 
+export type JobsDeadlineFilter = 'any' | 'open' | 'next7' | 'next30'
+
+export type JobsWorkingHoursFilter = 'any' | 'fullTime' | 'partTime'
+
 export type PersistedJobsSearchState = {
   v: 1
   tab: JobsSearchTab
   query: string
   region: string
   sortOrder: JobsSortOrder
+  deadlineFilter: JobsDeadlineFilter
+  workingHoursFilter: JobsWorkingHoursFilter
   skills: string[]
   selectedSkills: string[]
   skillsPanelOpen: boolean
@@ -56,6 +62,10 @@ export interface JobsSearchStateController {
   setQuery: SetState<string>
   sortOrder: JobsSortOrder
   setSortOrder: SetState<JobsSortOrder>
+  deadlineFilter: JobsDeadlineFilter
+  setDeadlineFilter: SetState<JobsDeadlineFilter>
+  workingHoursFilter: JobsWorkingHoursFilter
+  setWorkingHoursFilter: SetState<JobsWorkingHoursFilter>
   jobs: ScoredJob[]
   setJobs: SetState<ScoredJob[]>
   error: string | null

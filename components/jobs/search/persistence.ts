@@ -4,6 +4,7 @@ import {
 } from '@/components/jobs/search/constants'
 import {
   asBoolean,
+  asDeadlineFilter,
   asJobs,
   asNumber,
   asSearchSkillMatches,
@@ -11,6 +12,7 @@ import {
   asString,
   asStringArray,
   asTab,
+  asWorkingHoursFilter,
 } from '@/components/jobs/search/normalizers'
 import type { PersistedJobsSearchState } from '@/components/jobs/search/types'
 
@@ -42,6 +44,8 @@ export function restoreJobsSearchState(): PersistedJobsSearchState | null {
       query: asString(persisted.query),
       region: asString(persisted.region),
       sortOrder: asSortOrder(persisted.sortOrder),
+      deadlineFilter: asDeadlineFilter(persisted.deadlineFilter),
+      workingHoursFilter: asWorkingHoursFilter(persisted.workingHoursFilter),
       skills: asStringArray(persisted.skills),
       selectedSkills: asStringArray(persisted.selectedSkills),
       skillsPanelOpen: asBoolean(persisted.skillsPanelOpen, false),
