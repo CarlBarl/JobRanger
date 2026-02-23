@@ -4,6 +4,7 @@ import { render, screen, waitFor } from '@/lib/test-utils'
 import { SignInForm } from './SignInForm'
 
 const signInWithOtp = vi.fn()
+const signInWithOAuth = vi.fn()
 const push = vi.fn()
 const refresh = vi.fn()
 
@@ -11,6 +12,7 @@ vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
     auth: {
       signInWithOtp,
+      signInWithOAuth,
     },
   }),
 }))
@@ -179,5 +181,43 @@ describe('SignInForm', () => {
 
     const link = screen.getByRole('link', { name: /sign up/i })
     expect(link).toHaveAttribute('href', '/auth/signup')
+  })
+
+  describe('Google SSO', () => {
+    it('starts Google OAuth sign in with a callback redirect', async () => {
+      signInWithOAuth.mockResolvedValue({ data: { url: 'https://example.com' }, error: null })
+
+      const user = userEvent.setup()
+      render(<SignInForm />)
+
+      await user.click(screen.getByRole('button', { name: /continue with google/i }))
+
+      await waitFor(() => {
+        expect(signInWithOAuth).toHaveBeenCalledWith({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/dashboard')}`,
+          },
+        })
+      })
+    })
+
+    it('includes nextPath in the callback redirect', async () => {
+      signInWithOAuth.mockResolvedValue({ data: { url: 'https://example.com' }, error: null })
+
+      const user = userEvent.setup()
+      render(<SignInForm nextPath="/pricing?upgrade=1" />)
+
+      await user.click(screen.getByRole('button', { name: /continue with google/i }))
+
+      await waitFor(() => {
+        expect(signInWithOAuth).toHaveBeenCalledWith({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/pricing?upgrade=1')}`,
+          },
+        })
+      })
+    })
   })
 })

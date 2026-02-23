@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { GoogleOAuthButton } from '@/components/auth/signin/GoogleOAuthButton'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -98,6 +99,14 @@ export function SignUpForm() {
         <CardDescription>{t('signUpDescription')}</CardDescription>
       </CardHeader>
       <CardContent>
+        <GoogleOAuthButton />
+
+        <div className="my-5 flex items-center gap-3">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs text-muted-foreground">{t('or')}</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">{t('email')}</Label>

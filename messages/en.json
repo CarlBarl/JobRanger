@@ -44,6 +44,8 @@
     "signInTitle": "Sign in to JobbJägaren",
     "signInDescription": "Enter your email to receive a magic link",
     "signInDescriptionPassword": "Enter your email and password",
+    "continueWithGoogle": "Continue with Google",
+    "or": "or",
     "email": "Email",
     "emailPlaceholder": "you@example.com",
     "sendMagicLink": "Send magic link",
