@@ -29,6 +29,8 @@ export function JobSearch({ onFirstSearch }: JobSearchProps = {}) {
     setActiveTab,
     query,
     setQuery,
+    sortOrder,
+    setSortOrder,
     jobs,
     error,
     loading,
@@ -113,6 +115,11 @@ export function JobSearch({ onFirstSearch }: JobSearchProps = {}) {
       hasRelevanceSkills ? job.relevance?.matched ?? 0 : 0
 
     return [...withRelevance].sort((left, right) => {
+      if (sortOrder === 'newest') {
+        const dateDelta = sortByDateDesc(left.publication_date, right.publication_date)
+        if (dateDelta !== 0) return dateDelta
+      }
+
       const skillMatchDelta =
         getSearchSkillMatchCount(right) - getSearchSkillMatchCount(left)
       if (skillMatchDelta !== 0) return skillMatchDelta
@@ -134,7 +141,7 @@ export function JobSearch({ onFirstSearch }: JobSearchProps = {}) {
 
       return left.id.localeCompare(right.id)
     })
-  }, [jobs, query, searchSkillMatches, selectedRegion, selectedSkillSet])
+  }, [jobs, query, searchSkillMatches, selectedRegion, selectedSkillSet, sortOrder])
 
   const extractedSkillsByJob = useMemo(() => {
     return Object.fromEntries(
@@ -165,7 +172,7 @@ export function JobSearch({ onFirstSearch }: JobSearchProps = {}) {
   useEffect(() => {
     if (restoringRef.current) return
     setCurrentPage(1)
-  }, [itemsPerPage, selectedRegion, selectedSkillSet, restoringRef, setCurrentPage])
+  }, [itemsPerPage, selectedRegion, selectedSkillSet, sortOrder, restoringRef, setCurrentPage])
 
   useEffect(() => {
     const maxPage = Math.max(1, Math.ceil(scoredJobs.length / itemsPerPage))
@@ -214,6 +221,8 @@ export function JobSearch({ onFirstSearch }: JobSearchProps = {}) {
             onToggleSkillsPanel={() => setSkillsPanelOpen((previous) => !previous)}
             selectedChipSummary={selectedChipSummary}
             onOpenSkillsPanel={() => setSkillsPanelOpen(true)}
+            sortOrder={sortOrder}
+            onSortOrderChange={setSortOrder}
             skills={skills}
             selectedSkills={selectedSkills}
             onToggleSkill={toggleSkill}
