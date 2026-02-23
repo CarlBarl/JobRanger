@@ -21,6 +21,7 @@ import { normalizeSkillKey } from '@/lib/skills/normalize'
 export function useJobsSearchState(): JobsSearchStateController {
   const [activeTab, setActiveTab] = useState<JobsSearchTab>('search')
   const [query, setQuery] = useState('')
+  const [sortOrder, setSortOrder] = useState<PersistedJobsSearchState['sortOrder']>('bestMatch')
   const [jobs, setJobs] = useState<ScoredJob[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -68,6 +69,7 @@ export function useJobsSearchState(): JobsSearchStateController {
       setActiveTab(persisted.tab)
       setQuery(persisted.query)
       setSelectedRegion(persisted.region)
+      setSortOrder(persisted.sortOrder)
       setSkills(persisted.skills)
       setSelectedSkills(persisted.selectedSkills)
       setSkillsPanelOpen(persisted.skillsPanelOpen)
@@ -102,6 +104,7 @@ export function useJobsSearchState(): JobsSearchStateController {
       tab: activeTab,
       query,
       region: selectedRegion,
+      sortOrder,
       skills,
       selectedSkills,
       skillsPanelOpen,
@@ -131,6 +134,7 @@ export function useJobsSearchState(): JobsSearchStateController {
     itemsPerPage,
     jobs,
     query,
+    sortOrder,
     searchSkillMatches,
     selectedRegion,
     selectedSkills,
@@ -183,6 +187,8 @@ export function useJobsSearchState(): JobsSearchStateController {
     setActiveTab,
     query,
     setQuery,
+    sortOrder,
+    setSortOrder,
     jobs,
     setJobs,
     error,

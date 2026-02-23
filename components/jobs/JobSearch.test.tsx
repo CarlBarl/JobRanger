@@ -1179,6 +1179,104 @@ describe('JobSearch', () => {
     })
   })
 
+  it('can switch sorting to newest after searching', async () => {
+    const user = userEvent.setup()
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+      const url = typeof input === 'string' ? input : input.toString()
+
+      if (url === '/api/documents') {
+        return Promise.resolve(
+          jsonResponse({
+            success: true,
+            data: [{ id: 'doc-1', type: 'cv', skills: ['React', 'Node'] }],
+          })
+        )
+      }
+
+      if (url.startsWith('/api/skills/catalog')) {
+        return Promise.resolve(jsonResponse({ success: true, data: [] }))
+      }
+
+      if (url === '/api/jobs/save') {
+        return Promise.resolve(jsonResponse({ success: true, data: [] }))
+      }
+
+      if (url === '/api/jobs?q=React&limit=100') {
+        return Promise.resolve(
+          jsonResponse({
+            success: true,
+            data: {
+              hits: [
+                {
+                  id: 'job-old',
+                  headline: 'Older Better Match',
+                  publication_date: '2026-01-01T10:00:00.000Z',
+                  description: { text: 'React Node' },
+                  occupation: { label: 'Developer' },
+                  workplace_address: { region: 'Stockholm' },
+                },
+                {
+                  id: 'job-new',
+                  headline: 'Newer Worse Match',
+                  publication_date: '2026-01-30T10:00:00.000Z',
+                  description: { text: 'React' },
+                  occupation: { label: 'Developer' },
+                  workplace_address: { region: 'Stockholm' },
+                },
+              ],
+            },
+          })
+        )
+      }
+
+      if (url === '/api/jobs?q=Node&limit=100') {
+        return Promise.resolve(
+          jsonResponse({
+            success: true,
+            data: {
+              hits: [
+                {
+                  id: 'job-old',
+                  headline: 'Older Better Match',
+                  publication_date: '2026-01-01T10:00:00.000Z',
+                  description: { text: 'React Node' },
+                  occupation: { label: 'Developer' },
+                  workplace_address: { region: 'Stockholm' },
+                },
+              ],
+            },
+          })
+        )
+      }
+
+      return Promise.reject(new Error(`Unexpected fetch: ${url}`))
+    })
+
+    render(<JobSearch />)
+
+    await screen.findByText(/2\/2 skills selected/i)
+    await user.click(screen.getByRole('button', { name: /^search$/i }))
+
+    expect(await screen.findByRole('link', { name: /older better match/i })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /newer worse match/i })).toBeInTheDocument()
+
+    const beforeLinks = screen.getAllByRole('link', {
+      name: /Older Better Match|Newer Worse Match/i,
+    })
+    expect(beforeLinks[0]).toHaveTextContent('Older Better Match')
+
+    await user.click(screen.getByRole('combobox', { name: /sort/i }))
+    await user.click(await screen.findByRole('option', { name: /newest/i }))
+
+    await waitFor(() => {
+      const afterLinks = screen.getAllByRole('link', {
+        name: /Older Better Match|Newer Worse Match/i,
+      })
+      expect(afterLinks[0]).toHaveTextContent('Newer Worse Match')
+    })
+  })
+
   it('aborts in-flight text search on unmount', async () => {
     const user = userEvent.setup()
     let requestAborted = false

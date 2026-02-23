@@ -5,7 +5,15 @@ import { useTranslations } from 'next-intl'
 import { JobCard } from '@/components/jobs/JobCard'
 import { PaginationControls } from '@/components/jobs/results/PaginationControls'
 import { ResultSkillChips } from '@/components/jobs/results/ResultSkillChips'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import type { AFJobHit } from '@/lib/services/arbetsformedlingen'
+import type { JobsSortOrder } from '@/components/jobs/search/types'
 
 type ScoredJob = AFJobHit & {
   relevance?: { matched: number; total: number; score: number; matchedSkills: string[] }
@@ -24,6 +32,8 @@ interface SearchResultsProps {
   jobs: ScoredJob[]
   hasSearched: boolean
   loading: boolean
+  sortOrder: JobsSortOrder
+  onSortOrderChange: (value: JobsSortOrder) => void
   searchSkillMatches: Record<string, number>
   jobSkillsByJob: Record<string, string[]>
   matchedSkillsByJob: Record<string, string[]>
@@ -38,6 +48,8 @@ export function SearchResults({
   jobs,
   hasSearched,
   loading,
+  sortOrder,
+  onSortOrderChange,
   searchSkillMatches,
   jobSkillsByJob,
   matchedSkillsByJob,
@@ -92,11 +104,33 @@ export function SearchResults({
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       {hasSearched ? (
-        <p className="text-xs text-muted-foreground">
-          {pagination && pagination.totalPages > 1
-            ? t('pagination.showing', { from, to, total: pagination.totalItems })
-            : t('found', { count: pagination?.totalItems ?? jobs.length })}
-        </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground">
+            {pagination && pagination.totalPages > 1
+              ? t('pagination.showing', { from, to, total: pagination.totalItems })
+              : t('found', { count: pagination?.totalItems ?? jobs.length })}
+          </p>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{t('sortLabel')}</span>
+            <Select
+              value={sortOrder}
+              disabled={loading}
+              onValueChange={(value) => onSortOrderChange(value as JobsSortOrder)}
+            >
+              <SelectTrigger
+                aria-label={t('sortLabel')}
+                className="h-8 w-[220px] text-xs"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="bestMatch">{t('sort.bestMatch')}</SelectItem>
+                <SelectItem value="newest">{t('sort.newest')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       ) : (
         <p className="text-xs text-muted-foreground">{t('enterSearch')}</p>
       )}

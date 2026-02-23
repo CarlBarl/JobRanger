@@ -408,6 +408,11 @@
     "searchPlaceholderUnified": "Search by job title, skill, or keyword...",
     "search": "Search",
     "searching": "Searching...",
+    "sortLabel": "Sort",
+    "sort": {
+      "bestMatch": "Best match (skills)",
+      "newest": "Newest"
+    },
     "regionPlaceholder": "Region (optional)",
     "found": "Found {count} jobs",
     "searchStatus": {
