@@ -5,7 +5,12 @@ import { SkillSelector } from '@/components/jobs/SkillSelector'
 import { SearchResults } from '@/components/jobs/SearchResults'
 import { SearchStatusBar } from '@/components/jobs/SearchStatusBar'
 import { cn } from '@/lib/utils'
-import type { JobsSortOrder, ScoredJob } from '@/components/jobs/search/types'
+import type {
+  JobsDeadlineFilter,
+  JobsSortOrder,
+  JobsWorkingHoursFilter,
+  ScoredJob,
+} from '@/components/jobs/search/types'
 
 interface SearchTabPanelProps {
   labels: {
@@ -18,6 +23,10 @@ interface SearchTabPanelProps {
   onSearch: () => void
   sortOrder: JobsSortOrder
   onSortOrderChange: (value: JobsSortOrder) => void
+  deadlineFilter: JobsDeadlineFilter
+  onDeadlineFilterChange: (value: JobsDeadlineFilter) => void
+  workingHoursFilter: JobsWorkingHoursFilter
+  onWorkingHoursFilterChange: (value: JobsWorkingHoursFilter) => void
   loading: boolean
   selectedSkillCount: number
   totalSkillCount: number
@@ -64,6 +73,10 @@ export function SearchTabPanel({
   onSearch,
   sortOrder,
   onSortOrderChange,
+  deadlineFilter,
+  onDeadlineFilterChange,
+  workingHoursFilter,
+  onWorkingHoursFilterChange,
   loading,
   selectedSkillCount,
   totalSkillCount,
@@ -165,6 +178,10 @@ export function SearchTabPanel({
         error={error}
         sortOrder={sortOrder}
         onSortOrderChange={onSortOrderChange}
+        deadlineFilter={deadlineFilter}
+        onDeadlineFilterChange={onDeadlineFilterChange}
+        workingHoursFilter={workingHoursFilter}
+        onWorkingHoursFilterChange={onWorkingHoursFilterChange}
         paginationLocked={searchPhase === 'searching'}
         pagination={pagination}
       />

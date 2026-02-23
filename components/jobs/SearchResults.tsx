@@ -12,8 +12,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import type { AFJobHit } from '@/lib/services/arbetsformedlingen'
-import type { JobsSortOrder } from '@/components/jobs/search/types'
+import type {
+  JobsDeadlineFilter,
+  JobsSortOrder,
+  JobsWorkingHoursFilter,
+} from '@/components/jobs/search/types'
 
 type ScoredJob = AFJobHit & {
   relevance?: { matched: number; total: number; score: number; matchedSkills: string[] }
@@ -34,6 +48,10 @@ interface SearchResultsProps {
   loading: boolean
   sortOrder: JobsSortOrder
   onSortOrderChange: (value: JobsSortOrder) => void
+  deadlineFilter: JobsDeadlineFilter
+  onDeadlineFilterChange: (value: JobsDeadlineFilter) => void
+  workingHoursFilter: JobsWorkingHoursFilter
+  onWorkingHoursFilterChange: (value: JobsWorkingHoursFilter) => void
   searchSkillMatches: Record<string, number>
   jobSkillsByJob: Record<string, string[]>
   matchedSkillsByJob: Record<string, string[]>
@@ -50,6 +68,10 @@ export function SearchResults({
   loading,
   sortOrder,
   onSortOrderChange,
+  deadlineFilter,
+  onDeadlineFilterChange,
+  workingHoursFilter,
+  onWorkingHoursFilterChange,
   searchSkillMatches,
   jobSkillsByJob,
   matchedSkillsByJob,
@@ -99,37 +121,132 @@ export function SearchResults({
     ? Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)
     : jobs.length
 
+  const activeFilterCount =
+    Number(deadlineFilter !== 'any') + Number(workingHoursFilter !== 'any')
+
   return (
     <div className="space-y-3" ref={resultsRef}>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       {hasSearched ? (
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            {pagination && pagination.totalPages > 1
-              ? t('pagination.showing', { from, to, total: pagination.totalItems })
-              : t('found', { count: pagination?.totalItems ?? jobs.length })}
-          </p>
+        <div className="space-y-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-muted-foreground">
+              {pagination && pagination.totalPages > 1
+                ? t('pagination.showing', { from, to, total: pagination.totalItems })
+                : t('found', { count: pagination?.totalItems ?? jobs.length })}
+            </p>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{t('sortLabel')}</span>
-            <Select
-              value={sortOrder}
-              disabled={loading}
-              onValueChange={(value) => onSortOrderChange(value as JobsSortOrder)}
-            >
-              <SelectTrigger
-                aria-label={t('sortLabel')}
-                className="h-8 w-[220px] text-xs"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bestMatch">{t('sort.bestMatch')}</SelectItem>
-                <SelectItem value="newest">{t('sort.newest')}</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap items-center gap-2">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={loading}
+                    aria-label={t('filtersLabel')}
+                    className="h-8"
+                  >
+                    {t('filtersLabel')}
+                    {activeFilterCount > 0 ? ` (${activeFilterCount})` : null}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{t('filtersTitle')}</DialogTitle>
+                    <DialogDescription>{t('filtersDescription')}</DialogDescription>
+                  </DialogHeader>
+
+                  <div className="grid gap-4">
+                    <div className="grid gap-2">
+                      <span className="text-sm font-medium text-foreground">
+                        {t('filters.deadlineLabel')}
+                      </span>
+                      <Select
+                        value={deadlineFilter}
+                        onValueChange={(value) =>
+                          onDeadlineFilterChange(value as JobsDeadlineFilter)
+                        }
+                      >
+                        <SelectTrigger aria-label={t('filters.deadlineLabel')}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="any">{t('filters.deadline.any')}</SelectItem>
+                          <SelectItem value="open">{t('filters.deadline.open')}</SelectItem>
+                          <SelectItem value="next7">{t('filters.deadline.next7')}</SelectItem>
+                          <SelectItem value="next30">{t('filters.deadline.next30')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid gap-2">
+                      <span className="text-sm font-medium text-foreground">
+                        {t('filters.workingHoursLabel')}
+                      </span>
+                      <Select
+                        value={workingHoursFilter}
+                        onValueChange={(value) =>
+                          onWorkingHoursFilterChange(value as JobsWorkingHoursFilter)
+                        }
+                      >
+                        <SelectTrigger aria-label={t('filters.workingHoursLabel')}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="any">{t('filters.workingHours.any')}</SelectItem>
+                          <SelectItem value="fullTime">
+                            {t('filters.workingHours.fullTime')}
+                          </SelectItem>
+                          <SelectItem value="partTime">
+                            {t('filters.workingHours.partTime')}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <DialogFooter className="sm:justify-between">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => {
+                        onDeadlineFilterChange('any')
+                        onWorkingHoursFilterChange('any')
+                      }}
+                    >
+                      {t('filtersClear')}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{t('sortLabel')}</span>
+                <Select
+                  value={sortOrder}
+                  disabled={loading}
+                  onValueChange={(value) => onSortOrderChange(value as JobsSortOrder)}
+                >
+                  <SelectTrigger
+                    aria-label={t('sortLabel')}
+                    className="h-8 w-[220px] text-xs"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bestMatch">{t('sort.bestMatch')}</SelectItem>
+                    <SelectItem value="newest">{t('sort.newest')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
+
+          {sortOrder === 'bestMatch' ? (
+            <p className="text-xs text-muted-foreground">{t('sortHintBestMatch')}</p>
+          ) : null}
         </div>
       ) : (
         <p className="text-xs text-muted-foreground">{t('enterSearch')}</p>

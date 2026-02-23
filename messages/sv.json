@@ -413,6 +413,26 @@
       "bestMatch": "Bästa matchning (kompetenser)",
       "newest": "Nyast"
     },
+    "sortHintBestMatch": "Auto-sorterad efter matchande kompetenser (flest matchningar först).",
+    "filtersLabel": "Filter",
+    "filtersTitle": "Filter",
+    "filtersDescription": "Filtrera resultat utan att ändra din sökning.",
+    "filtersClear": "Rensa filter",
+    "filters": {
+      "deadlineLabel": "Sista ansökningsdag",
+      "deadline": {
+        "any": "Alla",
+        "open": "Öppen (ej utgången)",
+        "next7": "Nästa 7 dagar",
+        "next30": "Nästa 30 dagar"
+      },
+      "workingHoursLabel": "Arbetstid",
+      "workingHours": {
+        "any": "Alla",
+        "fullTime": "Heltid",
+        "partTime": "Deltid"
+      }
+    },
     "regionPlaceholder": "Region (valfritt)",
     "found": "Hittade {count} jobb",
     "searchStatus": {
