@@ -1,5 +1,11 @@
 import { normalizeSkillKey } from '@/lib/skills/normalize'
-import type { JobsSearchTab, JobsSortOrder, ScoredJob } from './types'
+import type {
+  JobsDeadlineFilter,
+  JobsSearchTab,
+  JobsSortOrder,
+  JobsWorkingHoursFilter,
+  ScoredJob,
+} from './types'
 
 export function asString(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback
@@ -24,6 +30,19 @@ export function asTab(value: unknown): JobsSearchTab {
 
 export function asSortOrder(value: unknown): JobsSortOrder {
   return value === 'newest' ? 'newest' : 'bestMatch'
+}
+
+export function asDeadlineFilter(value: unknown): JobsDeadlineFilter {
+  if (value === 'open') return 'open'
+  if (value === 'next7') return 'next7'
+  if (value === 'next30') return 'next30'
+  return 'any'
+}
+
+export function asWorkingHoursFilter(value: unknown): JobsWorkingHoursFilter {
+  if (value === 'fullTime') return 'fullTime'
+  if (value === 'partTime') return 'partTime'
+  return 'any'
 }
 
 export function asSearchSkillMatches(value: unknown): Record<string, number> {
