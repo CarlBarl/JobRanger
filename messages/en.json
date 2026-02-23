@@ -413,6 +413,26 @@
       "bestMatch": "Best match (skills)",
       "newest": "Newest"
     },
+    "sortHintBestMatch": "Auto-sorted by matched skills (most matches first).",
+    "filtersLabel": "Filters",
+    "filtersTitle": "Filters",
+    "filtersDescription": "Narrow down results without changing your search.",
+    "filtersClear": "Clear filters",
+    "filters": {
+      "deadlineLabel": "Deadline",
+      "deadline": {
+        "any": "Any",
+        "open": "Open (not expired)",
+        "next7": "Next 7 days",
+        "next30": "Next 30 days"
+      },
+      "workingHoursLabel": "Working hours",
+      "workingHours": {
+        "any": "Any",
+        "fullTime": "Full-time",
+        "partTime": "Part-time"
+      }
+    },
     "regionPlaceholder": "Region (optional)",
     "found": "Found {count} jobs",
     "searchStatus": {
