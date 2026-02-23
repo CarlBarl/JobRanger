@@ -19,6 +19,43 @@ interface JobSearchProps {
   onFirstSearch?: () => void
 }
 
+function matchesDeadlineFilter(deadline: string | null | undefined, filter: 'any' | 'open' | 'next7' | 'next30'): boolean {
+  if (filter === 'any') return true
+  if (!deadline) return true
+
+  const deadlineMs = Date.parse(deadline)
+  if (Number.isNaN(deadlineMs)) return true
+
+  const nowMs = Date.now()
+
+  if (filter === 'open') {
+    return deadlineMs >= nowMs
+  }
+
+  if (filter === 'next7') {
+    return deadlineMs >= nowMs && deadlineMs <= nowMs + 7 * 24 * 60 * 60 * 1000
+  }
+
+  if (filter === 'next30') {
+    return deadlineMs >= nowMs && deadlineMs <= nowMs + 30 * 24 * 60 * 60 * 1000
+  }
+
+  return true
+}
+
+function matchesWorkingHoursFilter(
+  label: string | null | undefined,
+  filter: 'any' | 'fullTime' | 'partTime'
+): boolean {
+  if (filter === 'any') return true
+  if (!label) return false
+
+  const normalized = label.toLowerCase()
+  if (filter === 'fullTime') return normalized.includes('heltid') || normalized.includes('full')
+  if (filter === 'partTime') return normalized.includes('deltid') || normalized.includes('part')
+  return true
+}
+
 export function JobSearch({ onFirstSearch }: JobSearchProps = {}) {
   const t = useTranslations('jobs')
   const controller = useJobsSearchState()
@@ -31,6 +68,10 @@ export function JobSearch({ onFirstSearch }: JobSearchProps = {}) {
     setQuery,
     sortOrder,
     setSortOrder,
+    deadlineFilter,
+    setDeadlineFilter,
+    workingHoursFilter,
+    setWorkingHoursFilter,
     jobs,
     error,
     loading,
@@ -75,13 +116,21 @@ export function JobSearch({ onFirstSearch }: JobSearchProps = {}) {
     controller,
   })
 
+  const filteredJobs = useMemo(() => {
+    return jobs.filter((job) => {
+      if (!matchesDeadlineFilter(job.application_deadline, deadlineFilter)) return false
+      if (!matchesWorkingHoursFilter(job.working_hours_type?.label, workingHoursFilter)) return false
+      return true
+    })
+  }, [deadlineFilter, jobs, workingHoursFilter])
+
   const scoredJobs: ScoredJob[] = useMemo(() => {
     const queryLower = query.trim().toLowerCase()
     const relevanceSkills = selectedSkillSet
     const hasRelevanceSkills = relevanceSkills.length > 0
     const relevanceSkillsKey = hasRelevanceSkills ? buildSkillsKey(relevanceSkills) : ''
 
-    const withRelevance: ScoredJob[] = jobs.map((job) => {
+    const withRelevance: ScoredJob[] = filteredJobs.map((job) => {
       if (!hasRelevanceSkills) {
         if (!job.relevance && !job.relevanceSkillsKey) return job
         return { ...job, relevance: undefined, relevanceSkillsKey: undefined }
@@ -141,11 +190,11 @@ export function JobSearch({ onFirstSearch }: JobSearchProps = {}) {
 
       return left.id.localeCompare(right.id)
     })
-  }, [jobs, query, searchSkillMatches, selectedRegion, selectedSkillSet, sortOrder])
+  }, [filteredJobs, query, searchSkillMatches, selectedRegion, selectedSkillSet, sortOrder])
 
   const extractedSkillsByJob = useMemo(() => {
     return Object.fromEntries(
-      jobs.map((job) => [
+      filteredJobs.map((job) => [
         job.id,
         extractJobSkills(
           {
@@ -157,7 +206,7 @@ export function JobSearch({ onFirstSearch }: JobSearchProps = {}) {
         ),
       ])
     )
-  }, [jobs, skillCatalog])
+  }, [filteredJobs, skillCatalog])
 
   const matchedSkillsByJob = useMemo(() => {
     const selectedKeys = new Set(selectedSkillSet.map((skill) => normalizeSkillKey(skill)))
@@ -172,7 +221,16 @@ export function JobSearch({ onFirstSearch }: JobSearchProps = {}) {
   useEffect(() => {
     if (restoringRef.current) return
     setCurrentPage(1)
-  }, [itemsPerPage, selectedRegion, selectedSkillSet, sortOrder, restoringRef, setCurrentPage])
+  }, [
+    deadlineFilter,
+    itemsPerPage,
+    selectedRegion,
+    selectedSkillSet,
+    sortOrder,
+    workingHoursFilter,
+    restoringRef,
+    setCurrentPage,
+  ])
 
   useEffect(() => {
     const maxPage = Math.max(1, Math.ceil(scoredJobs.length / itemsPerPage))
@@ -223,6 +281,10 @@ export function JobSearch({ onFirstSearch }: JobSearchProps = {}) {
             onOpenSkillsPanel={() => setSkillsPanelOpen(true)}
             sortOrder={sortOrder}
             onSortOrderChange={setSortOrder}
+            deadlineFilter={deadlineFilter}
+            onDeadlineFilterChange={setDeadlineFilter}
+            workingHoursFilter={workingHoursFilter}
+            onWorkingHoursFilterChange={setWorkingHoursFilter}
             skills={skills}
             selectedSkills={selectedSkills}
             onToggleSkill={toggleSkill}

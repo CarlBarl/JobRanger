@@ -22,6 +22,8 @@ export function useJobsSearchState(): JobsSearchStateController {
   const [activeTab, setActiveTab] = useState<JobsSearchTab>('search')
   const [query, setQuery] = useState('')
   const [sortOrder, setSortOrder] = useState<PersistedJobsSearchState['sortOrder']>('bestMatch')
+  const [deadlineFilter, setDeadlineFilter] = useState<PersistedJobsSearchState['deadlineFilter']>('any')
+  const [workingHoursFilter, setWorkingHoursFilter] = useState<PersistedJobsSearchState['workingHoursFilter']>('any')
   const [jobs, setJobs] = useState<ScoredJob[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -70,6 +72,8 @@ export function useJobsSearchState(): JobsSearchStateController {
       setQuery(persisted.query)
       setSelectedRegion(persisted.region)
       setSortOrder(persisted.sortOrder)
+      setDeadlineFilter(persisted.deadlineFilter)
+      setWorkingHoursFilter(persisted.workingHoursFilter)
       setSkills(persisted.skills)
       setSelectedSkills(persisted.selectedSkills)
       setSkillsPanelOpen(persisted.skillsPanelOpen)
@@ -105,6 +109,8 @@ export function useJobsSearchState(): JobsSearchStateController {
       query,
       region: selectedRegion,
       sortOrder,
+      deadlineFilter,
+      workingHoursFilter,
       skills,
       selectedSkills,
       skillsPanelOpen,
@@ -129,6 +135,7 @@ export function useJobsSearchState(): JobsSearchStateController {
   }, [
     activeTab,
     currentPage,
+    deadlineFilter,
     error,
     hasSearched,
     itemsPerPage,
@@ -140,6 +147,7 @@ export function useJobsSearchState(): JobsSearchStateController {
     selectedSkills,
     skills,
     skillsPanelOpen,
+    workingHoursFilter,
   ])
 
   useEffect(() => {
@@ -189,6 +197,10 @@ export function useJobsSearchState(): JobsSearchStateController {
     setQuery,
     sortOrder,
     setSortOrder,
+    deadlineFilter,
+    setDeadlineFilter,
+    workingHoursFilter,
+    setWorkingHoursFilter,
     jobs,
     setJobs,
     error,
