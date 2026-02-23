@@ -1,5 +1,5 @@
 import { normalizeSkillKey } from '@/lib/skills/normalize'
-import type { JobsSearchTab, ScoredJob } from './types'
+import type { JobsSearchTab, JobsSortOrder, ScoredJob } from './types'
 
 export function asString(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback
@@ -20,6 +20,10 @@ export function asStringArray(value: unknown): string[] {
 
 export function asTab(value: unknown): JobsSearchTab {
   return value === 'saved' ? 'saved' : 'search'
+}
+
+export function asSortOrder(value: unknown): JobsSortOrder {
+  return value === 'newest' ? 'newest' : 'bestMatch'
 }
 
 export function asSearchSkillMatches(value: unknown): Record<string, number> {

@@ -23,11 +23,14 @@ export type JobsSearchTab = 'search' | 'saved'
 
 export type JobsSearchPhase = 'idle' | 'searching' | 'complete'
 
+export type JobsSortOrder = 'bestMatch' | 'newest'
+
 export type PersistedJobsSearchState = {
   v: 1
   tab: JobsSearchTab
   query: string
   region: string
+  sortOrder: JobsSortOrder
   skills: string[]
   selectedSkills: string[]
   skillsPanelOpen: boolean
@@ -51,6 +54,8 @@ export interface JobsSearchStateController {
   setActiveTab: SetState<JobsSearchTab>
   query: string
   setQuery: SetState<string>
+  sortOrder: JobsSortOrder
+  setSortOrder: SetState<JobsSortOrder>
   jobs: ScoredJob[]
   setJobs: SetState<ScoredJob[]>
   error: string | null
