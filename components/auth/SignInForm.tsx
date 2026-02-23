@@ -17,6 +17,7 @@ import { resolvePasswordSignInError } from './signin/error-messages'
 import { MagicLinkSignInPanel } from './signin/MagicLinkSignInPanel'
 import { PasswordSignInPanel } from './signin/PasswordSignInPanel'
 import { QuickSignInButton } from './signin/QuickSignInButton'
+import { GoogleOAuthButton } from './signin/GoogleOAuthButton'
 import { signInWithPasswordApi } from './signin/sign-in-api'
 
 function sanitizeNextPath(rawNext: string | undefined) {
@@ -156,6 +157,14 @@ export function SignInForm({ nextPath }: { nextPath?: string }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <GoogleOAuthButton nextPath={nextPath} />
+
+        <div className="my-5 flex items-center gap-3">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs text-muted-foreground">{t('or')}</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
         {mode === 'password' ? (
           <PasswordSignInPanel
             email={email}

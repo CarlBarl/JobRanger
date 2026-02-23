@@ -1,14 +1,16 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '@/lib/test-utils'
+import { render, screen, waitFor } from '@/lib/test-utils'
 import { SignUpForm } from './SignUpForm'
 
 const signUp = vi.fn()
+const signInWithOAuth = vi.fn()
 
 vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
     auth: {
       signUp,
+      signInWithOAuth,
     },
   }),
 }))
@@ -115,5 +117,25 @@ describe('SignUpForm', () => {
 
     const link = screen.getByRole('link', { name: /sign in/i })
     expect(link).toHaveAttribute('href', '/auth/signin')
+  })
+
+  describe('Google SSO', () => {
+    it('starts Google OAuth sign in with a callback redirect', async () => {
+      signInWithOAuth.mockResolvedValue({ data: { url: 'https://example.com' }, error: null })
+
+      const user = userEvent.setup()
+      render(<SignUpForm />)
+
+      await user.click(screen.getByRole('button', { name: /continue with google/i }))
+
+      await waitFor(() => {
+        expect(signInWithOAuth).toHaveBeenCalledWith({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/dashboard')}`,
+          },
+        })
+      })
+    })
   })
 })

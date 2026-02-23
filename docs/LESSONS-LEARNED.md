@@ -15,6 +15,9 @@ Applied in `next.config.mjs` via webpack configuration.
 ### Prisma Client Must Be Generated Before Deploy
 The `@prisma/client did not initialize yet` error occurs when the Prisma client hasn't been generated. Fix: ensure `npx prisma generate` runs as part of the build step or `postinstall` script.
 
+### Prisma Schema Must Be Applied to the Live DB
+If Vercel logs show Prisma `P2022` during auth (for example `prisma.user.upsert()` failing on login), the deployed Prisma client expects columns that do not exist in the current database schema. Fix: apply the schema changes to the active database (for example `npx prisma db push` or `npx prisma migrate deploy` against the production `DATABASE_URL`) and then redeploy.
+
 ### GitHub Actions Vercel Preview Requires Project Secrets
 For PR-based preview deployments via GitHub Actions, set `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` as repository secrets and run `vercel pull/build/deploy` in CI. Keep the workflow on `pull_request` (not `pull_request_target`) so untrusted fork code does not run with secrets.
 
@@ -58,6 +61,9 @@ Browser extensions (e.g., Claude in Chrome) can modify the DOM, causing Next.js 
 Next.js App Router route files (for example `app/api/**/route.ts`) may only export supported route-handler symbols (`GET`, `POST`, etc.). Exporting test helpers from a route file can fail build-time type generation under `.next/types/...` with `Type ... does not satisfy the constraint '{ [x: string]: never; }'`.
 
 For route handlers that use module-scoped caches, reset state in tests with `vi.resetModules()` + dynamic `import('./route')` in `beforeEach`, instead of exporting test-only reset helpers from the route file.
+
+### Supabase Auth Callback Should Upsert Prisma User
+Supabase OAuth and magic-link flows land on `/auth/callback`. After `exchangeCodeForSession`, call `supabase.auth.getUser()` and `getOrCreateUser(authUser.id, authUser.email)` to ensure the Prisma `User` row exists before redirecting. Otherwise, newly signed-in users can hit 404s on DB-backed endpoints like `/api/user/profile`.
 
 ### Server Components by Default
 Use Server Components for data fetching (dashboard page, header). Only add `'use client'` when the component needs interactivity (state, event handlers, effects).
