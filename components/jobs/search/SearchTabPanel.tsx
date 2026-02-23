@@ -5,7 +5,7 @@ import { SkillSelector } from '@/components/jobs/SkillSelector'
 import { SearchResults } from '@/components/jobs/SearchResults'
 import { SearchStatusBar } from '@/components/jobs/SearchStatusBar'
 import { cn } from '@/lib/utils'
-import type { ScoredJob } from '@/components/jobs/search/types'
+import type { JobsSortOrder, ScoredJob } from '@/components/jobs/search/types'
 
 interface SearchTabPanelProps {
   labels: {
@@ -16,6 +16,8 @@ interface SearchTabPanelProps {
   region: string
   onRegionChange: (region: string) => void
   onSearch: () => void
+  sortOrder: JobsSortOrder
+  onSortOrderChange: (value: JobsSortOrder) => void
   loading: boolean
   selectedSkillCount: number
   totalSkillCount: number
@@ -60,6 +62,8 @@ export function SearchTabPanel({
   region,
   onRegionChange,
   onSearch,
+  sortOrder,
+  onSortOrderChange,
   loading,
   selectedSkillCount,
   totalSkillCount,
@@ -159,6 +163,8 @@ export function SearchTabPanel({
         savedJobIds={savedJobIds}
         onToggleSave={onToggleSave}
         error={error}
+        sortOrder={sortOrder}
+        onSortOrderChange={onSortOrderChange}
         paginationLocked={searchPhase === 'searching'}
         pagination={pagination}
       />

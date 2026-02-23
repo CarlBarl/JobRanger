@@ -408,6 +408,11 @@
     "searchPlaceholderUnified": "Sök på jobbtitel, kompetens eller nyckelord...",
     "search": "Sök",
     "searching": "Söker...",
+    "sortLabel": "Sortera",
+    "sort": {
+      "bestMatch": "Bästa matchning (kompetenser)",
+      "newest": "Nyast"
+    },
     "regionPlaceholder": "Region (valfritt)",
     "found": "Hittade {count} jobb",
     "searchStatus": {
