@@ -29,6 +29,9 @@ const MONTHLY_AI_QUOTAS: Record<UserTier, Record<string, number>> = {
   },
 }
 
+export const LETTER_GENERATE_COST_CREDITS = 2
+export const LETTER_HONE_COST_CREDITS = 1
+
 type MonthlyWindow = {
   startAt: Date
   resetAt: Date
@@ -49,6 +52,20 @@ type MonthlyQuotaSnapshotParams = {
   now?: Date
 }
 
+type LetterQuotaSnapshotParams = {
+  userId: string
+  userTier: UserTier
+  now?: Date
+}
+
+type LetterQuotaParams = {
+  userId: string
+  userTier: UserTier
+  requiredCredits: number
+  message: string
+  now?: Date
+}
+
 export type MonthlyQuotaSnapshot = {
   limit: number
   used: number
@@ -56,6 +73,12 @@ export type MonthlyQuotaSnapshot = {
   window: 'monthly'
   resetAt: string
   isExhausted: boolean
+}
+
+export type LetterQuotaSnapshot = MonthlyQuotaSnapshot & {
+  limitCredits: number
+  usedCredits: number
+  remainingCredits: number
 }
 
 function getMonthWindow(now = new Date()): MonthlyWindow {
@@ -108,6 +131,43 @@ export async function getMonthlyQuotaSnapshot({
   }
 }
 
+export async function getLetterQuotaSnapshot({
+  userId,
+  userTier,
+  now = new Date(),
+}: LetterQuotaSnapshotParams): Promise<LetterQuotaSnapshot> {
+  const { startAt, resetAt } = getMonthWindow(now)
+  const monthlyGenerateLimit = getMonthlyQuotaLimit(userTier, USAGE_EVENT_TYPES.GENERATE_LETTER)
+  const limitCredits = monthlyGenerateLimit * LETTER_GENERATE_COST_CREDITS
+
+  // Letter generation and letter honing both record GENERATE_LETTER events.
+  // We model one event as one credit, with 2 credits = 1 full generation.
+  const usedCredits = await prisma.usageEvent.count({
+    where: {
+      userId,
+      type: UsageEventType.GENERATE_LETTER,
+      createdAt: {
+        gte: startAt,
+        lt: resetAt,
+      },
+    },
+  })
+
+  const remainingCredits = Math.max(limitCredits - usedCredits, 0)
+
+  return {
+    limit: limitCredits / LETTER_GENERATE_COST_CREDITS,
+    used: usedCredits / LETTER_GENERATE_COST_CREDITS,
+    remaining: remainingCredits / LETTER_GENERATE_COST_CREDITS,
+    window: 'monthly',
+    resetAt: resetAt.toISOString(),
+    isExhausted: remainingCredits < LETTER_GENERATE_COST_CREDITS,
+    limitCredits,
+    usedCredits,
+    remainingCredits,
+  }
+}
+
 export async function enforceMonthlyQuota({
   userId,
   userTier,
@@ -123,6 +183,45 @@ export async function enforceMonthlyQuota({
   })
 
   if (!snapshot.isExhausted) {
+    return null
+  }
+
+  return NextResponse.json(
+    {
+      success: false,
+      error: {
+        code: 'QUOTA_EXCEEDED',
+        message,
+        limit: snapshot.limit,
+        used: snapshot.used,
+        remaining: snapshot.remaining,
+        window: snapshot.window,
+        resetAt: snapshot.resetAt,
+      },
+    },
+    {
+      status: 429,
+      headers: {
+        'Retry-After': String(secondsUntil(new Date(snapshot.resetAt), now)),
+      },
+    }
+  )
+}
+
+export async function enforceLetterQuota({
+  userId,
+  userTier,
+  requiredCredits,
+  message,
+  now = new Date(),
+}: LetterQuotaParams): Promise<NextResponse | null> {
+  const snapshot = await getLetterQuotaSnapshot({
+    userId,
+    userTier,
+    now,
+  })
+
+  if (snapshot.remainingCredits >= requiredCredits) {
     return null
   }
 

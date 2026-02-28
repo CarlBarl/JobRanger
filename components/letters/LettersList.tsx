@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { FileText } from 'lucide-react'
+import { isApiEnvelope, isApiFailure } from '@/lib/api/envelope'
 import { CopyToast } from './CopyToast'
+import { LetterEditDialog } from './LetterEditDialog'
 import { LetterCard, type LetterCardLabels } from './LetterCard'
 import type { LetterListItem } from './types'
 import { buildExcerpt, copyTextToClipboard } from './utils'
@@ -13,9 +15,11 @@ import { buildExcerpt, copyTextToClipboard } from './utils'
 export function LettersList({
   initialLetters,
   activeJobId,
+  canUseAiHone = false,
 }: {
   initialLetters: LetterListItem[]
   activeJobId?: string
+  canUseAiHone?: boolean
 }) {
   const t = useTranslations('letters')
   const locale = useLocale()
@@ -24,6 +28,7 @@ export function LettersList({
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [editingLetter, setEditingLetter] = useState<LetterListItem | null>(null)
   const [error, setError] = useState<string | null>(null)
   const pendingDeleteRef = useRef<{ letter: LetterListItem; index: number } | null>(null)
 
@@ -46,6 +51,7 @@ export function LettersList({
       copied: t('copied'),
       delete: t('delete'),
       deleting: t('deleting'),
+      edit: t('edit'),
       showLess: t('showLess'),
       showMore: t('showMore'),
       viewJob: t('viewJob'),
@@ -127,9 +133,90 @@ export function LettersList({
     [deletingId, letters, resolveTitle, router, t]
   )
 
+  const updateLetterContent = useCallback((letterId: string, content: string) => {
+    setLetters((prev) =>
+      prev.map((letter) => (letter.id === letterId ? { ...letter, content } : letter))
+    )
+    setEditingLetter((current) => (current?.id === letterId ? { ...current, content } : current))
+  }, [])
+
+  const handleSaveEdit = useCallback(
+    async (letterId: string, content: string) => {
+      try {
+        const response = await fetch(`/api/letters/${letterId}`, {
+          method: 'PATCH',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ content }),
+        })
+        const json: unknown = await response.json()
+        if (!isApiEnvelope<{ id: string; content: string }>(json)) {
+          return { ok: false as const, error: t('editSaveFailed') }
+        }
+        if (!response.ok) {
+          return {
+            ok: false as const,
+            error: isApiFailure(json) ? json.error.message || t('editSaveFailed') : t('editSaveFailed'),
+          }
+        }
+        if (isApiFailure(json)) {
+          return { ok: false as const, error: json.error.message || t('editSaveFailed') }
+        }
+
+        updateLetterContent(json.data.id, json.data.content)
+        router.refresh()
+        return { ok: true as const, content: json.data.content }
+      } catch {
+        return { ok: false as const, error: t('editSaveFailed') }
+      }
+    },
+    [router, t, updateLetterContent]
+  )
+
+  const handleHone = useCallback(
+    async (letterId: string, content: string, followUpPrompt: string) => {
+      try {
+        const response = await fetch(`/api/letters/${letterId}/hone`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ followUpPrompt, baseContent: content }),
+        })
+        const json: unknown = await response.json()
+        if (!isApiEnvelope<{ id: string; content: string }>(json)) {
+          return { ok: false as const, error: t('honeFailed') }
+        }
+        if (!response.ok) {
+          return {
+            ok: false as const,
+            error: isApiFailure(json) ? json.error.message || t('honeFailed') : t('honeFailed'),
+          }
+        }
+        if (isApiFailure(json)) {
+          return { ok: false as const, error: json.error.message || t('honeFailed') }
+        }
+
+        updateLetterContent(json.data.id, json.data.content)
+        router.refresh()
+        return { ok: true as const, content: json.data.content }
+      } catch {
+        return { ok: false as const, error: t('honeFailed') }
+      }
+    },
+    [router, t, updateLetterContent]
+  )
+
   return (
     <div className="space-y-8">
       <CopyToast copiedId={copiedId} label={t('copiedToast')} />
+      <LetterEditDialog
+        open={Boolean(editingLetter)}
+        letter={editingLetter}
+        canUseAiHone={canUseAiHone}
+        onOpenChange={(open) => {
+          if (!open) setEditingLetter(null)
+        }}
+        onSave={handleSaveEdit}
+        onHone={handleHone}
+      />
 
       <div className="animate-fade-up">
         <p className="mb-1 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
@@ -187,6 +274,7 @@ export function LettersList({
                 metaLine={metaLine}
                 onCopy={handleCopy}
                 onDelete={handleDelete}
+                onEdit={setEditingLetter}
                 onToggleExpanded={handleToggleExpanded}
                 title={title}
               />
