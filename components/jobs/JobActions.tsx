@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button'
 
 export function JobActions({
   afJobId,
+  initialSaved = false,
   defaultGuidance,
   existingLettersCount = 0,
 }: {
   afJobId: string
+  initialSaved?: boolean
   defaultGuidance?: string | null
   existingLettersCount?: number
 }) {
@@ -18,6 +20,7 @@ export function JobActions({
   const locale = useLocale()
   const state = useJobActions({
     afJobId,
+    initialSaved,
     defaultGuidance,
     existingLettersCount,
     locale,

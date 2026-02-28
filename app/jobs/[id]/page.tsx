@@ -30,13 +30,22 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   const profile = user.email ? await getOrCreateUser(user.id, user.email) : null
 
   try {
-    const [job, existingLettersCount] = await Promise.all([
+    const [job, existingLettersCount, savedJob] = await Promise.all([
       getJobById(id),
       prisma.generatedLetter.count({
         where: {
           userId: user.id,
           afJobId: id,
         },
+      }),
+      prisma.savedJob.findUnique({
+        where: {
+          userId_afJobId: {
+            userId: user.id,
+            afJobId: id,
+          },
+        },
+        select: { id: true },
       }),
     ])
     const title = job.headline ?? t('card.untitledRole')
@@ -80,6 +89,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               <div className="lg:sticky lg:top-6">
                 <JobActionsCard
                   jobId={id}
+                  initialSaved={Boolean(savedJob)}
                   applyUrl={applyUrl}
                   listingUrl={listingUrl}
                   defaultGuidance={profile?.letterGuidanceDefault ?? null}
