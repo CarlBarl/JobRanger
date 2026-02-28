@@ -21,6 +21,7 @@ import {
   validateFileSignature,
 } from './_lib/file-validation'
 import { createUploadLogger } from './_lib/logger'
+import { extractDocxText } from './_lib/docx-parser'
 import { extractPdfText } from './_lib/pdf-parser'
 import { badRequest, internalError, unauthorized } from './_lib/responses'
 import { parsePlainTextUpload } from './_lib/text-parser'
@@ -183,6 +184,16 @@ export async function POST(request: NextRequest) {
         onParseError: (error) => logger.error('pdf.parse.error', error, { fileName, normalizedMimeType }),
         onCleanupError: (error) => logger.error('pdf.parse.cleanup_error', error, { fileName }),
       })
+    } else if (normalizedMimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      stage = 'docx.parse'
+      const bytes = fileBytes ?? new Uint8Array(await file.arrayBuffer())
+      parsedContent = await extractDocxText(bytes)
+      if (parsedContent === null) {
+        logger.error('docx.parse.error', 'Failed to extract DOCX text', {
+          fileName,
+          normalizedMimeType,
+        })
+      }
     }
 
     stage = 'db.document_create'

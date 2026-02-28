@@ -911,8 +911,8 @@
     }
   },
   "upload": {
-    "dropCV": "Click to upload CV (PDF, DOCX, or TXT)",
-    "dropPersonalLetter": "Click to upload Personal Letter (PDF, DOCX, or TXT)",
+    "dropCV": "Drag and drop or click to upload CV (PDF, DOCX, or TXT)",
+    "dropPersonalLetter": "Drag and drop or click to upload Personal Letter (PDF, DOCX, or TXT)",
     "uploading": "Uploading...",
     "uploadFailed": "Upload failed",
     "uploadCV": "Upload CV",
