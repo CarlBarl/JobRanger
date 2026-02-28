@@ -8,6 +8,7 @@ export function getFileExtension(filename: string) {
 export function normalizeMimeType(rawMimeType: string, filename: string) {
   const extension = getFileExtension(filename)
   const mimeType = rawMimeType.trim().toLowerCase()
+  const docxMimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
   if (mimeType === 'application/pdf' || mimeType === 'application/x-pdf') {
     return 'application/pdf'
@@ -15,6 +16,20 @@ export function normalizeMimeType(rawMimeType: string, filename: string) {
 
   if (extension === '.pdf' && (mimeType === '' || mimeType === 'application/octet-stream')) {
     return 'application/pdf'
+  }
+
+  if (mimeType === docxMimeType) {
+    return docxMimeType
+  }
+
+  if (
+    extension === '.docx' &&
+    (mimeType === '' ||
+      mimeType === 'application/octet-stream' ||
+      mimeType === 'application/zip' ||
+      mimeType === 'application/x-zip-compressed')
+  ) {
+    return docxMimeType
   }
 
   return mimeType

@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   pdfGetText: vi.fn(),
   pdfDestroy: vi.fn(),
   pdfSetWorker: vi.fn(),
+  extractDocxText: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -49,6 +50,10 @@ vi.mock('pdf-parse', () => ({
     getText = mocks.pdfGetText
     destroy = mocks.pdfDestroy
   },
+}))
+
+vi.mock('./_lib/docx-parser', () => ({
+  extractDocxText: mocks.extractDocxText,
 }))
 
 import { POST } from './route'
@@ -196,6 +201,74 @@ describe('POST /api/upload', () => {
       expect.any(Blob),
       { contentType: 'application/pdf' }
     )
+  })
+
+  it('accepts DOCX files with application/octet-stream when extension and signature match', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
+    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1' })
+    mocks.upload.mockResolvedValue({ data: { path: 'u1/1-cv.docx' }, error: null })
+    mocks.create.mockResolvedValue({ id: 'doc-docx', fileUrl: 'u1/1-cv.docx' })
+    mocks.extractDocxText.mockResolvedValue('Extracted DOCX text content')
+
+    const docxBytes = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0x14]).buffer
+    const docxFile = new File(['PK\u0003\u0004fake'], 'cv.docx', { type: 'application/octet-stream' })
+    docxFile.arrayBuffer = async () => docxBytes
+
+    const fd = new FormData()
+    fd.set('type', 'cv')
+    fd.set('file', docxFile)
+
+    const res = await POST(makeRequest(fd))
+    expect(res.status).toBe(200)
+    await expect(res.json()).resolves.toMatchObject({
+      success: true,
+      data: { id: 'doc-docx' },
+    })
+    expect(mocks.upload).toHaveBeenCalledWith(
+      expect.stringMatching(/^u1\/\d+-cv\.docx$/),
+      expect.any(Blob),
+      { contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
+    )
+    expect(mocks.extractDocxText).toHaveBeenCalled()
+    expect(mocks.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'u1',
+        type: 'cv',
+        parsedContent: 'Extracted DOCX text content',
+      }),
+    })
+  })
+
+  it('saves document with null parsedContent when DOCX parsing fails', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
+    mocks.getOrCreateUser.mockResolvedValue({ id: 'u1' })
+    mocks.upload.mockResolvedValue({ data: { path: 'u1/1-cv.docx' }, error: null })
+    mocks.create.mockResolvedValue({ id: 'doc-docx-null', fileUrl: 'u1/1-cv.docx' })
+    mocks.extractDocxText.mockResolvedValue(null)
+
+    const docxBytes = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0x14]).buffer
+    const docxFile = new File(['PK\u0003\u0004fake'], 'cv.docx', {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    })
+    docxFile.arrayBuffer = async () => docxBytes
+
+    const fd = new FormData()
+    fd.set('type', 'cv')
+    fd.set('file', docxFile)
+
+    const res = await POST(makeRequest(fd))
+    expect(res.status).toBe(200)
+    await expect(res.json()).resolves.toMatchObject({
+      success: true,
+      data: { id: 'doc-docx-null' },
+    })
+    expect(mocks.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'u1',
+        type: 'cv',
+        parsedContent: null,
+      }),
+    })
   })
 
   it('uploads to storage and creates document record', async () => {

@@ -911,8 +911,8 @@
     }
   },
   "upload": {
-    "dropCV": "Klicka för att ladda upp CV (PDF, DOCX eller TXT)",
-    "dropPersonalLetter": "Klicka för att ladda upp Personligt Brev (PDF, DOCX eller TXT)",
+    "dropCV": "Dra och släpp eller klicka för att ladda upp CV (PDF, DOCX eller TXT)",
+    "dropPersonalLetter": "Dra och släpp eller klicka för att ladda upp Personligt Brev (PDF, DOCX eller TXT)",
     "uploading": "Laddar upp...",
     "uploadFailed": "Uppladdningen misslyckades",
     "uploadCV": "Ladda upp CV",
