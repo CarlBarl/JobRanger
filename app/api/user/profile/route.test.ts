@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
   findUnique: vi.fn(),
   update: vi.fn(),
-  getMonthlyQuotaSnapshot: vi.fn(),
+  getLetterQuotaSnapshot: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -26,7 +26,7 @@ vi.mock('@/lib/prisma', () => ({
 }))
 
 vi.mock('@/lib/security/monthly-quota', () => ({
-  getMonthlyQuotaSnapshot: (...args: unknown[]) => mocks.getMonthlyQuotaSnapshot(...args),
+  getLetterQuotaSnapshot: (...args: unknown[]) => mocks.getLetterQuotaSnapshot(...args),
 }))
 
 import { GET, PATCH } from './route'
@@ -34,7 +34,7 @@ import { GET, PATCH } from './route'
 describe('/api/user/profile', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.getMonthlyQuotaSnapshot.mockResolvedValue({
+    mocks.getLetterQuotaSnapshot.mockResolvedValue({
       limit: 1,
       used: 0,
       remaining: 1,
@@ -74,10 +74,9 @@ describe('/api/user/profile', () => {
       },
     })
 
-    expect(mocks.getMonthlyQuotaSnapshot).toHaveBeenCalledWith({
+    expect(mocks.getLetterQuotaSnapshot).toHaveBeenCalledWith({
       userId: 'u1',
       userTier: 'FREE',
-      usageType: 'GENERATE_LETTER',
     })
   })
 

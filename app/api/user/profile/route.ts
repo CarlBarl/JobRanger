@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { UsageEventType } from '@/generated/prisma/client'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { enforceCsrfProtection } from '@/lib/security/csrf'
 import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
-import { getMonthlyQuotaSnapshot } from '@/lib/security/monthly-quota'
+import { getLetterQuotaSnapshot } from '@/lib/security/monthly-quota'
 import { z } from 'zod'
 
 const MAX_GUIDANCE_CHARS = 1200
@@ -86,10 +85,9 @@ export async function GET() {
       )
     }
 
-    const generateLetterQuota = await getMonthlyQuotaSnapshot({
+    const generateLetterQuota = await getLetterQuotaSnapshot({
       userId: user.id,
       userTier: profile.tier,
-      usageType: UsageEventType.GENERATE_LETTER,
     })
 
     return NextResponse.json({
