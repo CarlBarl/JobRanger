@@ -2,6 +2,7 @@ import { JobActions } from '@/components/jobs/JobActions'
 
 interface JobActionsCardProps {
   jobId: string
+  initialSaved: boolean
   applyUrl: string | null
   listingUrl: string | null
   defaultGuidance: string | null
@@ -14,6 +15,7 @@ interface JobActionsCardProps {
 
 export function JobActionsCard({
   jobId,
+  initialSaved,
   applyUrl,
   listingUrl,
   defaultGuidance,
@@ -38,6 +40,7 @@ export function JobActionsCard({
 
       <JobActions
         afJobId={jobId}
+        initialSaved={initialSaved}
         defaultGuidance={defaultGuidance}
         existingLettersCount={existingLettersCount}
       />
