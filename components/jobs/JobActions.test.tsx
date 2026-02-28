@@ -54,6 +54,19 @@ describe('JobActions', () => {
     ).toBeInTheDocument()
   })
 
+  it('shows saved state when initialized as already saved', () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error('profile fetch unavailable'))
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(
+      <NextIntlClientProvider locale="en" messages={messages}>
+        <JobActions afJobId="123" initialSaved />
+      </NextIntlClientProvider>
+    )
+
+    expect(screen.getByRole('button', { name: 'Already saved' })).toBeDisabled()
+  })
+
   it('shows job-specific letters link when letters already exist', () => {
     const fetchMock = vi.fn().mockRejectedValue(new Error('profile fetch unavailable'))
     vi.stubGlobal('fetch', fetchMock)

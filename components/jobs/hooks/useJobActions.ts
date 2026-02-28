@@ -87,19 +87,21 @@ function formatResetAtDate(resetAt: string, locale: string): string | null {
 
 export function useJobActions({
   afJobId,
+  initialSaved = false,
   defaultGuidance,
   existingLettersCount,
   locale,
   t,
 }: {
   afJobId: string
+  initialSaved?: boolean
   defaultGuidance?: string | null
   existingLettersCount: number
   locale: string
   t: JobActionTranslations
 }) {
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [saved, setSaved] = useState(initialSaved)
   const [generating, setGenerating] = useState(false)
   const [generated, setGenerated] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -124,6 +126,10 @@ export function useJobActions({
   useEffect(() => {
     setLettersForJobCount(existingLettersCount)
   }, [existingLettersCount])
+
+  useEffect(() => {
+    setSaved(initialSaved)
+  }, [afJobId, initialSaved])
 
   useEffect(() => {
     let cancelled = false
