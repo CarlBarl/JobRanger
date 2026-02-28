@@ -91,6 +91,14 @@ Use `sv-SE` locale with `hour12: false` for 24-hour time display. Swedish users 
 ### Clickable Cards Need stopPropagation
 When making an entire card clickable but keeping nested buttons functional, use `e.stopPropagation()` on nested button click handlers to prevent the card click from firing.
 
+## Uploads
+
+### DOCX Uploads Need MIME Normalization + Signature Checks
+Browsers can send DOCX files as `application/octet-stream`, `application/zip`, `application/x-zip-compressed`, or empty MIME. Normalize to the DOCX MIME only when extension is `.docx`, and keep extension/MIME/signature validation together to avoid accepting mislabeled files.
+
+### DOCX Parsing Should Fail Open
+Keep upload/storage success independent from DOCX text extraction. If DOCX parsing fails, still persist the document with `parsedContent: null` so users are not blocked from uploading files.
+
 ## Database
 
 ### SavedJob Stores Only References

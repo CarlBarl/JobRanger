@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Upload, FileText, X, Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import {
   MAX_UPLOAD_BYTES,
   ALLOWED_UPLOAD_MIME_TYPES,
@@ -34,29 +35,59 @@ export function PersonalLetterUpload({
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isDragActive, setIsDragActive] = useState(false)
+
+  const selectFile = useCallback((selectedFile: File | null | undefined) => {
+    if (!selectedFile) return
+
+    const mimeType = selectedFile.type.trim().toLowerCase()
+    const extension = getFileExtension(selectedFile.name)
+    const hasAllowedMime = (ALLOWED_UPLOAD_MIME_TYPES as readonly string[]).includes(mimeType)
+    const hasAllowedExtension = (ALLOWED_UPLOAD_EXTENSIONS as readonly string[]).includes(
+      extension
+    )
+
+    if (!hasAllowedMime && !hasAllowedExtension) {
+      setError(t('invalidType'))
+      return
+    }
+    if (selectedFile.size > MAX_UPLOAD_BYTES) {
+      setError(t('tooLarge'))
+      return
+    }
+    setFile(selectedFile)
+    setError(null)
+  }, [t])
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      const mimeType = selectedFile.type.trim().toLowerCase()
-      const extension = getFileExtension(selectedFile.name)
-      const hasAllowedMime = (ALLOWED_UPLOAD_MIME_TYPES as readonly string[]).includes(mimeType)
-      const hasAllowedExtension = (ALLOWED_UPLOAD_EXTENSIONS as readonly string[]).includes(
-        extension
-      )
+    selectFile(e.target.files?.[0])
+  }, [selectFile])
 
-      if (!hasAllowedMime && !hasAllowedExtension) {
-        setError(t('invalidType'))
-        return
-      }
-      if (selectedFile.size > MAX_UPLOAD_BYTES) {
-        setError(t('tooLarge'))
-        return
-      }
-      setFile(selectedFile)
-      setError(null)
-    }
-  }, [t])
+  const handleDragEnter = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(true)
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = 'copy'
+    setIsDragActive(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(false)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(false)
+    selectFile(e.dataTransfer.files?.[0])
+  }, [selectFile])
 
   const handleUpload = async () => {
     if (!file) return
@@ -94,7 +125,18 @@ export function PersonalLetterUpload({
   const content = (
     <>
       {!file ? (
-        <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+        <label
+          className={cn(
+            'flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors',
+            isDragActive
+              ? 'border-primary bg-muted/60'
+              : 'border-border hover:bg-muted/50'
+          )}
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
           <Upload className="h-8 w-8 text-muted-foreground mb-2" />
           <span className="text-sm text-muted-foreground text-center px-2">
             {t('dropPersonalLetter')}
