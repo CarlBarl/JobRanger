@@ -54,6 +54,9 @@ On skill extraction (`POST /api/skills` and `POST /api/skills/batch`), map extra
 
 ## Next.js / React
 
+### Job Detail Save State Must Be Hydrated on Initial Render
+The job detail actions UI (`components/jobs/JobActions`) should receive an `initialSaved` flag from server data (`SavedJob` lookup by `userId + afJobId`). If `saved` is only set after client-side POST to `/api/jobs/save`, a page refresh will incorrectly show "Save job" even though the job is already saved.
+
 ### Hydration Mismatch from Chrome Extensions
 Browser extensions (e.g., Claude in Chrome) can modify the DOM, causing Next.js hydration warnings ("1 Issue" in dev overlay). This is not a code bug and can be safely ignored.
 
@@ -212,6 +215,9 @@ When client components grow large, extract stateful hooks + presentational block
 
 ### Layer Monthly Plan Quotas Over Hourly Rate Limits
 For AI endpoints, keep existing hourly in-memory anti-abuse limits (`consumeRateLimit`) and add DB-backed monthly quotas by tier (`UsageEvent` counts). The layered approach protects infrastructure from bursts while enforcing product entitlements across server restarts/instances.
+
+### Letter Quotas Can Use Credit-Based Accounting Without Schema Changes
+For generated-letter workflows that need fractional costs (for example AI follow-up edits costing half of a full generation), reuse `UsageEventType.GENERATE_LETTER` as a credit ledger: 1 event = 0.5 letter credit. Record 2 events for full generation and 1 event for hone/refine actions, and compute `limit/used/remaining` in `/2` units for UI/API responses.
 
 ### Surface Quota Snapshots for Proactive UI Feedback
 When an action is plan-gated (for example cover-letter generation), expose a quota snapshot (`limit`, `used`, `remaining`, `resetAt`, `isExhausted`) from a lightweight profile read endpoint so mobile/web clients can disable CTA buttons before the user taps. Keep server-side quota enforcement on the mutation endpoint as the final authority and fallback.

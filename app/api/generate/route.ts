@@ -8,7 +8,11 @@ import { getJobById } from '@/lib/services/arbetsformedlingen'
 import { generateCoverLetter } from '@/lib/services/gemini'
 import { enforceCsrfProtection } from '@/lib/security/csrf'
 import { consumeRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
-import { enforceMonthlyQuota, recordUsageEvent } from '@/lib/security/monthly-quota'
+import {
+  enforceLetterQuota,
+  LETTER_GENERATE_COST_CREDITS,
+  recordUsageEvent,
+} from '@/lib/security/monthly-quota'
 
 const RequestSchema = z.object({
   afJobId: z.string().min(1).regex(/^\d{1,15}$/, 'Invalid job ID format'),
@@ -74,10 +78,10 @@ export async function POST(request: NextRequest) {
       (user.dashboardGuideLastStartedAt?.getTime() ?? 0) >= bonusWindowStart.getTime()
 
     if (!wantsGuideBonus) {
-      const monthlyQuotaError = await enforceMonthlyQuota({
+      const monthlyQuotaError = await enforceLetterQuota({
         userId: user.id,
         userTier: user.tier,
-        usageType: UsageEventType.GENERATE_LETTER,
+        requiredCredits: LETTER_GENERATE_COST_CREDITS,
         message: 'Monthly letter generation quota reached for your plan.',
         now,
       })
@@ -123,10 +127,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (wantsGuideBonus && !guideBonusReserved) {
-      const monthlyQuotaError = await enforceMonthlyQuota({
+      const monthlyQuotaError = await enforceLetterQuota({
         userId: user.id,
         userTier: user.tier,
-        usageType: UsageEventType.GENERATE_LETTER,
+        requiredCredits: LETTER_GENERATE_COST_CREDITS,
         message: 'Monthly letter generation quota reached for your plan.',
         now,
       })
@@ -172,7 +176,11 @@ export async function POST(request: NextRequest) {
 
     if (!guideBonusReserved) {
       try {
-        await recordUsageEvent(user.id, UsageEventType.GENERATE_LETTER)
+        await Promise.all(
+          Array.from({ length: LETTER_GENERATE_COST_CREDITS }, () =>
+            recordUsageEvent(user.id, UsageEventType.GENERATE_LETTER)
+          )
+        )
       } catch (usageEventError) {
         console.error(
           'Failed to record generate usage event:',

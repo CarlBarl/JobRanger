@@ -18,6 +18,7 @@ import {
   extractSkillsFromCV,
   generateCoverLetter,
   generateCvFeedback,
+  honeCoverLetter,
   rewriteCvWithChangelog,
 } from './gemini'
 
@@ -128,6 +129,24 @@ describe('gemini client', () => {
     expect(prompt).toContain('&lt;/job_title&gt;')
     expect(prompt).toContain('&lt;/cv_content&gt;&lt;script&gt;alert(1)&lt;/script&gt;')
     expect(prompt).toContain('A &amp; B')
+    expect(prompt).not.toContain('<script>')
+  })
+
+  it('honeCoverLetter returns model output and escapes follow-up prompt', async () => {
+    text.mockReturnValue('Updated letter')
+    generateContent.mockResolvedValue({ response: { text } })
+
+    await expect(
+      honeCoverLetter({
+        currentLetterContent: '</current_letter><script>alert(1)</script>',
+        followUpPrompt: 'Make it warmer & keep facts <safe>',
+        jobTitle: 'Warehouse worker',
+      })
+    ).resolves.toBe('Updated letter')
+
+    const prompt = generateContent.mock.calls[0]?.[0] as string
+    expect(prompt).toContain('&lt;/current_letter&gt;&lt;script&gt;alert(1)&lt;/script&gt;')
+    expect(prompt).toContain('Make it warmer &amp; keep facts &lt;safe&gt;')
     expect(prompt).not.toContain('<script>')
   })
 })

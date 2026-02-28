@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   findUnique: vi.fn(),
   create: vi.fn(),
   updateMany: vi.fn(),
-  enforceMonthlyQuota: vi.fn(),
+  enforceLetterQuota: vi.fn(),
   recordUsageEvent: vi.fn(),
 }))
 
@@ -44,7 +44,8 @@ vi.mock('@/lib/prisma', () => ({
 }))
 
 vi.mock('@/lib/security/monthly-quota', () => ({
-  enforceMonthlyQuota: (...args: unknown[]) => mocks.enforceMonthlyQuota(...args),
+  LETTER_GENERATE_COST_CREDITS: 2,
+  enforceLetterQuota: (...args: unknown[]) => mocks.enforceLetterQuota(...args),
   recordUsageEvent: (...args: unknown[]) => mocks.recordUsageEvent(...args),
 }))
 
@@ -53,7 +54,7 @@ import { POST } from './route'
 describe('POST /api/generate', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.enforceMonthlyQuota.mockResolvedValue(null)
+    mocks.enforceLetterQuota.mockResolvedValue(null)
     mocks.recordUsageEvent.mockResolvedValue(undefined)
     mocks.updateMany.mockResolvedValue({ count: 0 })
   })
@@ -131,7 +132,9 @@ describe('POST /api/generate', () => {
       userGuidance: undefined,
     })
     expect(mocks.create).toHaveBeenCalled()
-    expect(mocks.recordUsageEvent).toHaveBeenCalledWith('u1', 'GENERATE_LETTER')
+    expect(mocks.recordUsageEvent).toHaveBeenCalledTimes(2)
+    expect(mocks.recordUsageEvent).toHaveBeenNthCalledWith(1, 'u1', 'GENERATE_LETTER')
+    expect(mocks.recordUsageEvent).toHaveBeenNthCalledWith(2, 'u1', 'GENERATE_LETTER')
   })
 
   it('uses guidance override when provided', async () => {
@@ -205,7 +208,7 @@ describe('POST /api/generate', () => {
   it('returns 429 when monthly quota is exceeded', async () => {
     mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1', email: 'e@example.com' } } })
     mocks.getOrCreateUser.mockResolvedValue({ id: 'u1', tier: 'FREE' })
-    mocks.enforceMonthlyQuota.mockResolvedValue(
+    mocks.enforceLetterQuota.mockResolvedValue(
       NextResponse.json(
         {
           success: false,
@@ -264,7 +267,7 @@ describe('POST /api/generate', () => {
       data: { id: 'letter-1', content: 'letter', createdAt: 'now', guideBonusApplied: true },
     })
 
-    expect(mocks.enforceMonthlyQuota).not.toHaveBeenCalled()
+    expect(mocks.enforceLetterQuota).not.toHaveBeenCalled()
     expect(mocks.recordUsageEvent).not.toHaveBeenCalled()
     expect(mocks.updateMany).toHaveBeenCalled()
   })
