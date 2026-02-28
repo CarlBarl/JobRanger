@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { FileUpload } from './FileUpload'
 
@@ -8,7 +8,7 @@ const messages = {
     error: 'An error occurred',
   },
   upload: {
-    dropCV: 'Click to upload CV (PDF, DOCX, or TXT)',
+    dropCV: 'Drag and drop or click to upload CV (PDF, DOCX, or TXT)',
     uploadCV: 'Upload CV',
     uploading: 'Uploading...',
     uploadFailed: 'Upload failed',
@@ -26,7 +26,7 @@ describe('FileUpload', () => {
       </NextIntlClientProvider>
     )
 
-    expect(screen.getByText('Click to upload CV (PDF, DOCX, or TXT)')).toBeInTheDocument()
+    expect(screen.getByText('Drag and drop or click to upload CV (PDF, DOCX, or TXT)')).toBeInTheDocument()
     expect(screen.getByText('Max 5MB')).toBeInTheDocument()
   })
 
@@ -48,6 +48,26 @@ describe('FileUpload', () => {
     )
 
     expect(container.querySelector('[class*="rounded-xl"]')).not.toBeInTheDocument()
-    expect(screen.getByText('Click to upload CV (PDF, DOCX, or TXT)')).toBeInTheDocument()
+    expect(screen.getByText('Drag and drop or click to upload CV (PDF, DOCX, or TXT)')).toBeInTheDocument()
+  })
+
+  it('selects a file when dropped on the upload zone', () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={messages}>
+        <FileUpload />
+      </NextIntlClientProvider>
+    )
+
+    const dropZone = screen
+      .getByText('Drag and drop or click to upload CV (PDF, DOCX, or TXT)')
+      .closest('label')
+    const file = new File(['resume content'], 'resume.docx', {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    })
+
+    expect(dropZone).not.toBeNull()
+    fireEvent.drop(dropZone!, { dataTransfer: { files: [file] } })
+
+    expect(screen.getByText('resume.docx')).toBeInTheDocument()
   })
 })

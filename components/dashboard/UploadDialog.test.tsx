@@ -21,11 +21,11 @@ const messages = {
     replaceDocumentDescription: 'Upload a new file to replace your current document.',
   },
   upload: {
-    dropCV: 'Click to upload CV',
+    dropCV: 'Drag and drop or click to upload CV',
     uploadCV: 'Upload CV',
     uploading: 'Uploading...',
     uploadFailed: 'Upload failed',
-    dropPersonalLetter: 'Click to upload Personal Letter',
+    dropPersonalLetter: 'Drag and drop or click to upload Personal Letter',
     maxSize: 'Max 5MB',
     uploadPersonalLetter: 'Upload Personal Letter',
     invalidType: 'Invalid file type',
@@ -47,7 +47,7 @@ describe('UploadDialog', () => {
 
     expect(screen.getByText('Upload New CV')).toBeInTheDocument()
     expect(screen.getByText('Upload a new file to replace your current document.')).toBeInTheDocument()
-    expect(screen.getByText('Click to upload CV')).toBeInTheDocument()
+    expect(screen.getByText('Drag and drop or click to upload CV')).toBeInTheDocument()
   })
 
   it('renders personal letter upload when documentType is personal_letter', () => {
@@ -62,7 +62,7 @@ describe('UploadDialog', () => {
     )
 
     expect(screen.getByText('Upload New Personal Letter')).toBeInTheDocument()
-    expect(screen.getByText('Click to upload Personal Letter')).toBeInTheDocument()
+    expect(screen.getByText('Drag and drop or click to upload Personal Letter')).toBeInTheDocument()
   })
 
   it('does not render when closed', () => {
