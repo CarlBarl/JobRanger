@@ -15,9 +15,13 @@ vi.mock('@/lib/prisma', () => ({
 }))
 
 import {
+  enforceLetterQuota,
   enforceMonthlyQuota,
+  getLetterQuotaSnapshot,
   getMonthlyQuotaLimit,
   getMonthlyQuotaSnapshot,
+  LETTER_GENERATE_COST_CREDITS,
+  LETTER_HONE_COST_CREDITS,
   recordUsageEvent,
 } from './monthly-quota'
 
@@ -109,6 +113,68 @@ describe('monthly quota helpers', () => {
       data: {
         userId: 'u1',
         type: 'SKILLS_BATCH',
+      },
+    })
+  })
+
+  it('returns letter quota snapshot using half-step credits', async () => {
+    mocks.count.mockResolvedValue(1)
+
+    const snapshot = await getLetterQuotaSnapshot({
+      userId: 'u1',
+      userTier: 'FREE',
+      now: new Date('2026-02-15T00:00:00.000Z'),
+    })
+
+    expect(snapshot).toEqual({
+      limit: 1,
+      used: 0.5,
+      remaining: 0.5,
+      window: 'monthly',
+      resetAt: '2026-03-01T00:00:00.000Z',
+      isExhausted: true,
+      limitCredits: 2,
+      usedCredits: 1,
+      remainingCredits: 1,
+    })
+  })
+
+  it('allows letter hone when one credit remains', async () => {
+    mocks.count.mockResolvedValue(1)
+
+    const result = await enforceLetterQuota({
+      userId: 'u1',
+      userTier: 'FREE',
+      requiredCredits: LETTER_HONE_COST_CREDITS,
+      message: 'Quota hit',
+      now: new Date('2026-02-15T00:00:00.000Z'),
+    })
+
+    expect(result).toBeNull()
+  })
+
+  it('blocks full letter generation when only one credit remains', async () => {
+    mocks.count.mockResolvedValue(1)
+    const now = new Date('2026-02-15T00:00:00.000Z')
+
+    const result = await enforceLetterQuota({
+      userId: 'u1',
+      userTier: 'FREE',
+      requiredCredits: LETTER_GENERATE_COST_CREDITS,
+      message: 'Monthly letter generation quota reached for your plan.',
+      now,
+    })
+
+    expect(result?.status).toBe(429)
+    await expect(result?.json()).resolves.toMatchObject({
+      success: false,
+      error: {
+        code: 'QUOTA_EXCEEDED',
+        limit: 1,
+        used: 0.5,
+        remaining: 0.5,
+        window: 'monthly',
+        resetAt: '2026-03-01T00:00:00.000Z',
       },
     })
   })

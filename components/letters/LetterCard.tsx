@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Briefcase, ChevronDown, ChevronUp, Copy, ExternalLink, Trash2 } from 'lucide-react'
+import { Briefcase, ChevronDown, ChevronUp, Copy, ExternalLink, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -12,6 +12,7 @@ export type LetterCardLabels = {
   copied: string
   delete: string
   deleting: string
+  edit: string
   showLess: string
   showMore: string
   viewJob: string
@@ -32,6 +33,7 @@ type LetterCardProps = {
   metaLine: string | null
   onCopy: (letter: LetterListItem) => void
   onDelete: (letter: LetterListItem) => void
+  onEdit: (letter: LetterListItem) => void
   onToggleExpanded: (id: string) => void
   title: string
 }
@@ -50,6 +52,7 @@ export function LetterCard({
   metaLine,
   onCopy,
   onDelete,
+  onEdit,
   onToggleExpanded,
   title,
 }: LetterCardProps) {
@@ -93,6 +96,19 @@ export function LetterCard({
                 </a>
               </Button>
             ) : null}
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2"
+              onClick={() => onEdit(letter)}
+              disabled={Boolean(deletingId)}
+              aria-label={labels.edit}
+            >
+              <Pencil className="h-4 w-4" />
+              <span className="hidden sm:inline">{labels.edit}</span>
+            </Button>
 
             <Button
               type="button"

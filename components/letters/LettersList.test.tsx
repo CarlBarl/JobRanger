@@ -92,6 +92,104 @@ describe('LettersList', () => {
     })
   })
 
+  it('edits letter text via PATCH', async () => {
+    const user = userEvent.setup()
+    ;(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: { id: 'l1', content: 'Updated letter body' },
+      }),
+    })
+
+    const letters: LetterListItem[] = [
+      {
+        id: 'l1',
+        afJobId: '123',
+        jobTitle: 'React Developer',
+        content: 'Original letter body',
+        createdAt: '2026-02-15T12:00:00.000Z',
+        savedJob: null,
+      },
+    ]
+
+    render(<LettersList initialLetters={letters} />)
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.clear(screen.getByLabelText('Letter body'))
+    await user.type(screen.getByLabelText('Letter body'), 'Updated letter body')
+    await user.click(screen.getByRole('button', { name: 'Save text' }))
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/letters/l1',
+      expect.objectContaining({
+        method: 'PATCH',
+      })
+    )
+    await waitFor(() => {
+      expect(screen.getByLabelText('Letter body')).toHaveValue('Updated letter body')
+    })
+  })
+
+  it('hones letter text via AI follow-up prompt', async () => {
+    const user = userEvent.setup()
+    ;(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: { id: 'l1', content: 'AI refined letter' },
+      }),
+    })
+
+    const letters: LetterListItem[] = [
+      {
+        id: 'l1',
+        afJobId: '123',
+        jobTitle: 'React Developer',
+        content: 'Original letter body',
+        createdAt: '2026-02-15T12:00:00.000Z',
+        savedJob: null,
+      },
+    ]
+
+    render(<LettersList initialLetters={letters} canUseAiHone={true} />)
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.type(screen.getByLabelText('AI follow-up prompt'), 'Make it more concise')
+    await user.click(screen.getByRole('button', { name: 'Hone with AI' }))
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/letters/l1/hone',
+      expect.objectContaining({
+        method: 'POST',
+      })
+    )
+    await waitFor(() => {
+      expect(screen.getByLabelText('Letter body')).toHaveValue('AI refined letter')
+    })
+  })
+
+  it('disables AI hone action for free users', async () => {
+    const user = userEvent.setup()
+    const letters: LetterListItem[] = [
+      {
+        id: 'l1',
+        afJobId: '123',
+        jobTitle: 'React Developer',
+        content: 'Original letter body',
+        createdAt: '2026-02-15T12:00:00.000Z',
+        savedJob: null,
+      },
+    ]
+
+    render(<LettersList initialLetters={letters} canUseAiHone={false} />)
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+    expect(screen.getByText('AI honing is available for Pro users only.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Hone with AI' })).toBeDisabled()
+  })
+
   it('shows filtered context and show-all link when activeJobId is provided', () => {
     const letters: LetterListItem[] = [
       {
