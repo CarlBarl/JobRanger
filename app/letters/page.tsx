@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
@@ -15,7 +16,7 @@ export default async function LettersPage({ searchParams }: LettersPageProps) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return null
+  if (!user) redirect('/auth/signin')
 
   const { jobId } = await searchParams
   const activeJobId = jobId && isValidAfJobId(jobId) ? jobId : null

@@ -7,12 +7,17 @@ interface UseSkillsEditorParams {
   initialSkills: string[]
   documentId: string | null
   onSkillsChange?: (skills: string[]) => void
+  messages: {
+    saved: string
+    saveFailed: string
+  }
 }
 
 export function useSkillsEditor({
   initialSkills,
   documentId,
   onSkillsChange,
+  messages,
 }: UseSkillsEditorParams) {
   const [skills, setSkills] = useState<string[]>(initialSkills)
   const [newSkill, setNewSkill] = useState('')
@@ -20,6 +25,10 @@ export function useSkillsEditor({
   const [isSaving, setIsSaving] = useState(false)
   const [removingSkill, setRemovingSkill] = useState<string | null>(null)
   const [recentlyAdded, setRecentlyAdded] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState<{
+    tone: 'success' | 'error'
+    message: string
+  } | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -30,6 +39,7 @@ export function useSkillsEditor({
     if (!documentId) return
 
     setIsSaving(true)
+    setFeedback(null)
     try {
       const response = await fetch('/api/skills', {
         method: 'PATCH',
@@ -42,9 +52,10 @@ export function useSkillsEditor({
       }
 
       onSkillsChange?.(nextSkills)
-    } catch (error) {
-      console.error('Failed to save skills:', error)
+      setFeedback({ tone: 'success', message: messages.saved })
+    } catch {
       setSkills(previousSkills)
+      setFeedback({ tone: 'error', message: messages.saveFailed })
     } finally {
       setIsSaving(false)
     }
@@ -105,6 +116,7 @@ export function useSkillsEditor({
     isSaving,
     removingSkill,
     recentlyAdded,
+    feedback,
     inputRef,
     handleAddSkill,
     handleRemoveSkill,

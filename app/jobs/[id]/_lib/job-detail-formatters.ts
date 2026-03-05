@@ -1,3 +1,5 @@
+import { formatShortDate } from '@/lib/formatting'
+
 export function formatLocation(address?: {
   municipality?: string | null
   region?: string | null
@@ -28,9 +30,8 @@ export function formatAddressLine(address?: {
   return parts.length > 0 ? parts.join(', ') : null
 }
 
-export function formatDate(value?: string | null): string | null {
-  if (!value || value.length < 10) return null
-  return value.slice(0, 10)
+export function formatDate(value?: string | null, locale?: string | null): string | null {
+  return formatShortDate(value, locale)
 }
 
 export function isDeadlineSoon(deadline?: string | null): boolean {

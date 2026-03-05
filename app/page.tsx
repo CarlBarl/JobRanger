@@ -167,21 +167,21 @@ export default async function HomePage() {
                 <div className="relative space-y-3">
                   <div className="flex items-center gap-3 rounded-xl border border-primary/25 bg-primary/[0.06] p-3">
                     <div className="flex-1 space-y-1">
-                      <p className="text-xs font-semibold text-foreground">Frontend-utvecklare</p>
-                      <p className="text-[11px] text-muted-foreground">Spotify &middot; Stockholm</p>
+                      <p className="text-xs font-semibold text-foreground">{t('sampleJobFrontendTitle')}</p>
+                      <p className="text-[11px] text-muted-foreground">{t('sampleJobFrontendMeta')}</p>
                     </div>
                     <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">4/5</span>
                   </div>
                   <div className="flex items-center gap-3 rounded-xl border border-foreground/10 bg-background/90 p-3">
                     <div className="flex-1 space-y-1">
-                      <p className="text-xs font-semibold text-foreground">Backend-utvecklare</p>
-                      <p className="text-[11px] text-muted-foreground">Klarna &middot; Stockholm</p>
+                      <p className="text-xs font-semibold text-foreground">{t('sampleJobBackendTitle')}</p>
+                      <p className="text-[11px] text-muted-foreground">{t('sampleJobBackendMeta')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 rounded-xl border border-foreground/10 bg-background/90 p-3 opacity-60">
                     <div className="flex-1 space-y-1">
-                      <p className="text-xs font-semibold text-foreground">Fullstack-utvecklare</p>
-                      <p className="text-[11px] text-muted-foreground">Ericsson &middot; Kista</p>
+                      <p className="text-xs font-semibold text-foreground">{t('sampleJobFullstackTitle')}</p>
+                      <p className="text-[11px] text-muted-foreground">{t('sampleJobFullstackMeta')}</p>
                     </div>
                   </div>
                 </div>
@@ -207,7 +207,7 @@ export default async function HomePage() {
                 <div className="relative rounded-xl border border-foreground/10 bg-background/95 p-4">
                   <div className="mb-4 flex items-center gap-2">
                     <Sparkles className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                    <span className="text-xs font-medium text-primary">Personligt brev</span>
+                    <span className="text-xs font-medium text-primary">{t('generatedLetterLabel')}</span>
                   </div>
                   <div className="space-y-2">
                     <div className="h-2 w-full rounded-full bg-foreground/10" />
@@ -216,7 +216,7 @@ export default async function HomePage() {
                     <div className="h-2 w-full rounded-full bg-foreground/10" />
                     <div className="h-2 w-3/4 rounded-full bg-foreground/10" />
                   </div>
-                  <span className="mt-5 inline-flex h-7 items-center rounded-md border border-border/80 bg-muted/40 px-3 text-[11px] font-medium text-muted-foreground">Kopiera</span>
+                  <span className="mt-5 inline-flex h-7 items-center rounded-md border border-border/80 bg-muted/40 px-3 text-[11px] font-medium text-muted-foreground">{t('copyAction')}</span>
                 </div>
               </div>
             </article>
@@ -245,9 +245,7 @@ export default async function HomePage() {
               {common('privacyPolicy')}
             </Link>
           </div>
-          <span className="text-xs text-muted-foreground">
-            Stockholm, Sverige
-          </span>
+          <span className="text-xs text-muted-foreground">{t('footerLocation')}</span>
         </div>
       </footer>
     </main>

@@ -1,13 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ResetPasswordForm } from '@/components/auth/ResetPasswordForm'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { AuthShell } from '@/components/auth/AuthShell'
 import { getTranslations } from 'next-intl/server'
 
 export default async function ResetPasswordPage() {
@@ -19,25 +13,18 @@ export default async function ResetPasswordPage() {
 
   if (!user) {
     return (
-      <main className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>{t('resetLinkInvalidTitle')}</CardTitle>
-            <CardDescription>{t('resetLinkInvalidDescription')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/auth/forgot" className="text-primary hover:underline">
-              {t('requestNewResetLink')}
-            </Link>
-          </CardContent>
-        </Card>
-      </main>
+      <AuthShell
+        title={t('resetLinkInvalidTitle')}
+        description={t('resetLinkInvalidDescription')}
+        footerHref="/auth/forgot"
+        footerLabel={t('requestNewResetLink')}
+      >
+        <p className="hidden">
+          <Link href="/auth/forgot">{t('requestNewResetLink')}</Link>
+        </p>
+      </AuthShell>
     )
   }
 
-  return (
-    <main className="min-h-screen flex items-center justify-center p-4">
-      <ResetPasswordForm />
-    </main>
-  )
+  return <ResetPasswordForm />
 }

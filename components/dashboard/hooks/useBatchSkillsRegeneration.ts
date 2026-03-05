@@ -24,13 +24,18 @@ interface BatchResults {
   }>
 }
 
-export function useBatchSkillsRegeneration() {
+export function useBatchSkillsRegeneration(failureMessage: string) {
   const [batchModalOpen, setBatchModalOpen] = useState(false)
   const [batchLoading, setBatchLoading] = useState(false)
   const [batchResults, setBatchResults] = useState<BatchResults | null>(null)
+  const [feedback, setFeedback] = useState<{
+    tone: 'error'
+    message: string
+  } | null>(null)
 
   const handleBatchRegenerate = async () => {
     setBatchLoading(true)
+    setFeedback(null)
 
     try {
       const response = await fetch('/api/skills/batch', { method: 'POST' })
@@ -40,10 +45,10 @@ export function useBatchSkillsRegeneration() {
         setBatchResults(data.data)
         setBatchModalOpen(true)
       } else {
-        console.error('Batch skills update failed:', data.error)
+        setFeedback({ tone: 'error', message: failureMessage })
       }
-    } catch (error) {
-      console.error('Batch skills update error:', error)
+    } catch {
+      setFeedback({ tone: 'error', message: failureMessage })
     } finally {
       setBatchLoading(false)
     }
@@ -54,6 +59,7 @@ export function useBatchSkillsRegeneration() {
     setBatchModalOpen,
     batchLoading,
     batchResults,
+    feedback,
     handleBatchRegenerate,
   }
 }

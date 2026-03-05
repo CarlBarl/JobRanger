@@ -13,6 +13,7 @@ import { ExternalLink, Pencil, Upload, Save, Loader2, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { UploadDialog } from './UploadDialog'
+import { ActionFeedback } from '@/components/ui/action-feedback'
 
 interface DocumentPreviewDialogProps {
   open: boolean
@@ -39,6 +40,10 @@ export function DocumentPreviewDialog({
   const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState(content || '')
   const [isSaving, setIsSaving] = useState(false)
+  const [feedback, setFeedback] = useState<{
+    tone: 'success' | 'error'
+    message: string
+  } | null>(null)
 
   const isDirty = editedContent !== (content || '')
 
@@ -47,11 +52,13 @@ export function DocumentPreviewDialog({
     if (open) {
       setIsEditing(false)
       setEditedContent(content || '')
+      setFeedback(null)
     }
   }, [open, content])
 
   const handleSave = async () => {
     setIsSaving(true)
+    setFeedback(null)
     try {
       const response = await fetch(`/api/documents/${documentId}`, {
         method: 'PATCH',
@@ -62,11 +69,18 @@ export function DocumentPreviewDialog({
       if (response.ok) {
         router.refresh()
         setIsEditing(false)
+        setFeedback({ tone: 'success', message: t('changesSaved') })
       } else {
-        console.error('Failed to save document:', response.status, response.statusText)
+        const json = await response.json().catch(() => null) as
+          | { error?: { message?: string } }
+          | null
+        setFeedback({
+          tone: 'error',
+          message: json?.error?.message || t('saveFailed'),
+        })
       }
-    } catch (error) {
-      console.error('Network error while saving document:', error)
+    } catch {
+      setFeedback({ tone: 'error', message: t('saveFailed') })
     } finally {
       setIsSaving(false)
     }
@@ -139,6 +153,9 @@ export function DocumentPreviewDialog({
           <div className="border-t bg-muted/20 px-6 py-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-col gap-1">
+                {feedback ? (
+                  <ActionFeedback tone={feedback.tone} message={feedback.message} />
+                ) : null}
                 {isEditing && isDirty ? (
                   <p className="text-sm text-amber-600">{t('unsavedChanges')}</p>
                 ) : null}

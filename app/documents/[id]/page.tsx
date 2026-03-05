@@ -2,7 +2,8 @@ import { redirect } from 'next/navigation'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
-import { getTranslations } from 'next-intl/server'
+import { formatShortDate } from '@/lib/formatting'
+import { getLocale, getTranslations } from 'next-intl/server'
 
 export default async function DocumentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -14,6 +15,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
   if (!user) redirect('/auth/signin')
 
   const t = await getTranslations('dashboard')
+  const locale = await getLocale()
 
   const document = await prisma.document.findFirst({
     where: { id, userId: user.id },
@@ -24,7 +26,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
       <div className="min-h-screen">
         <DashboardHeader />
         <main className="container mx-auto px-4 py-8">
-          <h1 className="text-2xl font-bold">Document not found</h1>
+          <h1 className="text-2xl font-bold">{t('documentNotFound')}</h1>
         </main>
       </div>
     )
@@ -38,7 +40,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
       <main className="container mx-auto space-y-6 px-4 py-6 sm:py-8">
         <h1 className="text-2xl font-bold break-words">{title}</h1>
         <div className="text-sm text-muted-foreground">
-          {t('uploaded')}: {document.createdAt.toLocaleDateString()}
+          {t('uploaded')}: {formatShortDate(document.createdAt, locale)}
         </div>
         {document.parsedContent ? (
           <div className="prose max-w-none">
