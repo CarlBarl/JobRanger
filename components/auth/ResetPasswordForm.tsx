@@ -2,19 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { updatePassword } from '@/app/auth/reset/actions'
+import { AuthShell } from './AuthShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 
 export function ResetPasswordForm() {
   const t = useTranslations('auth')
@@ -55,12 +48,12 @@ export function ResetPasswordForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>{t('updatePasswordTitle')}</CardTitle>
-        <CardDescription>{t('updatePasswordDescription')}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <AuthShell
+      title={t('updatePasswordTitle')}
+      description={t('updatePasswordDescription')}
+      footerHref="/auth/signin"
+      footerLabel={t('backToSignIn')}
+    >
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="password">{t('password')}</Label>
@@ -87,12 +80,6 @@ export function ResetPasswordForm() {
             {loading ? tCommon('loading') : t('updatePassword')}
           </Button>
         </form>
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          <Link href="/auth/signin" className="text-primary hover:underline">
-            {t('backToSignIn')}
-          </Link>
-        </p>
-      </CardContent>
-    </Card>
+    </AuthShell>
   )
 }

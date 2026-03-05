@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { FileText } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { isApiEnvelope, isApiFailure } from '@/lib/api/envelope'
 import { CopyToast } from './CopyToast'
 import { LetterEditDialog } from './LetterEditDialog'
@@ -22,6 +23,7 @@ export function LettersList({
   canUseAiHone?: boolean
 }) {
   const t = useTranslations('letters')
+  const common = useTranslations('common')
   const locale = useLocale()
   const router = useRouter()
   const [letters, setLetters] = useState<LetterListItem[]>(initialLetters)
@@ -243,6 +245,14 @@ export function LettersList({
           <p className="text-sm text-muted-foreground">
             {activeJobId ? t('emptyForJob') : t('empty')}
           </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <Button asChild>
+              <Link href="/jobs">{common('navJobs')}</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/dashboard">{common('navDashboard')}</Link>
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="animate-fade-up delay-1 space-y-4">

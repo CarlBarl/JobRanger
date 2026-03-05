@@ -22,7 +22,7 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser()
 
   if (!authUser?.email) {
-    return null
+    redirect('/auth/signin')
   }
 
   const user = await getOrCreateUser(authUser.id, authUser.email)

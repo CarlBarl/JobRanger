@@ -1,6 +1,7 @@
 {
   "common": {
     "appName": "JobbJägaren",
+    "metaEyebrow": "AI-Driven Jobbmatchning",
     "signIn": "Logga in",
     "signOut": "Logga ut",
     "save": "Spara",
@@ -25,6 +26,15 @@
     "getStarted": "Kom ig\u00e5ng",
     "howItWorks": "S\u00e5 funkar det",
     "howItWorksSubtitle": "Ladda upp. Matcha. Ans\u00f6k. Tre enkla steg.",
+    "sampleJobFrontendTitle": "Frontend-utvecklare",
+    "sampleJobFrontendMeta": "Spotify · Stockholm",
+    "sampleJobBackendTitle": "Backend-utvecklare",
+    "sampleJobBackendMeta": "Klarna · Stockholm",
+    "sampleJobFullstackTitle": "Fullstack-utvecklare",
+    "sampleJobFullstackMeta": "Ericsson · Kista",
+    "generatedLetterLabel": "Personligt brev",
+    "copyAction": "Kopiera",
+    "footerLocation": "Stockholm, Sverige",
     "features": {
       "upload": {
         "title": "Ladda upp ditt CV",
@@ -161,6 +171,9 @@
     "backToDashboard": "Tillbaka till Dashboard",
     "lastUpdated": "Senast uppdaterad",
     "changesSaved": "Ändringar sparade",
+    "saveFailed": "Kunde inte spara dina ändringar",
+    "documentNotFound": "Dokumentet hittades inte",
+    "batchRegenerationFailed": "Vi kunde inte uppdatera kompetenser just nu. Försök igen.",
     "regenerateAllSkills": "Uppdatera kompetenser från CV",
     "regenerating": "Uppdaterar kompetenser...",
     "batchResults": {
@@ -191,6 +204,8 @@
       "addPlaceholder": "Skriv en kompetens och tryck Enter",
       "removeSkill": "Ta bort {skill}",
       "saving": "Sparar...",
+      "saved": "Kompetenser sparade",
+      "saveFailed": "Kunde inte spara kompetenserna. Vi återställde den tidigare listan.",
       "count": "{count, plural, =0 {Inga kompetenser} =1 {1 kompetens} other {# kompetenser}}"
     },
     "letterGuidance": {

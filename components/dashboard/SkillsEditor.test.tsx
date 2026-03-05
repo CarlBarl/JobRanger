@@ -90,8 +90,6 @@ describe('SkillsEditor', () => {
 
     it('handles API errors gracefully', async () => {
       const user = userEvent.setup()
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-
       ;(global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Network error'))
 
       render(
@@ -102,13 +100,10 @@ describe('SkillsEditor', () => {
       await user.click(button)
 
       await waitFor(() => {
-        expect(consoleError).toHaveBeenCalledWith(
-          'Batch skills update error:',
-          expect.any(Error)
+        expect(screen.getByRole('alert')).toHaveTextContent(
+          "We couldn't update skills right now. Please try again."
         )
       })
-
-      consoleError.mockRestore()
     })
 
     it('refreshes page when modal is closed', async () => {

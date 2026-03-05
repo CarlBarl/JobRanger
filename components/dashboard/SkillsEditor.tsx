@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { X, Plus, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ActionFeedback } from '@/components/ui/action-feedback'
 import { useSkillsEditor } from '@/components/dashboard/hooks/useSkillsEditor'
 import { BatchSkillsButton } from '@/components/dashboard/BatchSkillsButton'
 import { BatchResultsModal } from '@/components/dashboard/BatchResultsModal'
@@ -32,19 +33,29 @@ export function SkillsEditor({
     setIsAdding,
     isSaving,
     removingSkill,
+    feedback,
     inputRef,
     handleAddSkill,
     handleRemoveSkill,
     handleInputKeyDown,
-  } = useSkillsEditor({ initialSkills, documentId, onSkillsChange })
+  } = useSkillsEditor({
+    initialSkills,
+    documentId,
+    onSkillsChange,
+    messages: {
+      saved: t('skills.saved'),
+      saveFailed: t('skills.saveFailed'),
+    },
+  })
 
   const {
     batchModalOpen,
     setBatchModalOpen,
     batchLoading,
     batchResults,
+    feedback: batchFeedback,
     handleBatchRegenerate,
-  } = useBatchSkillsRegeneration()
+  } = useBatchSkillsRegeneration(t('batchRegenerationFailed'))
 
   return (
     <div className={cn('card-elevated rounded-xl border bg-card p-5', className)}>
@@ -151,6 +162,13 @@ export function SkillsEditor({
             </button>
           )}
         </div>
+
+        {feedback ? (
+          <ActionFeedback tone={feedback.tone} message={feedback.message} className="mt-3" />
+        ) : null}
+        {batchFeedback ? (
+          <ActionFeedback tone={batchFeedback.tone} message={batchFeedback.message} className="mt-3" />
+        ) : null}
 
         {documentId ? (
           <div className="mt-3 flex justify-end">

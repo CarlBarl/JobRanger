@@ -49,8 +49,8 @@ describe('JobCard', () => {
     expect(screen.getByText('Systemutvecklare')).toBeInTheDocument()
     expect(screen.getByText(/Vanlig anställning/)).toBeInTheDocument()
     expect(screen.getByText(/Heltid/)).toBeInTheDocument()
-    expect(screen.getByText('2026-02-03')).toBeInTheDocument()
-    expect(screen.getByText(/2026-02-28/)).toBeInTheDocument()
+    expect(screen.getByText('Feb 3, 2026')).toBeInTheDocument()
+    expect(screen.getByText(/Feb 28, 2026/)).toBeInTheDocument()
     expect(screen.getByAltText('ACME logo')).toBeInTheDocument()
 
     const listingLinks = screen.getAllByRole('link', { name: /see listing/i })
