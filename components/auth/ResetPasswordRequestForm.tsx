@@ -1,19 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
+import { AuthShell } from './AuthShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -53,31 +46,18 @@ export function ResetPasswordRequestForm() {
     setSent(true)
   }
 
-  if (sent) {
-    return (
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>{t('resetEmailSent')}</CardTitle>
-          <CardDescription>
-            {t('resetEmailSentDescription', { email })}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link href="/auth/signin" className="text-primary hover:underline">
-            {t('backToSignIn')}
-          </Link>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>{t('resetPasswordTitle')}</CardTitle>
-        <CardDescription>{t('resetPasswordDescription')}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <AuthShell
+      title={sent ? t('resetEmailSent') : t('resetPasswordTitle')}
+      description={
+        sent
+          ? t('resetEmailSentDescription', { email })
+          : t('resetPasswordDescription')
+      }
+      footerHref="/auth/signin"
+      footerLabel={t('backToSignIn')}
+    >
+      {sent ? null : (
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">{t('email')}</Label>
@@ -96,12 +76,7 @@ export function ResetPasswordRequestForm() {
             {loading ? t('sending') : t('sendResetLink')}
           </Button>
         </form>
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          <Link href="/auth/signin" className="text-primary hover:underline">
-            {t('backToSignIn')}
-          </Link>
-        </p>
-      </CardContent>
-    </Card>
+      )}
+    </AuthShell>
   )
 }

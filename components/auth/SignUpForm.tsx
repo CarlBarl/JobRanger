@@ -1,25 +1,21 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
+import { AuthShell } from './AuthShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { GoogleOAuthButton } from '@/components/auth/signin/GoogleOAuthButton'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function SignUpForm() {
   const t = useTranslations('auth')
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -49,7 +45,7 @@ export function SignUpForm() {
     setLoading(true)
     const supabase = createClient()
 
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -71,34 +67,29 @@ export function SignUpForm() {
       return
     }
 
+    if (data.session) {
+      router.push('/dashboard')
+      router.refresh()
+      return
+    }
+
     setSent(true)
   }
 
-  if (sent) {
-    return (
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>{t('signUpCheckEmail')}</CardTitle>
-          <CardDescription>
-            {t('signUpCheckEmailDescription', { email })}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link href="/auth/signin" className="text-primary hover:underline text-sm">
-            {t('backToSignIn')}
-          </Link>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>{t('signUpTitle')}</CardTitle>
-        <CardDescription>{t('signUpDescription')}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <AuthShell
+      title={sent ? t('signUpCheckEmail') : t('signUpTitle')}
+      description={
+        sent
+          ? t('signUpCheckEmailDescription', { email })
+          : t('signUpDescription')
+      }
+      footerText={sent ? undefined : t('haveAccount')}
+      footerHref="/auth/signin"
+      footerLabel={sent ? t('backToSignIn') : t('signIn')}
+    >
+      {sent ? null : (
+        <>
         <GoogleOAuthButton />
 
         <div className="my-5 flex items-center gap-3">
@@ -144,13 +135,11 @@ export function SignUpForm() {
             {loading ? t('signingUp') : t('signUp')}
           </Button>
         </form>
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          {t('haveAccount')}{' '}
-          <Link href="/auth/signin" className="text-primary hover:underline">
-            {t('signIn')}
-          </Link>
-        </p>
-      </CardContent>
-    </Card>
+        </>
+      )}
+      <p className="hidden">
+        <Link href="/auth/signin">{t('signIn')}</Link>
+      </p>
+    </AuthShell>
   )
 }

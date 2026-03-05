@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { AFJobHit } from '@/lib/services/arbetsformedlingen'
+import { formatShortDate } from '@/lib/formatting'
 
 type JobCardProps = {
   job: Pick<
@@ -39,17 +40,13 @@ function formatLocation(job: JobCardProps['job']): string | null {
   return uniqueParts.length > 0 ? uniqueParts.join(', ') : null
 }
 
-function formatDate(value?: string | null): string | null {
-  if (!value || value.length < 10) return null
-  return value.slice(0, 10)
-}
-
 export function JobCard({ job, isSaved = false, onToggleSave }: JobCardProps) {
   const t = useTranslations('jobs')
+  const locale = useLocale()
   const employerName = job.employer?.name ?? t('card.unknownEmployer')
   const location = formatLocation(job)
-  const publishedDate = formatDate(job.publication_date)
-  const deadlineDate = formatDate(job.application_deadline)
+  const publishedDate = formatShortDate(job.publication_date, locale)
+  const deadlineDate = formatShortDate(job.application_deadline, locale)
   const employmentType = job.employment_type?.label ?? null
   const workingHours = job.working_hours_type?.label ?? null
   const occupation = job.occupation?.label ?? null

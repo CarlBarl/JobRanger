@@ -1,6 +1,7 @@
 {
   "common": {
     "appName": "JobbJägaren",
+    "metaEyebrow": "AI-Powered Job Matching",
     "signIn": "Sign In",
     "signOut": "Sign Out",
     "save": "Save",
@@ -25,6 +26,15 @@
     "getStarted": "Get Started",
     "howItWorks": "How it works",
     "howItWorksSubtitle": "Upload. Match. Apply. Three simple steps.",
+    "sampleJobFrontendTitle": "Frontend Developer",
+    "sampleJobFrontendMeta": "Spotify · Stockholm",
+    "sampleJobBackendTitle": "Backend Developer",
+    "sampleJobBackendMeta": "Klarna · Stockholm",
+    "sampleJobFullstackTitle": "Full-stack Developer",
+    "sampleJobFullstackMeta": "Ericsson · Kista",
+    "generatedLetterLabel": "Cover letter",
+    "copyAction": "Copy",
+    "footerLocation": "Stockholm, Sweden",
     "features": {
       "upload": {
         "title": "Upload your CV",
@@ -161,6 +171,9 @@
     "backToDashboard": "Back to Dashboard",
     "lastUpdated": "Last updated",
     "changesSaved": "Changes saved",
+    "saveFailed": "Could not save your changes",
+    "documentNotFound": "Document not found",
+    "batchRegenerationFailed": "We couldn't update skills right now. Please try again.",
     "regenerateAllSkills": "Update skills from CV",
     "regenerating": "Updating skills...",
     "batchResults": {
@@ -191,6 +204,8 @@
       "addPlaceholder": "Type a skill and press Enter",
       "removeSkill": "Remove {skill}",
       "saving": "Saving...",
+      "saved": "Skills saved",
+      "saveFailed": "Could not save skills. We restored the previous list.",
       "count": "{count, plural, =0 {No skills} =1 {1 skill} other {# skills}}"
     },
     "letterGuidance": {

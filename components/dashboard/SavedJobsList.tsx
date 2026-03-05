@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { MapPin, Briefcase, X } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { formatShortDate } from '@/lib/formatting'
 
 interface SavedJobData {
   afJobId: string
@@ -24,16 +25,9 @@ interface SavedJobsListProps {
   className?: string
 }
 
-function formatDeadline(iso: string) {
-  const d = new Date(iso)
-  return d.toLocaleDateString('sv-SE', {
-    day: 'numeric',
-    month: 'short',
-  })
-}
-
 export function SavedJobsList({ jobs: initialJobs, totalCount: initialCount, className }: SavedJobsListProps) {
   const t = useTranslations('dashboard')
+  const locale = useLocale()
   const router = useRouter()
   const [jobs, setJobs] = useState(initialJobs)
   const [totalCount, setTotalCount] = useState(initialCount)
@@ -144,7 +138,7 @@ export function SavedJobsList({ jobs: initialJobs, totalCount: initialCount, cla
                 <div className="flex shrink-0 items-center gap-2 pt-0.5">
                   {!job.isStale && job.deadline && (
                     <span className="text-[11px] tabular-nums text-muted-foreground/50">
-                      {t('deadlineShort')} {formatDeadline(job.deadline)}
+                      {t('deadlineShort')} {formatShortDate(job.deadline, locale)}
                     </span>
                   )}
                   {job.isStale && (

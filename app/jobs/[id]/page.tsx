@@ -1,10 +1,11 @@
+import { redirect } from 'next/navigation'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { BackToJobsLink } from '@/components/jobs/BackToJobsLink'
 import { createClient } from '@/lib/supabase/server'
 import { getOrCreateUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getJobById } from '@/lib/services/arbetsformedlingen'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { JobHeroCard } from '@/app/jobs/[id]/_components/JobHeroCard'
 import { JobActionsCard } from '@/app/jobs/[id]/_components/JobActionsCard'
 import { JobKeyDetailsCard } from '@/app/jobs/[id]/_components/JobKeyDetailsCard'
@@ -24,8 +25,9 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
     data: { user },
   } = await supabase.auth.getUser()
   const t = await getTranslations('jobs')
+  const locale = await getLocale()
 
-  if (!user) return null
+  if (!user) redirect('/auth/signin')
 
   const profile = user.email ? await getOrCreateUser(user.id, user.email) : null
 
@@ -53,8 +55,8 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
     const description = job.description?.text ?? ''
     const location = formatLocation(job.workplace_address)
     const addressLine = formatAddressLine(job.workplace_address)
-    const publishedDate = formatDate(job.publication_date)
-    const deadlineDate = formatDate(job.application_deadline)
+    const publishedDate = formatDate(job.publication_date, locale)
+    const deadlineDate = formatDate(job.application_deadline, locale)
     const employmentType = job.employment_type?.label ?? null
     const workingHours = job.working_hours_type?.label ?? null
     const occupation = job.occupation?.label ?? null

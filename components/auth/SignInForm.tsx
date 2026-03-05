@@ -5,18 +5,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { AuthShell } from './AuthShell'
 import { EMAIL_REGEX, type AuthMode } from './signin/constants'
 import { resolvePasswordSignInError } from './signin/error-messages'
 import { MagicLinkSignInPanel } from './signin/MagicLinkSignInPanel'
 import { PasswordSignInPanel } from './signin/PasswordSignInPanel'
-import { QuickSignInButton } from './signin/QuickSignInButton'
 import { GoogleOAuthButton } from './signin/GoogleOAuthButton'
 import { signInWithPasswordApi } from './signin/sign-in-api'
 
@@ -39,7 +32,6 @@ export function SignInForm({ nextPath }: { nextPath?: string }) {
   const [mode, setMode] = useState<AuthMode>('password')
   const [shouldShake, setShouldShake] = useState(false)
 
-  const isDev = process.env.NODE_ENV === 'development'
   const nextDestination = sanitizeNextPath(nextPath)
 
   useEffect(() => {
@@ -102,69 +94,38 @@ export function SignInForm({ nextPath }: { nextPath?: string }) {
     router.refresh()
   }
 
-  async function handleQuickSignIn() {
-    const devEmail = process.env.NEXT_PUBLIC_DEV_EMAIL
-    const devPassword = process.env.NEXT_PUBLIC_DEV_PASSWORD
-
-    if (!devEmail || !devPassword) {
-      setLoading(false)
-      triggerError(
-        'Dev credentials not configured. Set NEXT_PUBLIC_DEV_EMAIL and NEXT_PUBLIC_DEV_PASSWORD in .env.local'
-      )
-      return
-    }
-
-    setEmail(devEmail)
-    setPassword(devPassword)
-    setMode('password')
-    setError(null)
-    setLoading(true)
-
-    const result = await signInWithPasswordApi(devEmail, devPassword)
-    if (!result.ok) {
-      setLoading(false)
-      triggerError(result.rawMessage ?? 'Quick sign-in failed')
-      return
-    }
-
-    router.push(nextDestination)
-    router.refresh()
-  }
-
   if (sent) {
     return (
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>{t('checkEmail')}</CardTitle>
-          <CardDescription>
-            {t('checkEmailDescription', { email })}
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <AuthShell
+        title={t('checkEmail')}
+        description={t('checkEmailDescription', { email })}
+      >
+        {null}
+      </AuthShell>
     )
   }
 
   return (
-    <Card
-      className={`w-full max-w-md transition-transform ${shouldShake ? 'animate-signin-shake' : ''}`}
+    <AuthShell
+      title={t('signInTitle')}
+      description={
+        mode === 'password'
+          ? t('signInDescriptionPassword')
+          : t('signInDescription')
+      }
+      footerText={t('noAccount')}
+      footerHref="/auth/signup"
+      footerLabel={t('signUp')}
     >
-      <CardHeader>
-        <CardTitle>{t('signInTitle')}</CardTitle>
-        <CardDescription>
-          {mode === 'password'
-            ? t('signInDescriptionPassword')
-            : t('signInDescription')}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <GoogleOAuthButton nextPath={nextPath} />
+      <GoogleOAuthButton nextPath={nextPath} />
 
-        <div className="my-5 flex items-center gap-3">
-          <div className="h-px flex-1 bg-border" />
-          <span className="text-xs text-muted-foreground">{t('or')}</span>
-          <div className="h-px flex-1 bg-border" />
-        </div>
+      <div className="my-5 flex items-center gap-3">
+        <div className="h-px flex-1 bg-border" />
+        <span className="text-xs text-muted-foreground">{t('or')}</span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
 
+      <div className={`transition-transform ${shouldShake ? 'animate-signin-shake' : ''}`}>
         {mode === 'password' ? (
           <PasswordSignInPanel
             email={email}
@@ -206,21 +167,11 @@ export function SignInForm({ nextPath }: { nextPath?: string }) {
             }}
           />
         )}
+      </div>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          {t('noAccount')}{' '}
-          <Link href="/auth/signup" className="text-primary hover:underline font-medium">
-            {t('signUp')}
-          </Link>
-        </p>
-
-        {isDev ? (
-          <QuickSignInButton
-            disabled={loading}
-            onClick={handleQuickSignIn}
-          />
-        ) : null}
-      </CardContent>
-    </Card>
+      <p className="hidden">
+        <Link href="/auth/signup">{t('signUp')}</Link>
+      </p>
+    </AuthShell>
   )
 }
