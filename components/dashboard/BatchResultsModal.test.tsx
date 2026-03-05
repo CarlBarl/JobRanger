@@ -12,6 +12,7 @@ vi.mock('next/navigation', () => ({
 
 // Mock next-intl
 vi.mock('next-intl', () => ({
+  useLocale: () => 'en',
   useTranslations: () => (key: string, values?: any) => {
     const translations: Record<string, string> = {
       'dashboard.batchResults.title': 'Skills Update Results',
@@ -231,10 +232,9 @@ describe('BatchResultsModal', () => {
         />
       )
 
-      // Dates should be formatted as sv-SE locale strings
-      expect(screen.getByText('2024-01-01')).toBeInTheDocument()
-      expect(screen.getByText('2024-01-02')).toBeInTheDocument()
-      expect(screen.getByText('2024-01-03')).toBeInTheDocument()
+      expect(screen.getByText('Jan 1, 2024')).toBeInTheDocument()
+      expect(screen.getByText('Jan 2, 2024')).toBeInTheDocument()
+      expect(screen.getByText('Jan 3, 2024')).toBeInTheDocument()
     })
   })
 })
