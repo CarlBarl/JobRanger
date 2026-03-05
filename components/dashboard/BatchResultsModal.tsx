@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { CheckCircle, XCircle, AlertCircle, Plus, Minus } from 'lucide-react'
 import {
@@ -12,6 +12,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { formatShortDate } from '@/lib/formatting'
 
 interface BatchResults {
   total: number
@@ -47,15 +48,12 @@ export function BatchResultsModal({
   results
 }: BatchResultsModalProps) {
   const t = useTranslations()
+  const locale = useLocale()
   const router = useRouter()
 
   const handleClose = () => {
     onClose()
     router.refresh()
-  }
-
-  const formatDate = (isoString: string) => {
-    return new Date(isoString).toLocaleDateString('sv-SE')
   }
 
   return (
@@ -95,7 +93,7 @@ export function BatchResultsModal({
                           {(item.previousSkills ?? []).length} → {(item.newSkills ?? []).length} {t('dashboard.batchResults.skills')}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {formatDate(item.createdAt)}
+                          {formatShortDate(item.createdAt, locale)}
                         </span>
                       </div>
                       {/* Added skills */}
@@ -166,7 +164,7 @@ export function BatchResultsModal({
                           CV {index + 1}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {formatDate(item.createdAt)}
+                          {formatShortDate(item.createdAt, locale)}
                         </span>
                       </div>
                       <div className="mt-1 text-xs text-red-700 dark:text-red-300">
@@ -196,7 +194,7 @@ export function BatchResultsModal({
                           CV {index + 1}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {formatDate(item.createdAt)}
+                          {formatShortDate(item.createdAt, locale)}
                         </span>
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground">
