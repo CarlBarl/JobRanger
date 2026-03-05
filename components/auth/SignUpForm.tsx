@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { AuthShell } from './AuthShell'
@@ -137,9 +136,6 @@ export function SignUpForm() {
         </form>
         </>
       )}
-      <p className="hidden">
-        <Link href="/auth/signin">{t('signIn')}</Link>
-      </p>
     </AuthShell>
   )
 }

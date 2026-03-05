@@ -2,7 +2,6 @@
 
 import { useEffect, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { AuthShell } from './AuthShell'
@@ -168,10 +167,6 @@ export function SignInForm({ nextPath }: { nextPath?: string }) {
           />
         )}
       </div>
-
-      <p className="hidden">
-        <Link href="/auth/signup">{t('signUp')}</Link>
-      </p>
     </AuthShell>
   )
 }
