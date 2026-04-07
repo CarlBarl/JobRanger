@@ -896,7 +896,7 @@
       },
       "contact": {
         "title": "9. Contact",
-        "body": "For questions about these terms, contact us at carlelelid@outlook.com. Business entity: Carl Elelid Enskild Firma."
+        "body": "For questions about these terms, contact us at contact@example.com. Business entity: JobRanger."
       }
     }
   },
@@ -923,7 +923,7 @@
       },
       "rights": {
         "title": "5. Your Rights (GDPR)",
-        "body": "Under the EU General Data Protection Regulation, you have the right to: access your personal data, correct inaccurate data, request deletion of your data, export your data (data portability), object to processing, and withdraw consent at any time. To exercise these rights, contact us at carlelelid@outlook.com or delete your account from the Settings page."
+        "body": "Under the EU General Data Protection Regulation, you have the right to: access your personal data, correct inaccurate data, request deletion of your data, export your data (data portability), object to processing, and withdraw consent at any time. To exercise these rights, contact us at contact@example.com or delete your account from the Settings page."
       },
       "deletion": {
         "title": "6. Account Deletion",
@@ -935,7 +935,7 @@
       },
       "contact": {
         "title": "8. Contact",
-        "body": "For privacy-related questions or to exercise your GDPR rights, contact us at carlelelid@outlook.com. Business entity: Carl Elelid Enskild Firma."
+        "body": "For privacy-related questions or to exercise your GDPR rights, contact us at contact@example.com. Business entity: JobRanger."
       },
       "changes": {
         "title": "9. Changes to This Policy",

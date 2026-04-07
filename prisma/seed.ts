@@ -53,15 +53,15 @@ async function ensureBucketExists(supabase: any): Promise<void> {
   }
 }
 
-const DEBUG_USER_EMAIL = 'carlelelid@gmail.com'
+const DEBUG_USER_EMAIL = 'user@example.com'
 const DEBUG_USER_ID = 'debug-user-001'
-const MUNICIPAL_USER_EMAIL = 'carlelelid@outlook.com'
+const MUNICIPAL_USER_EMAIL = 'admin@example.com'
 const MUNICIPAL_USER_ID = 'debug-user-002'
 
 const MOCK_CV_CONTENT = `
-CARL ELELID
+TEST USER
 Mjukvaruutvecklare | Stockholm, Sverige
-carl.elelid@gmail.com | +46 70 123 4567
+user@example.com | +46 70 000 0000
 
 PROFIL
 Erfaren mjukvaruutvecklare med 5+ års erfarenhet av fullstack-utveckling.
@@ -102,7 +102,7 @@ Engelska: Flytande
 const MOCK_PERSONAL_LETTER_CONTENT = `
 Hej,
 
-Jag heter Carl Elelid och är en passionerad mjukvaruutvecklare med över fem års
+Jag heter Test User och är en passionerad mjukvaruutvecklare med över fem års
 erfarenhet av att bygga moderna webbapplikationer. Jag skriver till er för att
 uttrycka mitt starka intresse för möjligheter inom ert företag.
 
@@ -130,7 +130,7 @@ och genuina intresse för att skapa värde skulle vara en tillgång för ert tea
 Jag ser fram emot möjligheten att diskutera hur jag kan bidra till er organisation.
 
 Med vänliga hälsningar,
-Carl Elelid
+Test User
 `
 
 const MOCK_SKILLS = [
@@ -149,9 +149,9 @@ const MOCK_SKILLS = [
 ]
 
 const MUNICIPAL_CV_CONTENT = `
-CARL ELELID
+TEST USER
 AdministratÃ¶r | Kommunal service | Ã–rebro, Sverige
-carlelelid@outlook.com | +46 70 555 1122
+admin@example.com | +46 70 000 0000
 
 PROFIL
 Serviceinriktad administratÃ¶r med erfarenhet frÃ¥n kommunal verksamhet och
@@ -204,7 +204,7 @@ kÃ¤nner sig trygga och vÃ¤linformerade. Jag tror att min erfarenhet av admin
 processer och mitt intresse fÃ¶r service skulle passa bra hos er.
 
 Med vÃ¤nliga hÃ¤lsningar,
-Carl Elelid
+Test User
 `
 
 const MUNICIPAL_SKILLS = [
@@ -315,7 +315,7 @@ async function main() {
   await seedUserDocuments(supabase, {
     id: DEBUG_USER_ID,
     email: DEBUG_USER_EMAIL,
-    name: 'Carl Elelid',
+    name: 'Test User',
     cvContent: MOCK_CV_CONTENT,
     personalLetterContent: MOCK_PERSONAL_LETTER_CONTENT,
     skills: MOCK_SKILLS,
@@ -324,7 +324,7 @@ async function main() {
   await seedUserDocuments(supabase, {
     id: MUNICIPAL_USER_ID,
     email: MUNICIPAL_USER_EMAIL,
-    name: 'Carl Elelid',
+    name: 'Test User',
     cvContent: MUNICIPAL_CV_CONTENT,
     personalLetterContent: MUNICIPAL_PERSONAL_LETTER_CONTENT,
     skills: MUNICIPAL_SKILLS,

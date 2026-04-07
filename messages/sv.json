@@ -896,7 +896,7 @@
       },
       "contact": {
         "title": "9. Kontakt",
-        "body": "För frågor om dessa villkor, kontakta oss på carlelelid@outlook.com. Företag: Carl Elelid Enskild Firma."
+        "body": "För frågor om dessa villkor, kontakta oss på contact@example.com. Företag: JobRanger."
       }
     }
   },
@@ -923,7 +923,7 @@
       },
       "rights": {
         "title": "5. Dina rättigheter (GDPR)",
-        "body": "Enligt EU:s dataskyddsförordning (GDPR) har du rätt att: få tillgång till dina personuppgifter, korrigera felaktiga uppgifter, begära radering av dina uppgifter, exportera dina uppgifter (dataportabilitet), invända mot behandling och när som helst återkalla samtycke. För att utöva dessa rättigheter, kontakta oss på carlelelid@outlook.com eller radera ditt konto från Inställningar."
+        "body": "Enligt EU:s dataskyddsförordning (GDPR) har du rätt att: få tillgång till dina personuppgifter, korrigera felaktiga uppgifter, begära radering av dina uppgifter, exportera dina uppgifter (dataportabilitet), invända mot behandling och när som helst återkalla samtycke. För att utöva dessa rättigheter, kontakta oss på contact@example.com eller radera ditt konto från Inställningar."
       },
       "deletion": {
         "title": "6. Radering av konto",
@@ -935,7 +935,7 @@
       },
       "contact": {
         "title": "8. Kontakt",
-        "body": "För integritetsrelaterade frågor eller för att utöva dina GDPR-rättigheter, kontakta oss på carlelelid@outlook.com. Företag: Carl Elelid Enskild Firma."
+        "body": "För integritetsrelaterade frågor eller för att utöva dina GDPR-rättigheter, kontakta oss på contact@example.com. Företag: JobRanger."
       },
       "changes": {
         "title": "9. Ändringar av denna policy",
